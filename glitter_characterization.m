@@ -41,10 +41,11 @@ for rx = 1:size(R,1)
     P = R(rx).Centroid;
     numPoints = numPoints + 1;
     C(numPoints,:) = P;
+    disp(P);
 end
 disp(size(C));
 
-%% draw the centroids on top of the glitter specs image
+%% draw the centroids on top of the glitter specs max image
 imagesc(m);
 for cx = 1:size(C,1)
     axis on;
@@ -53,5 +54,21 @@ for cx = 1:size(C,1)
 end
 
 %% for each glitter spec
+% now let's build a distribution for each glitter spec of brightness for
+% the various lighting positions
+% if we assume that a glitter spec's brighness can be found simply by
+% checking the brightness of its centroid, then this is as simple
+% as building a 3d matrix that is a stack of the images over time
+% and then looking at the line for each centroid
+
+% the stack of images is ims
+
+% for each centroid
+for cx = 100:100%size(C,1)
+    dist = reshape(ims(C(cx,2),C(cx,1),:),11,1);
+    plot(dist, '+', 'markersize', 8);
+end
+
+
 
 
