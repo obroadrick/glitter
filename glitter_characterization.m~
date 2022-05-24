@@ -9,7 +9,7 @@ for ix = 444:4:480
     im = double(rgb2gray(im))./255;
     ims(:,:,i) = im;
 end
-%% show an image of glitter
+%%
 imagesc(ims(:,:,5));colormap(gray);
 
 %% get coordinate system of glitter from fiducial markers
@@ -27,15 +27,14 @@ imagesc(M);colormap(gray);
 disp(max(max(max(M,[],1),[],2),[],3));
 disp(min(min(min(M,[],1),[],2),[],3));
 %%
-thresh = .2
-imagesc(M > thresh);colormap(gray);
+thresh = .1
+imagesc(M > thresh);
 
 %% from star images lecture in comp photo:
 % Let's find some features:
 numPoints = 0;
 C = [];
 Mt = M>thresh;
-imagesc(Mt);
 R = regionprops(Mt);
 for rx = 1:size(R,1)
     P = R(rx).Centroid;
@@ -46,10 +45,10 @@ disp(size(C));
 
 %% draw the centroids on top of the glitter specs image
 imagesc(m);
-for cx = 1:size(C,1)
+for cx = 1:100%size(C,1)
     axis on;
     hold on;
-    plot(C(cx,1),C(cx,2), 'r+', 'MarkerSize', 12, 'LineWidth', 2);
+    plot(C(cx,1),C(cx,2), 'r+', 'MarkerSize', 3, 'LineWidth', 1);
 end
 
 %% for each glitter spec
