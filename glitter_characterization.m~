@@ -24,14 +24,11 @@ F = fspecial('Gaussian',[15 15],1) - fspecial('Gaussian',[15 15],7);
 
 M = imfilter(m, F);
 imagesc(M);colormap(gray);
-disp(max(max(max(M,[],1),[],2),[],3));
-disp(min(min(min(M,[],1),[],2),[],3));
 %%
 thresh = .2
 imagesc(M > thresh);colormap(gray);
 
-%% from star images lecture in comp photo:
-% Let's find some features:
+%% get a list of the points
 numPoints = 0;
 C = [];
 Mt = M>thresh;
@@ -41,9 +38,7 @@ for rx = 1:size(R,1)
     P = R(rx).Centroid;
     numPoints = numPoints + 1;
     C(numPoints,:) = P;
-    disp(P);
 end
-disp(size(C));
 
 %% draw the centroids on top of the glitter specs max image
 imagesc(m);
@@ -64,10 +59,27 @@ end
 % the stack of images is ims
 
 % for each centroid
-for cx = 100:100%size(C,1)
-    dist = reshape(ims(C(cx,2),C(cx,1),:),11,1);
-    figure('Centroid brightness of a single spec for 11 horizontally changing lighting positions');
-    plot(dist, '+', 'markersize', 8);
+t = tiledlayout(4,4);
+%start = 100;
+num = 16;
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+%cxs = randsample(size(C,1), num);
+cxs=randi(size(C,1),num,1);
+disp(cxs)
+for cx = cxs%start:start+num-1%size(C,1)
+    %disp(cx);
+    nexttile
+    disp('here')
+    disp(int32(C(cx,2)))
+    disp(size(ims(int32(C(cx,2)),int32(C(cx,1)),:)))
+    dist = reshape(ims(int32(C(cx,2)),int32(C(cx,1)),:),11,1);
+    x = reshape([1 2 3 4 5 6 7 8 9 10 11],11,1);
+    g = fit(x, dist, 'gauss1');
+    %plot(x, dist, '-', 'markersize', 8);
+    plot(x, dist); hold on;
+    plot(g);
+    
 end
 
 
