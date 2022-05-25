@@ -56,16 +56,17 @@ end
 
 % the stack of images is ims
 
-% now we look at the brightness dists for some random specs' centroids
+% for each centroid
 t = tiledlayout(4,4);
 start = 6000;
 num = 16;
 t.Padding = 'compact';
 t.TileSpacing = 'compact';
 cxs=randi(size(C,1),num,1);
+disp()
 for ix=1:size(cxs,1)%start:start+num-1%size(C,1)
     nexttile
-    cx = cxs(ix);
+    cx = cxs(i);
     %disp(cx);
     dist = reshape(ims(int32(C(cx,2)),int32(C(cx,1)),:),11,1);
     g = fit(x, dist, 'gauss1');
