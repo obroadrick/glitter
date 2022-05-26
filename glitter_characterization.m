@@ -58,7 +58,6 @@ end
 
 % now we look at the brightness dists for some random specs' centroids
 t = tiledlayout(4,4);
-start = 6000;
 num = 16;
 t.Padding = 'compact';
 t.TileSpacing = 'compact';
@@ -74,5 +73,43 @@ for ix=1:size(cxs,1)%start:start+num-1%size(C,1)
 end
 
 
+%% Now it's natural to wonder whether we can do better than to look at
+% just the pixel which contains the centroid of each glitter spec
+% let's begin by seeing whether the average of the centroid and its 
+% 4 cardinally-adjacent pixels gives a smoother gaussian-ish curve
 
-
+num = 100;
+t = tiledlayout(ceil(sqrt(num)), ceil(sqrt(num)));
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+cxs=randi(size(C,1),num,1);
+ssds = [];
+for ix=1:size(cxs,1)
+    nexttile
+    cx = cxs(ix);
+    %disp(cx);
+    dist = [];
+    % spec brightness will now be centroid and 4 adjacent pxs
+    d1 = int32(C(cx,2));
+    d2 = int32(C(cx,1));
+    for m=1:size(ims, 3)
+        dist(m) = 0;
+        dist(m) = dist(m) + ims(d1,d2,m);
+        %dist(m) = dist(m) + ims(d1+1,d2,m);
+        %dist(m) = dist(m) + ims(d1-1,d2,m);
+        %dist(m) = dist(m) + ims(d1,d2+1,m);
+        %dist(m) = dist(m) + ims(d1,d2-1,m);
+        %dist(m) = dist(m) + ims(d1+1,d2+1,m);
+        %dist(m) = dist(m) + ims(d1-1,d2+1,m);
+        %dist(m) = dist(m) + ims(d1+1,d2-1,m);
+        %dist(m) = dist(m) + ims(d1-1,d2-1,m);
+        %dist(m) = dist(m) / 9;
+    end
+    dist = reshape(dist, 11, 1);
+    g = fit(x, dist, 'gauss1');
+    %plot(dist); hold on;
+    %plot(g); hold on;
+    ssds(ix) = sum((g(x)-dist).^2);
+end
+avgerr = sum(ssds) / size(ssds,2);
+disp(avgerr);
