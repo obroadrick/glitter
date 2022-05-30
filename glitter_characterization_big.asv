@@ -78,7 +78,7 @@ C = [];
 D = [];
 Mt = M>thresh;
 %imagesc(Mt);
-R = regionprops(Mt,'Centroid','PixelIdxList');
+R = regionprops(Mt,'Centroid','PixelIdxList','PixelList');
 numBad = 0;
 for rx = 1:size(R,1)
     r = max(idxs(R(rx).PixelIdxList)) - min(idxs(R(rx).PixelIdxList));
@@ -97,8 +97,42 @@ for cx = 1:size(D,1)
     hold on;
     plot(D(cx,1),D(cx,2), 'r+', 'MarkerSize', 12, 'LineWidth', 2);
 end
-%% salvage these 'bad' regions by finding 2 centroids
+%% salvage these 'bad' regions by finding 2 centroids instead
+newCentroids = [];
+numBad = 0;
+colormap(gray);
+L = bwlabel(Mt);
+for rx = 1:size(R,1)
+    %imagesc(L == rx);break;
+    r = max(idxs(R(rx).PixelIdxList)) - min(idxs(R(rx).PixelIdxList));
+    P = R(rx).Centroid;
+    numPoints = numPoints + 1;
+    if r <= overlap_threshold
+        % ignore 'good' regions
+        continue
+    end
+    numBad = numBad + 1;
+    % use average index as a boundary
+    avgidx = sum(idxs(R(rx).PixelIdxList)) / size(R(rx).PixelIdxList,1);
+    % add the two new centroids
+    %imagesc(idxs(R(rx).PixelList));drawnow;colormap(gray);break;
+    %imagesc(idxs(R(rx).PixelList)>avgidx);drawnow;break;
+    imagesc(L==rx & idxs>avgidx);break;
+    R1 = regionprops(R(rx).PixelIdxList > avgidx, 'Centroid');
+    R2 = regionprops(R(rx).PixelIdxList < avgidx, 'Centroid');
+    newCentroids(2*numBad-1,:) = R1(1).Centroid;
+    newCentroids(2*numBad,:) = R2(1).Centroid;
+end
+%% draw the salvaged newCentroids on top of the glitter specs max image
+colormap(gray);
+imagesc(m);
+for cx = 1:size(newCentroids,1)%size(C,1)
+    axis on;
+    hold on;
+    plot(newCentroids(cx,1),newCentroids(cx,2), 'r+', 'MarkerSize', 12, 'LineWidth', 2);
+end
 %% draw the centroids on top of the glitter specs max image
+colormap(gray);
 imagesc(m);
 for cx = 15000:17000%size(C,1)
     axis on;
