@@ -49,36 +49,22 @@ end
 %% show the max image of glitter
 imagesc(ims(:,:,2));colormap(gray);
 m = ims(:,:,2);
-%%
-g = uint8(ims(:,:,2));
-imwrite(cat(3, g, g, g), 'imgs/may26/max.jpg');
-%%
-m = ims(:,:,2);
-
-%% get coordinate system of glitter from fiducial markers
-%todo (aruco?)
-
-%% Find specs of glitter using max image of all images
-%m = max(ims,[],3);
-%imagesc(m);colormap(gray);
 
 %% filter image to keep only specs of glitter bright enough to be of interest
 F = fspecial('Gaussian',[15 15],1) - fspecial('Gaussian',[15 15],7);
-
 M = imfilter(m, F);
 imagesc(M);colormap(gray);
-%%
-thresh = 30;
-imagesc(M > thresh);colormap(gray);
 
-%% get a list of the spec centroids
-overlap_threshold = 8; % diff in index >= thresh are two specs maybe
+%% apply threshold to get binary map with glitter spec regions
+thresh = 30;
+Mt = M > thresh;
+imagesc(Mt);colormap(gray);
+% get a list of the region centroids
+overlap_threshold = 8; % frame variation > thresh are two specs maybe
 numPoints = 0;
 C = [];
 D = [];
-Mt = M>thresh;
-%imagesc(Mt);
-R = regionprops(Mt,'Centroid','PixelIdxList','PixelList');
+R = regionprops(Mt,'Centroid','PixelIdxList','PixelList','Area');
 numBad = 0;
 for rx = 1:size(R,1)
     r = max(idxs(R(rx).PixelIdxList)) - min(idxs(R(rx).PixelIdxList));
@@ -98,12 +84,10 @@ for cx = 1:size(D,1)
     plot(D(cx,1),D(cx,2), 'r+', 'MarkerSize', 12, 'LineWidth', 2);
 end
 %% salvage these 'bad' regions by finding 2 centroids instead
-newCentroids = [];
+newCentroids = zeros(2*numBad,2);
 numBad = 0;
-colormap(gray);
-L = bwlabel(Mt);
+L = bwlabel(Mt); % labels binary map where each region is its index
 for rx = 1:size(R,1)
-    %imagesc(L == rx);break;
     r = max(idxs(R(rx).PixelIdxList)) - min(idxs(R(rx).PixelIdxList));
     P = R(rx).Centroid;
     numPoints = numPoints + 1;
@@ -111,25 +95,31 @@ for rx = 1:size(R,1)
         % ignore 'good' regions
         continue
     end
+    disp(rx);
     numBad = numBad + 1;
     % use average index as a boundary
-    avgidx = sum(idxs(R(rx).PixelIdxList)) / size(R(rx).PixelIdxList,1);
-    % add the two new centroids
-    %imagesc(idxs(R(rx).PixelList));drawnow;colormap(gray);break;
-    %imagesc(idxs(R(rx).PixelList)>avgidx);drawnow;break;
-    imagesc(L==rx & idxs>avgidx);break;
-    R1 = regionprops(R(rx).PixelIdxList > avgidx, 'Centroid');
-    R2 = regionprops(R(rx).PixelIdxList < avgidx, 'Centroid');
+    avgidx = sum(idxs(R(rx).PixelIdxList)) / R(rx).Area;
+    % two new regions: pixels from frames above avg and below
+    reg = L==rx;
+    R1 = regionprops(reg & idxs>avgidx, 'Centroid');
+    R2 = regionprops(reg & idxs<avgidx, 'Centroid');
+    % add new regions' centroids
     newCentroids(2*numBad-1,:) = R1(1).Centroid;
     newCentroids(2*numBad,:) = R2(1).Centroid;
 end
 %% draw the salvaged newCentroids on top of the glitter specs max image
+% first show the original centroids
 colormap(gray);
 imagesc(m);
+for cx = 15000:17000%size(C,1)
+    axis on;
+    hold on;
+    plot(C(cx,1),C(cx,2), 'r+', 'MarkerSize', 12, 'LineWidth', 2);
+end
 for cx = 1:size(newCentroids,1)%size(C,1)
     axis on;
     hold on;
-    plot(newCentroids(cx,1),newCentroids(cx,2), 'r+', 'MarkerSize', 12, 'LineWidth', 2);
+    plot(newCentroids(cx,1),newCentroids(cx,2), 'b+', 'MarkerSize', 12, 'LineWidth', 2);
 end
 %% draw the centroids on top of the glitter specs max image
 colormap(gray);
