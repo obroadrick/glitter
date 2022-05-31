@@ -135,12 +135,11 @@ end
 %% brightness distributions for some random specs' centroids
 % (for the various lighting positions)
 num = 16;
-rng(3141592);
+rng(314159);
 cxs = randi(size(C,1),num,1);
 numims = 256;
 dists = zeros(num,numims);
 i = 0;
-colormap(gray);
 % read thru the images
 for imx = 0:3:765
     i = i + 1;
@@ -192,6 +191,45 @@ for ix=1:size(cxs,1)
     text(C(cx,1),C(cx,2), cellstr(num2str(ix)), 'FontSize', 12, 'Color', [1 0 0]);
 end
 
+%% fit gaussians to brightness distributions
+disp('now plotting')
+num = 8*2;
+t = tiledlayout(uint8(ceil(sqrt(num))),uint8(ceil(sqrt(num))));
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+x = [1:numims]';
+for ix=1:size(cxs,1)%start:start+num-1%size(C,1)
+    nexttile;
+    dist = reshape(dists(ix,:), numims, 1);
+    g = fit(x, dist, 'gauss1');
+    mean = g.b1;
+    std = g.c1;
+    xline(g.b1); hold on;
+    plot(dist); hold on;
+    title(num2str(ix));
+    plot(g);
+    % now try downsampling (d) and fitting just to the spike
+    nexttile;
+    k = 4;
+    l = int32(mean-k*std);
+    r = int32(mean+k*std);
+    if l < 0
+        l = 0;
+    end
+    if r > size(dist,1)
+        r = size(dist,1);
+    end
+    distd = dist(l:r);
+    xd = [1:size(distd,1)]';
+    gd = fit(xd, distd, 'gauss1');
+    meand = gd.b1;
+    stdd = gd.c1;
+    plot(distd); hold on;
+    xline(meand); hold on;
+    plot(xd, gd(xd));
+    diff = mean - (cast(int32(mean-k*std),'like',mean) + meand - 1);
+    title(['difference in means: ' num2str(diff)]);
+end
 %% make a tethered set of plots to play with
 colormap(gray);
 t = tiledlayout(2,2);
