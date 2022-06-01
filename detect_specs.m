@@ -1,3 +1,4 @@
+clear;
 %% get max image
 tic;
 ims = [];

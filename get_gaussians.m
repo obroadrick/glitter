@@ -1,3 +1,4 @@
+clear;
 %% finds lighting position which most illuminated each spec
 % and use them to 
 
@@ -14,7 +15,7 @@ numDirections = 2;
 numFrames = [254, 144];
 paths = ["/Users/oliverbroadrick/Desktop/glitter-stuff/5-31 Captures V (right - left)/*calib";
          "/Users/oliverbroadrick/Desktop/glitter-stuff/5-31 Captures H (top - bottom)/*calib-h"];
-dists = zeros(num,numDirections,max(numFrames));
+dists = zeros(size(C,1),numDirections,max(numFrames));
 means = zeros(numDirections,size(C,1));
 for direction=1:numDirections
     num = size(C,1);
@@ -44,7 +45,9 @@ for direction=1:numDirections
     % fit gaussians to brightness dists and record their means
     x = [1:numFrames(direction)]';
     for ix=1:size(C,1)
-        disp([num2str(ix) ' of ' num2str(size(C,1))]);
+        if mod(ix, 1000) == 0
+            disp([num2str(ix) ' of ' num2str(size(C,1))]);
+        end
         dist = reshape(dists(ix,direction,1:numFrames(direction)), numFrames(direction), 1);
         [peak peakidx] = max(dist);
         l = int32(peakidx-10);
@@ -59,8 +62,7 @@ for direction=1:numDirections
         tightx = x(l:r);
         f = fit(tightx, tight, 'gauss1');
         mean = f.b1;
-        disp(mean);
-        means(direction, ix) = mean;% store the zoomed-in mean
+        means(direction, ix) = mean;
     end
 end % loop over sweep directions
 % save the means since finding them is the only
