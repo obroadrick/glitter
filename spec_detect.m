@@ -1,4 +1,5 @@
 %% get max image
+tic;
 ims = [];
 idxs = [];
 m = [];
@@ -7,9 +8,9 @@ i = 0;
 %t = tiledlayout(2,1);
 %t.Padding = 'compact';
 %t.TileSpacing = 'compact';
-for ix = 0:3:765
+for ix = 0:3:759
     i = i + 1;
-    p = '/Users/oliverbroadrick/Desktop/glitter-stuff/Calibrations5-25/';
+    p = '/Users/oliverbroadrick/Desktop/glitter-stuff/5-31 Captures V (right - left)/';
     path = [p '*calib' num2str(ix) '.0-Glitter.jpg'];
     files = dir(path);
     if length(files) < 1
@@ -99,11 +100,7 @@ end
 C = [C; newCentroids];
 
 %% save the centroids
-save('centroids.mat','C');
-
-%% read in centroids
-example = matfile('centroids.mat');
-Cprime = example.C;
-
-%% what we read in is what we saved
-assert(isequal(C,Cprime));
+time = datestr(now, 'yyyy_mm_dd');
+filename = sprintf('centroids_%s.mat',time);
+save(filename,'C');
+toc;
