@@ -1,3 +1,6 @@
+p = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
+means = matfile([p 'lightingmeans_2022_06_01.mat']).means;
+
 %% spec to lightsource vectors in glitter coords
 % at this point, means(1) is a list of x positions(in index units) of light that sparkled the centroids
 % and means(2) is a list of y positions otherwise the same
@@ -20,7 +23,7 @@ FIRST_INDEX_Y = FIRST_INDEX_PX_Y * PX2MM_Y;
 
 % map the gaussian means to lighting positions
 x = -GLIT_TO_MON_EDGES_X + MON_WIDTH_MM - (FIRST_INDEX_X + PX2MM_X * means(1,1)); 
-y = -GLIT_TO_MON_EDGES_Y + MON_HEIGHT_MM -(FIRST_INDEX_Y + PX2MM_Y * means(1,2)); 
+y = -GLIT_TO_MON_EDGES_Y + MON_HEIGHT_MM - (FIRST_INDEX_Y + PX2MM_Y * means(1,2)); 
 z = GLIT_TO_MON_PLANES;
 frstCntrsLightngPos = [x;y;z];
 %first glitter spec in glitter coord sys
@@ -30,6 +33,6 @@ frstSpecPos = [h*C(1,1); h*C(1,2); 0];
 frstLightToSpec = -frstCntrsLightngPos - frstSpecPos;
 % normalize
 frstLightToSpec = frstLightToSpec / norm(frstLightToSpec);
-disp(frstLightToSpec);
+disp(frstSpecPos);disp(frstCntrsLightngPos);disp(frstLightToSpec);
 
 
