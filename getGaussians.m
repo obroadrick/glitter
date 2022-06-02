@@ -36,6 +36,15 @@ for direction=1:numDirections
         im = rgb2gray(imread([files(1).folder '/' files(1).name]));
         % update each of the dists with this im's data
         for ix=1:size(C,1)
+            % for a quick first take in the interest
+            % of getting a glitter characterization done,
+            % this just rounds the centroid (floating coords)
+            % to nearest ints and checks the single pixel
+            % at those integer coords to get the brightness
+            % of the centroid... can be easily improved by 
+            % moving on to a linear interpolation...
+            % will do so only after full characterization pipeline
+            % is working to avoid unneeded early complexity
             d1 = int32(C(ix,2));
             d2 = int32(C(ix,1));
             dists(ix, direction, i) = im(d1,d2);
