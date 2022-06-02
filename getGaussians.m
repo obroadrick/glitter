@@ -19,7 +19,6 @@ dists = zeros(size(C,1),numDirections,max(numFrames));
 means = zeros(numDirections,size(C,1));
 for direction=1:numDirections
     num = size(C,1);
-    x = [1:numFrames(direction)]';
     % have to read thru the images to get brightnesses
     for i=1:numFrames(direction)
         imx = (i-1)*3;
@@ -44,7 +43,7 @@ for direction=1:numDirections
     end
     % fit gaussians to brightness dists and record their means
     x = [1:numFrames(direction)]';
-    for ix=1:size(C,1)
+    parfor ix=1:size(C,1)
         if mod(ix, 1000) == 0
             disp([num2str(ix) ' of ' num2str(size(C,1))]);
         end
@@ -60,14 +59,32 @@ for direction=1:numDirections
         end
         tight = dist(l:r);
         tightx = x(l:r);
-        f = fit(tightx, tight, 'gauss1');
-        mean = f.b1;
-        means(direction, ix) = mean;
+        try
+            f = fit(tightx, tight, 'gauss1');
+            means(direction, ix) = f.b1;
+        catch exception
+            % so far, exceptions have only occurred when the 
+            % peak is at a boundary which means we don't
+            % know whether the true mean should be past the
+            % boundary or not and so for now just throw
+            % this temporary solution at it to get results
+            % but remember to come back and do something
+            % about these (like throw them out, find a way
+            % to approximate where the mean should be, or
+            % decide that this mean is the best we can do and
+            % is worth using/keeping around)
+            if r == size(dist,1)
+                means(direction, ix) = r;
+            end
+            if l == 1
+                means(direction, ix) = 1;
+            end
+        end
     end
 end % loop over sweep directions
 % save the means since finding them is the only
 % meaningful computational effort
 time = datestr(now, 'yyyy_mm_dd');
-filename = sprintf('lightingmeans_%s.mat',time);
+filename = sprintf('data/lightingmeans_%s.mat',time);
 save(filename,'means');
 toc;

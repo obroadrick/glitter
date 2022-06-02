@@ -102,6 +102,6 @@ C = [C; newCentroids];
 
 %% save the centroids
 time = datestr(now, 'yyyy_mm_dd');
-filename = sprintf('centroids_%s.mat',time);
+filename = sprintf('data/centroids_%s.mat',time);
 save(filename,'C');
 toc;
