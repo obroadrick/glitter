@@ -22,30 +22,3 @@ for ix = 0:19
     title(i);
     drawnow;
 end
-%% now show a zoomed in section of glitter specs
-t = tiledlayout(3,3, 'Padding', 'none', 'TileSpacing', 'tight'); 
-colormap(gray);
-y = 1000;
-x = 3000;
-d = 500;
-for ix=1:4:21
-    if ix == 21
-        ix = 20
-    end
-    nexttile;
-    disp(ix);
-    imagesc(ims(y:y+d,x:x+d,ix));
-    title(['aperture number ' num2str(ix)]);
-    drawnow;
-end
-% show where on the original image is being shown
-for ix=[1 10 20]
-    nexttile;
-    disp(ix);
-    imagesc(ims(:,:,ix)); hold on;
-    rectangle('Position', [x y d d], 'EdgeColor', 'r');
-    title(['aperture number ' num2str(ix)]);
-    drawnow;
-end
-
-

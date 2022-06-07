@@ -26,6 +26,7 @@ specPos = [H*C(1,1); H*C(1,2); 0];
 frstLightToSpec = lightPos + specPos;
 % normalize
 frstLightToSpec = frstLightToSpec / norm(frstLightToSpec);
-
+camCal = [40.9412 6.2035 625.3044];
+lightPositions = lightPos
 % draw the glitter rig with this line showing
 drawRig(M, reshape(lightPos, 1,1,3), reshape(specPos, 1,1,3));
