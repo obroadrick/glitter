@@ -24,7 +24,13 @@ pin = [1571. 5129.;
  6863.  549.;
   6276. 5220.];
 %order: bottom-left, top-left, top-right, bottom-right
-pout = [0 305; 0 0; 305 0; 305 305];
+%pout = [0 305; 0 0; 305 0; 305 305];%this is true to image coords for 2d showing
+pout = [0 0; 0 305; 305 305; 305 0];%this is true to glitter coords for the project
+markeradjustments = [M.FIDUCIAL_MARKER_TO_EDGE M.FIDUCIAL_MARKER_TO_EDGE;...
+                    M.FIDUCIAL_MARKER_TO_EDGE (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE);...
+                    (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE) (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE);...
+                    (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE) M.FIDUCIAL_MARKER_TO_EDGE];
+pout = pout + markeradjustments;
 % homography
 tform = fitgeotrans(pin, pout, 'projective');
 % show max image and original position of glitter specs
@@ -60,7 +66,7 @@ drawnow;
 specPos = [out(:,1) out(:,2) zeros(size(out,1),1)];
 % draw the glitter rig with this line showing
 % drawRig(M, [],[]);%reshape(lightPos, 1,1,3), reshape(specPos, 1,1,3));
-%drawRig(M, lightPos, specPos);
+drawRig(M, lightPos, specPos);
 
 
 %%%%EXTRA

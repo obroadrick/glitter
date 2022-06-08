@@ -8,9 +8,10 @@ function M = createMeasurementsStruct()
     M.MON_WIDTH_MM = 670;%MEASURED (yard sticks)
     M.MON_HEIGHT_MM = 379;%MEASURED (yard sticks)
     M.GLIT_SIDE = 305;%MEASURED (yard sticks)
-    M.MARKER_TO_EDGE = 11.8;%MEASURED (calipers)
     M.CALIBRATION_SQUARE_SIZE = 147.1 / 6;%MEASURED six of them (calipers)
     M.CALIBRATION_BOARD_THICKNESS = 3.2;%MEASURED (calipers)
+    M.FIDUCIAL_MARKER_TO_EDGE = 11.8;%MEASURED (calipers)
+    M.FIDUCIAL_MARKER_SIZE = 16.7;%MEASURED (calipers)
 
     % other useful constants
     M.MON_WIDTH_PXS = 3840;
