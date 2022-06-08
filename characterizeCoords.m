@@ -13,12 +13,14 @@ M = matfile([datap 'measurements.mat']).M;
 % as matrix operations and done for all of the points
 % at once...
 howmany = 1000;
+rng(31415926);
 cxs = randi(size(C,1),howmany,1);
-x = (-M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - (M.FIRST_INDEX_X + M.PX2MM_X .* (means(1,cxs)-1)))'; 
-y = (-M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - (M.FIRST_INDEX_Y + M.PX2MM_Y .* (means(2,cxs)-1)))'; 
+x = (-M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - (M.FIRST_INDEX_X + (M.PX2MM_X * M.INDEX_TO_PX .* (means(1,cxs)-1))))'; 
+y = (-M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - (M.FIRST_INDEX_Y + (M.PX2MM_Y * M.INDEX_TO_PX .* (means(2,cxs)-1))))'; 
 z = zeros(howmany,1) + M.GLIT_TO_MON_PLANES;
 lightPos = [x y z];
-% point correspondences from Addy
+% point correspondences from Addy from fiducial markers (all lower left
+% corners)
 pin = [1571. 5129.;
  1418.  339.;
  6863.  549.;
@@ -69,10 +71,10 @@ specPos = [out(:,1) out(:,2) zeros(size(out,1),1)];
 drawRig(M, lightPos, specPos);
 
 
-%%%%EXTRA
 % vector from spec to light
-%frstLightToSpec = lightPos + specPos;
+spec2light = lightPos - specPos;
+
 % normalize
-%frstLightToSpec = frstLightToSpec / norm(frstLightToSpec);
+spec2light = spec2light ./ vecnorm(spec2light, 2, 1);
 %camCal = [40.9412 6.2035 625.3044];
 
