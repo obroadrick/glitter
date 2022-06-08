@@ -82,6 +82,10 @@ point_in_cam_coords = point_in_checker_coords*rotationMatrix + translationVector
 camera_in_glitter_coords = point_in_glitter_coords + cam_in_checker_coords;
 %correct the coordinate system by flipping the direction of the z-axis
 camera_in_glitter_coords = camera_in_glitter_coords .* [1 1 -1];
+%correct for thickness of calibration board
+camera_in_glitter_coords = camera_in_glitter_coords + [0 0 M.CALIBRATION_BOARD_THICKNESS];
+
+
 
 %% save
 save([datap 'camera_in_glitter_coords_' datestr(now, 'mm_dd_yyyy')], "camera_in_glitter_coords");

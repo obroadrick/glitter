@@ -1,4 +1,4 @@
-function drawRig(M, lightings, specs)% draws the glitter rig
+function drawRig(M, lightings, specs, cam)% draws the glitter rig
     figure;
     % glitter square:
     gx = [0 M.GLIT_SIDE M.GLIT_SIDE 0]; 
@@ -19,11 +19,15 @@ function drawRig(M, lightings, specs)% draws the glitter rig
     tc = ['k'];
     patch(tx,ty,tz,tc);
     % show camera as a dot: (dots=cameras)
-    scatter3([150],[450],[500],'filled');
+    scatter3(cam(1),cam(2),cam(3),'filled');
     % draw all the passed lines
     for ix=1:size(lightings,1)
         % show line from light source to glitter spec:
         line([lightings(ix,1) specs(ix,1)],[lightings(ix,2) specs(ix,2)],[lightings(ix,3) specs(ix,3)]);
+    end
+    for ix=1:size(specs,1)
+        % show line from light source to glitter spec:
+        line([cam(1) specs(ix,1)],[cam(2) specs(ix,2)],[cam(3) specs(ix,3)]);
     end
     % set viewpoint:
     view([-110 -30]);

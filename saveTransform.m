@@ -17,5 +17,6 @@ function T = saveTransform()
     pout = pout + markeradjustments;
     % homography
     tform = fitgeotrans(pin, pout, 'projective');
+    T = tform;
     save([datap 'transform_' datestr(now, 'mm_dd_yyyy')], "tform");
 end
