@@ -81,9 +81,10 @@ spec2cam = cam - specPos;
 spec2cam = spec2cam ./ vecnorm(spec2cam, 2, 1);
 
 % spec normals 
-specNormals = spec2light + spec2cam; %just add since they are normalized
-specNormals = specNormals ./ vecnorm(specNormals, 2, 1);
-save
+surface_normals = spec2light + spec2cam; %just add since they are normalized
+surface_normals = surface_normals ./ vecnorm(surface_normals, 2, 1);
+save([datap 'surface_normals_' datestr(now, 'mm_dd_yyyy')], "surface_normals");
+
 
 
 %% pretty picture of it all

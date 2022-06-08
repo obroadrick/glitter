@@ -1,7 +1,7 @@
 clear;
 tic;
 datap = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
-M = matfile([datap 'measurements.mat']).M;
+M = matfile([datap 'measurements.mat']).M;ush
 tform = matfile([datap 'transform_06_08_2022.mat']).tform;
 %%
 imsp = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_06_2020/';
