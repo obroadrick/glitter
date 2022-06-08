@@ -1,6 +1,5 @@
 function drawRig(M, lightings, specs)% draws the glitter rig
-    % clear figure
-    clf;
+    figure;
     % glitter square:
     gx = [0 M.GLIT_SIDE M.GLIT_SIDE 0]; 
     gy = [0 0 M.GLIT_SIDE M.GLIT_SIDE]; 
