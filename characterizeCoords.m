@@ -4,8 +4,9 @@ means = matfile([datap 'lightingmeans_2022_06_02.mat']).means;
 C = matfile([datap 'centroids_2022_06_01.mat']).C;
 M = matfile([datap 'measurements.mat']).M;
 cam = matfile([datap 'camera_in_glitter_coords_06_08_2022.mat']).camera_in_glitter_coords;
-
-
+% seed the rng
+seed = 125;
+rng(seed);
 %% spec to lightsource vectors in glitter coords
 % first: just get the first such vector to see if it
 % is reasonable
@@ -103,6 +104,8 @@ linkaxes([ax1 ax2], 'xy');
 
 %% pretty picture of it all
 % draw the glitter rig with these lines showing
-%drawRig(M, lightPos, specPos, cam);
+number_to_draw = 10;
+draw_idxs = randi(size(C,1),number_to_draw,1);
+drawRig(M, lightPos(draw_idxs,:), specPos(draw_idxs,:), cam);
 
 
