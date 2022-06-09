@@ -101,7 +101,7 @@ end
 C = [C; newCentroids];
 
 %% save the centroids in image coordinates
-time = datestr(now, 'yyyy_mm_dd');
+time = datestr(now, 'mm_dd_yyyy');
 filename = sprintf('data/image_centroids_%s.mat',time);
 save(filename,'C');
 
