@@ -14,9 +14,13 @@ cam = matfile([datap 'camera_in_glitter_coords_06_08_2022.mat']).camera_in_glitt
 % note that this can (and should and will) be recast
 % as matrix operations and done for all of the points
 % at once...
-howmany = 100;
-rng(3141592);
-cxs = randi(size(C,1),howmany,1);
+%RANDOM
+%howmany = 5000;
+howmany = size(C,1);
+%rng(125);
+%cxs = randi(size(C,1),howmany,1);
+%ALL
+cxs = [1:size(C,1)];
 x = (-M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - (M.FIRST_INDEX_X + (M.PX2MM_X * M.INDEX_TO_PX .* (means(1,cxs)-1))))'; 
 y = (-M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - (M.FIRST_INDEX_Y + (M.PX2MM_Y * M.INDEX_TO_PX .* (means(2,cxs)-1))))'; 
 z = zeros(howmany,1) + M.GLIT_TO_MON_PLANES;
@@ -80,15 +84,25 @@ spec2cam = cam - specPos;
 % normalize
 spec2cam = spec2cam ./ vecnorm(spec2cam, 2, 1);
 
-% spec normals 
-surface_normals = spec2light + spec2cam; %just add since they are normalized
-surface_normals = surface_normals ./ vecnorm(surface_normals, 2, 1);
-save([datap 'surface_normals_' datestr(now, 'mm_dd_yyyy')], "surface_normals");
-
-
+% spec surface normals 
+spec_normals = spec2light + spec2cam; %just add since they are normalized
+spec_normals = spec_normals ./ vecnorm(spec_normals, 2, 1);
+save([datap 'spec_normals_' datestr(now, 'mm_dd_yyyy')], "spec_normals");
+%% histograms of surface normal components in each direction (x,y)
+figure;
+t = tiledlayout(1,2);
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+ax1 = nexttile(1);
+histogram(spec_normals(:,1));xline(mean(spec_normals(:,1)));
+title('Horizontal Components of Spec Surface Normals');drawnow;
+ax2 = nexttile(2);
+histogram(spec_normals(:,2));xline(mean(spec_normals(:,2)));
+title('Vertical Components of Spec Surface Normals');
+linkaxes([ax1 ax2], 'xy');
 
 %% pretty picture of it all
 % draw the glitter rig with these lines showing
-drawRig(M, lightPos, specPos, cam);
+%drawRig(M, lightPos, specPos, cam);
 
 
