@@ -3,7 +3,7 @@
 % each direction, using stored spec centroid locations
 
 % inputs: P, matlab struct with paths to the necessary data/images
-function means = getGaussians(P)
+function meansPath = getGaussians(P)
     %% finds lighting position which most illuminated each spec
     % and use them to 
     
@@ -97,7 +97,8 @@ function means = getGaussians(P)
     % meaningful computational effort
     time = datestr(now, 'yyyy_mm_dd');
     filename = sprintf([P.data 'lightingmeans_%s'],time);
+    meansPath = filename;
     save(filename,'means');
 
-    %% returns the means. already set...
+    % returns the means. already set...
 end

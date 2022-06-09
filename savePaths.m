@@ -2,7 +2,6 @@ function P = savePaths()
     % Saves relevant file paths for the project (data, images, etc)
     P.data = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
     P.checkerboardIms = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_06_2020/';
-    P.lightingMeans = [P.data 'lightingmeans_2022_06_02.mat'];
     P.imageCentroids = [P.data 'image_centroids_06_09_2022.mat'];
     P.canonicalCentroids = [P.data 'canonical_centroids_06_09_2022.mat'];
     P.tform = [P.data 'transform_06_08_2022'];
@@ -11,6 +10,8 @@ function P = savePaths()
     P.onGlitterPlane = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_06_2020/onglitterplane.JPG';
     P.leftRightSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/5-31 Captures V (right - left)/';
     P.upDownSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/5-31 Captures H (top - bottom)/';
+    P.specNormals = [P.data 'spec_normals_06_09_2022.mat'];
+    P.means = [P.data 'lightingmeans_2022_06_02.mat'];
 
     % save paths 
     save([P.data 'paths'], "P");

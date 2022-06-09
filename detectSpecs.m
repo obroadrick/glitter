@@ -4,7 +4,7 @@
 % from image coordinates to canonical (glitter) coordinates
 
 % inputs: P, a matlab struct containing paths to relevant images/data
-function [imageCentroids, canonicalCentroids] = detectSpecs(P)
+function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     %% get max image
     ims = [];
     idxs = [];
@@ -115,9 +115,11 @@ function [imageCentroids, canonicalCentroids] = detectSpecs(P)
     out = transformPointsForward(tform, [C(cxs,1) C(cxs,2)]);
     % get specs' 3D coordinates (add a zero for z axis)
     C_canonical = [out(:,1) out(:,2) zeros(size(out,1),1)];
-    
-    save([datap 'canonical_centroids_' datestr(now, 'mm_dd_yyyy')], "C_canonical");
-    %% return them
+    %% return and save them
     imageCentroids = C;
     canonicalCentroids = C_canonical;
+    imageCentroidsPath = [P.data 'canonical_centroids_' datestr(now, 'mm_dd_yyyy')];
+    canonicalCentroidsPath = [P.data 'image_centroids_' datestr(now, 'mm_dd_yyyy')];
+    save(imageCentroidsPath, "canonicalCentroids");
+    save(canonicalCentroidsPath, "imageCentroids");
 end

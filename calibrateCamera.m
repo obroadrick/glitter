@@ -5,7 +5,7 @@
 
 % inputs: P, a matlab struct containing paths to the necessary images 
 %            and homography
-function cam = calibrateCamera(P)
+function campath = calibrateCamera(P)
     M = matfile(P.measurements).M;
     tform = matfile(P.tform).tform;
     %%
@@ -31,14 +31,14 @@ function cam = calibrateCamera(P)
     showExtrinsics(params);
     drawnow;
     % plot an image and its detected and reprojected points for comparison
-    figure; 
-    index = 2;
-    imshow(imageFileNames{index}); 
-    hold on;
-    plot(imagePoints(:,1,index), imagePoints(:,2,index),'go');
-    plot(params.ReprojectedPoints(:,1,index),params.ReprojectedPoints(:,2,index),'r+');
-    legend('Detected Points','ReprojectedPoints');
-    hold off;
+    %figure; 
+    %index = 2;
+    %imshow(imageFileNames{index}); 
+    %hold on;
+    %plot(imagePoints(:,1,index), imagePoints(:,2,index),'go');
+    %plot(params.ReprojectedPoints(:,1,index),params.ReprojectedPoints(:,2,index),'r+');
+    %legend('Detected Points','ReprojectedPoints');
+    %hold off;
     % display estimation errors
     %displayErrors(estimationErrors, params);
     %% show montage of the images actually being used
@@ -52,7 +52,6 @@ function cam = calibrateCamera(P)
     [imagePoints, boardSize, ~] = detectCheckerboardPoints(P.onGlitterPlane);
     squareSizeInMM = M.CALIBRATION_SQUARE_SIZE;
     worldPoints = generateCheckerboardPoints(boardSize,squareSizeInMM);
-    imshow(ogppath);
     index = 1;
     hold on;
     plot(imagePoints(:,1,index), imagePoints(:,2,index),'go');
@@ -85,9 +84,7 @@ function cam = calibrateCamera(P)
     %correct for thickness of calibration board
     camera_in_glitter_coords = camera_in_glitter_coords + [0 0 M.CALIBRATION_BOARD_THICKNESS];
     
-    %% save
-    save([datap 'camera_in_glitter_coords_' datestr(now, 'mm_dd_yyyy')], "camera_in_glitter_coords");
-    
-    %% return camera position
-    cam = camera_in_glitter_coords;
-end
+    % save and return
+    campath = [datap 'camera_in_glitter_coords_' datestr(now, 'mm_dd_yyyy')];
+    save(campath, "camera_in_glitter_coords");
+    end

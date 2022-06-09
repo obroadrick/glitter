@@ -3,7 +3,7 @@
 % which are currenlty just literals I copy and paste from Addy
 % TODO: take marker positions as CSV, etc (a file not literal)
 % inputs: P, matlab struct with paths to necessary data (measurements)
-function T = saveTransform(P)
+function tformpath = saveTransform(P)
     M = matfile(P.measurements).M;
     % point correspondences from Addy from fiducial markers (all lower left
     % corners)
@@ -21,6 +21,6 @@ function T = saveTransform(P)
     pout = pout + markeradjustments;
     % homography
     tform = fitgeotrans(pin, pout, 'projective');
-    T = tform;
-    save([P.data 'transform_' datestr(now, 'mm_dd_yyyy')], "tform");
+    tformpath = [P.data 'transform.mat'];
+    save([P.data 'transform'], "tform");
 end
