@@ -1,6 +1,10 @@
-function T = saveTransform()
-    datap = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
-    M = matfile([datap 'measurements.mat']).M;
+% compute and save the homography from images to canonical glitter
+% coordinate system using detected fiducial marker positions
+% which are currenlty just literals I copy and paste from Addy
+% TODO: take marker positions as CSV, etc (a file not literal)
+% inputs: P, matlab struct with paths to necessary data (measurements)
+function T = saveTransform(P)
+    M = matfile(P.measurements).M;
     % point correspondences from Addy from fiducial markers (all lower left
     % corners)
     pin = [1571. 5129.;
@@ -18,5 +22,5 @@ function T = saveTransform()
     % homography
     tform = fitgeotrans(pin, pout, 'projective');
     T = tform;
-    save([datap 'transform_' datestr(now, 'mm_dd_yyyy')], "tform");
+    save([P.data 'transform_' datestr(now, 'mm_dd_yyyy')], "tform");
 end

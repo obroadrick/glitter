@@ -8,6 +8,10 @@ function P = savePaths()
     P.tform = [P.data 'transform_06_08_2022'];
     P.measurements = [P.data 'measurements.mat'];
     P.camPos = [P.data 'camera_in_glitter_coords_06_08_2022.mat'];
+    P.onGlitterPlane = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_06_2020/onglitterplane.JPG';
+    P.leftRightSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/5-31 Captures V (right - left)/';
+    P.upDownSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/5-31 Captures H (top - bottom)/';
+
     % save paths 
     save([P.data 'paths'], "P");
 end
