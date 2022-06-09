@@ -24,7 +24,7 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
             disp(['more than one file at:' path]);
         end
         %disp([files(1).folder '/' files(1).name]);
-        disp(ix);
+        %disp(ix);
         im = imread([files(1).folder '/' files(1).name]);
         im = rgb2gray(im);
         ims(:,:,1) = im;
@@ -86,7 +86,7 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
             % ignore 'good' regions
             continue
         end
-        disp(rx);
+        %disp(rx);
         numBad = numBad + 1;
         % use average index as a boundary
         avgidx = sum(idxs(R(rx).PixelIdxList)) / R(rx).Area;

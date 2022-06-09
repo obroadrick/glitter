@@ -85,6 +85,6 @@ function campath = calibrateCamera(P)
     camera_in_glitter_coords = camera_in_glitter_coords + [0 0 M.CALIBRATION_BOARD_THICKNESS];
     
     % save and return
-    campath = [datap 'camera_in_glitter_coords_' datestr(now, 'mm_dd_yyyy')];
+    campath = [P.data 'camera_in_glitter_coords_' datestr(now, 'mm_dd_yyyy')];
     save(campath, "camera_in_glitter_coords");
     end

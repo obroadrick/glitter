@@ -23,5 +23,6 @@ these scripts are run in this order:
 - data: contains data outputs of scripts and other relevant data (spec centroid, brightness gaussian means, measurements, etc)
 - util: other matlab code for random related tasks not part of the main pipeline (aperture comparisons, light bar images, etc)
 - old: old code from throughout the project that might be useful for reference
+- glitter_capturing_code: contains code for tasks relating to capturing glitter images, including but not limited to: remote control of our camera (to take images, adjust aperture and shutterspeed, etc), displaying lighting patterns on the monitor, and creating lighting-pattern images for displaying on the monitor.
 ### Glitter images
 Actual glitter images used by this code are not stored in this repo
