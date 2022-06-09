@@ -1,7 +1,7 @@
 clear;close all;
 datap = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
 means = matfile([datap 'lightingmeans_2022_06_02.mat']).means;
-C = matfile([datap 'centroids_2022_06_01.mat']).C;
+C = matfile([datap 'image_centroids_2022_06_01.mat']).C;
 M = matfile([datap 'measurements.mat']).M;
 cam = matfile([datap 'camera_in_glitter_coords_06_08_2022.mat']).camera_in_glitter_coords;
 % seed the rng
@@ -89,17 +89,22 @@ spec2cam = spec2cam ./ vecnorm(spec2cam, 2, 1);
 spec_normals = spec2light + spec2cam; %just add since they are normalized
 spec_normals = spec_normals ./ vecnorm(spec_normals, 2, 1);
 save([datap 'spec_normals_' datestr(now, 'mm_dd_yyyy')], "spec_normals");
+
 %% histograms of surface normal components in each direction (x,y)
 figure;
 t = tiledlayout(1,2);
 t.Padding = 'compact';
 t.TileSpacing = 'compact';
 ax1 = nexttile(1);
-histogram(spec_normals(:,1));xline(mean(spec_normals(:,1)));
-title('Horizontal Components of Spec Surface Normals');drawnow;
+histogram(pi/2-acos(spec_normals(:,1)));
+xline(mean(pi/2-acos(spec_normals(:,1))));
+title('Horizontal Components of Spec Surface Normals');
+xlabel('Radians');
 ax2 = nexttile(2);
-histogram(spec_normals(:,2));xline(mean(spec_normals(:,2)));
+histogram(asin(spec_normals(:,2)));
+xline(mean(asin(spec_normals(:,2))));
 title('Vertical Components of Spec Surface Normals');
+xlabel('Radians');
 linkaxes([ax1 ax2], 'xy');
 
 %% pretty picture of it all

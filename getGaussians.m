@@ -2,9 +2,9 @@ clear;
 %% finds lighting position which most illuminated each spec
 % and use them to 
 
-%% read in the centroids
+%% read in the centroids (in image coordinates)
 datap = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
-C = matfile([datap 'centroids_2022_06_01.mat']).C;
+C = matfile([datap 'image_centroids_2022_06_01.mat']).C;
 
 %% find brightness distributions for all centroids
 % (over lighting positions)

@@ -1,6 +1,6 @@
 clear;
+datap = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
 %% get max image
-tic;
 ims = [];
 idxs = [];
 m = [];
@@ -100,8 +100,18 @@ end
 % add these new good centroids to our list of centroids
 C = [C; newCentroids];
 
-%% save the centroids
+%% save the centroids in image coordinates
 time = datestr(now, 'yyyy_mm_dd');
-filename = sprintf('data/centroids_%s.mat',time);
+filename = sprintf('data/image_centroids_%s.mat',time);
 save(filename,'C');
-toc;
+
+%% save the centroids in canonical glitter coordinates too
+% read in the homography that maps image coords to canonical coords
+tform = matfile([datap 'transform_06_08_2022.mat']).tform;
+% transform points
+cxs = [1:size(C,1)];
+out = transformPointsForward(tform, [C(cxs,1) C(cxs,2)]);
+% get specs' 3D coordinates (add a zero for z axis)
+C_canonical = [out(:,1) out(:,2) zeros(size(out,1),1)];
+
+save([datap 'canonical_centroids_' datestr(now, 'mm_dd_yyyy')], "C_canonical");
