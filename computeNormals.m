@@ -25,17 +25,17 @@ function specNormals = computeNormals(P)
     spec2light = lightPos - specPos;
     
     % normalize
-    spec2light = spec2light ./ vecnorm(spec2light, 2, 1);
+    spec2light = spec2light ./ vecnorm(spec2light, 2, 2);
     
     % vector from spec to camera
     spec2cam = cam - specPos;
     
     % normalize
-    spec2cam = spec2cam ./ vecnorm(spec2cam, 2, 1);
+    spec2cam = spec2cam ./ vecnorm(spec2cam, 2, 2);
     
     % spec surface normals 
     specNormals = spec2light + spec2cam; %just add since they are normalized
-    specNormals = specNormals ./ vecnorm(specNormals, 2, 1);
+    specNormals = specNormals ./ vecnorm(specNormals, 2, 2);
     specNormalsPath = [P.data 'spec_normals_' datestr(now, 'mm_dd_yyyy')];
     save(specNormalsPath, "specNormals");
     
