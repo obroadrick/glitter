@@ -7,10 +7,7 @@ function tformpath = saveTransform(P)
     M = matfile(P.measurements).M;
     % point correspondences from Addy from fiducial markers (all lower left
     % corners)
-    pin = [1571. 5129.;
-     1418.  339.;
-     6863.  549.;
-      6276. 5220.];
+    pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];
     %order: bottom-left, top-left, top-right, bottom-right
     %pout = [0 305; 0 0; 305 0; 305 305];%this is true to image coords for 2d showing    
     pout = [0 0; 0 305; 305 305; 305 0];%this is true to glitter coords for the project

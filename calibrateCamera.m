@@ -9,7 +9,7 @@ function campath = calibrateCamera(P)
     M = matfile(P.measurements).M;
     tform = matfile(P.tform).tform;
     %%
-    imsp = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_06_2020/';
+    imsp = P.checkerboardIms;
     images = imageSet(imsp);
     % could go through the images here and set isolate just the checkboard
     % find largest connected component of white-ish pixels
@@ -40,7 +40,7 @@ function campath = calibrateCamera(P)
     %legend('Detected Points','ReprojectedPoints');
     %hold off;
     % display estimation errors
-    %displayErrors(estimationErrors, params);
+    displayErrors(estimationErrors, params);
     %% show montage of the images actually being used
     imds = imageDatastore(imsp);
     s = subset(imds, imagesUsed);
@@ -69,20 +69,6 @@ function campath = calibrateCamera(P)
     % also get the point's coordinates in camera coordinates (AKA get
     % translations from camera to checkerboard points)
     [rotationMatrix, translationVector] = extrinsics(imagePoints,worldPoints,params);
-    R1 = rotationMatrix;
-    t1 = translationVector;
-    % we should also be able to find R2,t2 that map this world/checkerboard
-    % coordinate system back to the canonical glitter coordinate system.
-    % i align the axes of the checkboard (planes are parallel and i rotate
-    % correctly on that plane by placing on a flat surface for the
-    % checkerboard image capture, and so the rotation only has to flip the
-    % y axis and z axis (to get the positive directions to be correct) but
-    % otherwise does nothing
-    R2 = roty(180)*rotz(180);
-
-
-
-
 
     % I ~believe~ that the matlab calibration toolbox will try to assign
     % the uppermost-leftmost intersection to be the 
@@ -91,9 +77,26 @@ function campath = calibrateCamera(P)
     % to get the camera in glitter coords (coords both in MM and lined up axes,
     % so the addition is fine; when these are thought of as vectors, they are in
     % the same coordinate system)
-    [~, cam_in_checker_coords] = extrinsicsToCameraPose(rotationMatrix, ...
+    [orientation, cam_in_checker_coords] = extrinsicsToCameraPose(rotationMatrix, ...
         translationVector);
     camera_in_glitter_coords = point_in_glitter_coords + cam_in_checker_coords;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    R1 = orientation;
+    t1 = cam_in_checker_coords;
+    % we should also be able to find R2,t2 that map this world/checkerboard
+    % coordinate system back to the canonical glitter coordinate system.
+    % i align the axes of the checkboard (planes are parallel and i rotate
+    % correctly on that plane by placing on a flat surface for the
+    % checkerboard image capture, and so the rotation only has to flip the
+    % y axis and z axis (to get the positive directions to be correct) but
+    % otherwise does nothing
+    R2 = roty(180)*rotz(180);
+    t2 = point_in_glitter_coords + [0 0 M.CALIBRATION_BOARD_THICKNESS];
+    % rotation and translation from origin to camera coordinate system
+    R = R1 * R2;
+    t = t1 + t1;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%cue
     
     %correct the coordinate system by flipping the direction of the z-axis
     camera_in_glitter_coords = camera_in_glitter_coords .* [1 1 -1];
