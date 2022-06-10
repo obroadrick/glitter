@@ -32,5 +32,11 @@ range = 5; %in millimeters
 % the camera the reflectedRays intersect
 % this is as simple as multiplying (extending) the reflected rays
 % until their third (z) coordinate is equal to that of the camPos
+factors = repmat(camPos(3) ./ reflectedRays(:,3),1,3);
+reflectedRaysCamPlane = reflectedRays .* factors;
+% now the x and y position for each entry can be compared to camera pos
 
+% i have traced these light rays in perhaps the reverse of the most
+% uesful direction for when i go to set thresholds/etc on the glitter
+% receptive field
 

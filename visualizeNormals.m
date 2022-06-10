@@ -41,7 +41,7 @@ patch(tx,ty,tz,tc);
 % show camera as a dot: (dots=cameras)
 scatter3(cam(1),cam(2),cam(3),'filled');
 % draw all the passed lines
-specNormals = specNormals .* 10000;
+specNormals = specNormals .* 10;
 cxs = randi(size(specNormals,1),100,1);
 for ix=cxs%size(specNormals,1)
     % show line from light source to glitter spec:
