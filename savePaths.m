@@ -12,6 +12,7 @@ function P = savePaths()
     P.upDownSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/5-31 Captures H (top - bottom)/';
     P.specNormals = [P.data 'spec_normals_06_10_2022.mat'];
     P.means = [P.data 'lightingmeans_2022_06_02.mat'];
+    P.characterizationTest = '/Users/oliverbroadrick/Desktop/glitter-stuff/characterization_test_images/';
 
     % save paths 
     save([P.data 'paths'], "P");

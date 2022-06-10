@@ -69,6 +69,23 @@ function campath = calibrateCamera(P)
     % also get the point's coordinates in camera coordinates (AKA get
     % translations from camera to checkerboard points)
     [rotationMatrix, translationVector] = extrinsics(imagePoints,worldPoints,params);
+    R1 = rotationMatrix;
+    t1 = translationVector;
+    % we should also be able to find R2,t2 that map this world/checkerboard
+    % coordinate system back to the canonical glitter coordinate system.
+    % i align the axes of the checkboard (planes are parallel and i rotate
+    % correctly on that plane by placing on a flat surface for the
+    % checkerboard image capture, and so the rotation only has to flip the
+    % y axis and z axis (to get the positive directions to be correct) but
+    % otherwise does nothing
+    R2 = roty(180)*rotz(180);
+
+
+
+
+
+    % I ~believe~ that the matlab calibration toolbox will try to assign
+    % the uppermost-leftmost intersection to be the 
     
     % now add the point in glitter coords to the camera in checkerboard coords
     % to get the camera in glitter coords (coords both in MM and lined up axes,
@@ -87,4 +104,6 @@ function campath = calibrateCamera(P)
     % save and return
     campath = [P.data 'camera_in_glitter_coords_' datestr(now, 'mm_dd_yyyy')];
     save(campath, "camera_in_glitter_coords");
+    % also save the camera calibration (rotation/translation from canonical
+    % coordinates)
     end

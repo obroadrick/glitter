@@ -3,8 +3,8 @@
 %      - camera position
 %      - glitter characterization 
 %               - (spec positions and surface normals)
-clear;close all;
 rng(23);
+close all;
 
 % get useful paths
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P; 
@@ -41,7 +41,7 @@ Rtocam = R .* (camPos(3) ./ R(:,3));
 % now the x and y position for each entry can be compared to camera pos
 % and those that are sparkling (seen/on) are those that are within the range
 seen = sqrt((specPos(:,1)+Rtocam(:,1)-camPos(1)).^2+...
-        (specPos(:,2)+Rtocam(:,2)-camPos(2)).^2) < range;thi
+        (specPos(:,2)+Rtocam(:,2)-camPos(2)).^2) < range;
 
 
 % NOTE: i have traced these light rays in perhaps the reverse of the most
@@ -126,4 +126,47 @@ daspect([1 1 1]);
 % now show just a black glitter square with the bright specs that expected
 % to sparkle turned white
 figure;
+t = tiledlayout(1,2, 'TileSpacing','tight', 'Padding','tight');
+num = 16;
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+ax1 = nexttile;
+gx = [0 M.XRES M.XRES 0]; 
+gy = [0 0 M.YRES M.YRES]; 
+gz = [0 0 0 0];
+gc = ['k'];
+patch(gx,gy,gz,gc);hold on;
+sparkles = specPos(seen,:);
+%corners = [0 0 0; 0 M.GLIT_SIDE 0; M.GLIT_SIDE M.GLIT_SIDE 0; M.GLIT_SIDE 0 0];
+pout = [0 0; 0 305; 305 305; 305 0];%this is true to glitter coords for the project
+markeradjustments = [M.FIDUCIAL_MARKER_TO_EDGE M.FIDUCIAL_MARKER_TO_EDGE;...
+                    M.FIDUCIAL_MARKER_TO_EDGE (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE);...
+                    (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE) (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE);...
+                    (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE) M.FIDUCIAL_MARKER_TO_EDGE];
+corners = pout + markeradjustments;
+% get inverse transform to map these sparkles to where they will be in
+% the image
+tform = invert(matfile(P.tform).tform);
+sparklesOut = transformPointsForward(tform, [sparkles(:,1) sparkles(:,2)]);
+cornersOut = transformPointsForward(tform, [corners(:,1) corners(:,2)]);
+scatter(sparklesOut(:,1), sparklesOut(:,2), 12, 'filled', 'white');
+scatter(cornersOut(:,1), cornersOut(:,2), 12, 'filled', 'red');
+set(gca, 'YDir','reverse');axis equal;
+% show next to the corresponding test image
+% read in image
+name = '2022-06-09T12,10,34circle-calib-W1127-H574-S48.jpg';
+im = imread([P.characterizationTest name]);
+ax2 = nexttile;
+imagesc(im);hold on;
+%show points Addy detected on fiducial markers
+markers = [1234. 4976.; ...
+                1025.   64.;...
+                6528.  495.;...
+                6197. 5009.];
+scatter(markers(:,1), markers(:,2), 12, 'filled', 'red');
+linkaxes([ax1 ax2]);
+ylim([-500 6000]);axis equal;
+
+
+
 
