@@ -71,14 +71,14 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     numBad = 0;
     for rx = 1:size(R,1)
         r = max(idxs(R(rx).PixelIdxList)) - min(idxs(R(rx).PixelIdxList));
-        P = R(rx).Centroid;
+        Pt = R(rx).Centroid;
         if r > overlap_threshold
             numBad = numBad + 1;
-            D(numBad,:) = P;
+            D(numBad,:) = Pt;
             continue
         end
         numPoints = numPoints + 1;
-        C(numPoints,:) = P;
+        C(numPoints,:) = Pt;
     end
     %% salvage these 'bad' regions by finding 2 centroids instead
     newCentroids = zeros(2*numBad,2);
@@ -109,6 +109,7 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     % get the centroids in canonical glitter coordinates too
     % read in the homography that maps image coords to canonical coords
     tform = matfile(P.tform).tform;
+    
     % transform points
     cxs = [1:size(C,1)];
     out = transformPointsForward(tform, [C(cxs,1) C(cxs,2)]);

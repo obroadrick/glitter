@@ -20,17 +20,27 @@ function campath = calibrateCamera(P)
     % save those images that were used (AKA those in which the checkerboard
     % was succesfully detected) so that we can index through them and
     % remove images which were not usefu to the calibration
-    imagesNotUsed = imageFileNames(~imagesUsed);
-    for ix=1:size(imagesNotUsed,1)
-        delete(imagesNotUsed{ix});
-    end
-    disp(imageFileNames(imagesUsed));
+    %imagesNotUsed = imageFileNames(~imagesUsed);
+    %imagesUsedNames = imageFileNames(imagesUsed);
+    %for ix=1:size(imagesNotUsed,1)
+    %    delete(imagesNotUsed{ix});
+    %end
+    %disp(imageFileNames(imagesUsed));
     squareSizeInMM = M.CALIBRATION_SQUARE_SIZE;
     worldPoints = generateCheckerboardPoints(boardSize,squareSizeInMM);
     I = readimage(images,1); 
     imageSize = [size(I, 1),size(I, 2)];
-    [params, imagesUsed, estimationErrors] = estimateCameraParameters(imagePoints,worldPoints, ...
-                                      'ImageSize',imageSize);
+    [params, ~, estimationErrors] = estimateCameraParameters(imagePoints,worldPoints, ...
+                    'ImageSize',imageSize);%imagesUsedEst ignored as second return
+    %% find images with above average mean reprojection error
+    %errs = params.ReprojectionErrors;
+    %meanErrs = abs(reshape(mean(mean(errs,1,'omitnan'),2,'omitnan'), 32, 1));
+    % let's look at images whose mean error is more than one standard
+    % deviation away from the mean errors of all images
+    %badImageNames = imagesUsedNames(meanErrs > mean(meanErrs)+std(meanErrs));
+    %for ix=1:size(badImageNames,2)
+    %    disp(badImageNames(ix));
+    %end
     %% show a few aspects of the results
     % plot reprojection errors
     showReprojectionErrors(params);
