@@ -5,14 +5,14 @@ function P = savePaths()
     P.onGlitterPlane = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_10_2022/onglitterplane.JPG';
     P.imageCentroids = [P.data 'image_centroids_06_09_2022.mat'];
     P.canonicalCentroids = [P.data 'canonical_centroids_06_09_2022.mat'];
-    P.tform = [P.data 'transform_06_08_2022'];
+    P.tform = [P.data 'transform.mat'];
     P.measurements = [P.data 'measurements.mat'];
-    P.camPos = [P.data 'camera_in_glitter_coords_06_08_2022.mat'];
-    P.leftRightSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/5-31 Captures V (right - left)/';
-    P.upDownSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/5-31 Captures H (top - bottom)/';
+    P.camPos = [P.data 'camera_in_glitter_coords_06_12_2022.mat'];
+    P.leftRightSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/left_right_captures/';
+    P.upDownSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/up_down_captures/';
     P.specNormals = [P.data 'spec_normals_06_10_2022.mat'];
     P.means = [P.data 'lightingmeans_2022_06_02.mat'];
-    P.characterizationTest = '/Users/oliverbroadrick/Desktop/glitter-stuff/characterization_test_images/';
+    P.characterizationTest = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/';
 
     % save paths 
     save([P.data 'paths'], "P");

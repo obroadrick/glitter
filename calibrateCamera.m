@@ -17,11 +17,19 @@ function campath = calibrateCamera(P)
     % set all pixels outside that bounding box to gray
     imageFileNames = images.Files();
     [imagePoints, boardSize, imagesUsed] = detectCheckerboardPoints(imageFileNames);
+    % save those images that were used (AKA those in which the checkerboard
+    % was succesfully detected) so that we can index through them and
+    % remove images which were not usefu to the calibration
+    imagesNotUsed = imageFileNames(~imagesUsed);
+    for ix=1:size(imagesNotUsed,1)
+        delete(imagesNotUsed{ix});
+    end
+    disp(imageFileNames(imagesUsed));
     squareSizeInMM = M.CALIBRATION_SQUARE_SIZE;
     worldPoints = generateCheckerboardPoints(boardSize,squareSizeInMM);
     I = readimage(images,1); 
     imageSize = [size(I, 1),size(I, 2)];
-    [params, ~, ~] = estimateCameraParameters(imagePoints,worldPoints, ...
+    [params, imagesUsed, estimationErrors] = estimateCameraParameters(imagePoints,worldPoints, ...
                                       'ImageSize',imageSize);
     %% show a few aspects of the results
     % plot reprojection errors

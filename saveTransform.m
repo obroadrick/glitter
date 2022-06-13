@@ -7,10 +7,10 @@ function tformpath = saveTransform(P)
     M = matfile(P.measurements).M;
     % point correspondences from Addy from fiducial markers (all lower left
     % corners)
-    pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];
+    pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y pairs
     %order: bottom-left, top-left, top-right, bottom-right
     %pout = [0 305; 0 0; 305 0; 305 305];%this is true to image coords for 2d showing    
-    pout = [0 0; 0 305; 305 305; 305 0];%this is true to glitter coords for the project
+    pout = [0 0; 0 M.GLIT_SIDE; M.GLIT_SIDE M.GLIT_SIDE; M.GLIT_SIDE 0];%x,y pairs...this is true to glitter coords for the project
     markeradjustments = [M.FIDUCIAL_MARKER_TO_EDGE M.FIDUCIAL_MARKER_TO_EDGE;...
                         M.FIDUCIAL_MARKER_TO_EDGE (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE);...
                         (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE) (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE);...

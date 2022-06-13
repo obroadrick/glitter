@@ -11,11 +11,12 @@ fprintf("Computing homography...\n");
 P.tform = saveTransform(P);
 fprintf("Homography computed after %f minutes\n", toc(tStart)/60);
 
+%% Skip camera-calibration for now as it is done... %%%%%%%%%%%%%%%%%
 %% Calibrate camera:find the camera's position in the canonical
 %                   coordinate system using checkerboards
-fprintf("Calibrating camera...\n");
-P.camPos = calibrateCamera(P);
-fprintf("Camera calibrated after %f minutes\n", toc(tStart)/60);
+%fprintf("Calibrating camera...\n");
+%P.camPos = calibrateCamera(P);
+%fprintf("Camera calibrated after %f minutes\n", toc(tStart)/60);
 
 %% Detect specs:    find specs that sparkled during a sweep of light
 fprintf("Detecting spec centroids...\n");

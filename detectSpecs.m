@@ -13,7 +13,11 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     %t = tiledlayout(2,1);
     %t.Padding = 'compact';
     %t.TileSpacing = 'compact';
-    for ix = 0:3:759
+    %TODO add code to find the highest index of sweepimage for each
+    %     direction so that we don't manually enter it like animals
+    %...... 
+    maxIndexLeftRight = 759;
+    for ix = 0:3:maxIndexLeftRight
         i = i + 1;
         path = [P.leftRightSweep '*calib' num2str(ix) '.0-Glitter.jpg'];
         files = dir(path);
@@ -101,20 +105,16 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     
     % add these new good centroids to our list of centroids
     C = [C; newCentroids];
-    
-    %% save the centroids in image coordinates
-    time = datestr(now, 'mm_dd_yyyy');
-    filename = sprintf('data/image_centroids_%s.mat',time);
-    save(filename,'C');
-    
-    %% save the centroids in canonical glitter coordinates too
+
+    % get the centroids in canonical glitter coordinates too
     % read in the homography that maps image coords to canonical coords
-    tform = matfile([datap 'transform_06_08_2022.mat']).tform;
+    tform = matfile(P.tform).tform;
     % transform points
     cxs = [1:size(C,1)];
     out = transformPointsForward(tform, [C(cxs,1) C(cxs,2)]);
     % get specs' 3D coordinates (add a zero for z axis)
     C_canonical = [out(:,1) out(:,2) zeros(size(out,1),1)];
+    
     %% return and save them
     imageCentroids = C;
     canonicalCentroids = C_canonical;
