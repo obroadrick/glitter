@@ -154,7 +154,7 @@ scatter(cornersOut(:,1), cornersOut(:,2), 12, 'filled', 'red');
 set(gca, 'YDir','reverse');axis equal;
 % show next to the corresponding test image
 % read in image
-name = '2022-06-09T12,10,34circle-calib-W1127-H574-S48.jpg';
+name = '2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
 im = imread([P.characterizationTest name]);
 ax2 = nexttile;
 imagesc(im);hold on;

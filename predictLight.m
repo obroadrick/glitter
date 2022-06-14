@@ -35,7 +35,7 @@ plot(imageCentroids(:,1),imageCentroids(:,2),'r+', 'MarkerSize', 12, 'LineWidth'
 knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
 [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids, 'Distance', 'euclidean');
 % only consider specs whose match is within .5 millimeters
-closeEnough = .5;
+closeEnough = .1;
 specIdxs = idx(dist<closeEnough);
 
 %% trace rays from camera to illuminated specs
@@ -106,6 +106,18 @@ for ix=1:size(specPos,1)
     z = [specPos(ix,3) specPos(ix,3)+Rlong(ix,3)]';
     line(x,y,z);
 end
+% shown known light source (which we didn't use to ray trace)
+monitorCoords = [1127 574];
+x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
+y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
+lightPos = [x y M.GLIT_TO_MON_PLANES];
+%scatter3(lightPos(1), lightPos(2), lightPos(3), 'filled', 'o');
+t = linspace(0, 2*pi);
+r = 48 * M.PX2MM_X;
+x = r*cos(t) + lightPos(1);
+y = r*sin(t) + lightPos(2);
+z = zeros(size(t))+M.GLIT_TO_MON_PLANES;
+patch(x, y, z, 'b');
 % set viewpoint:
 view([-110 -30]);
 camroll(-80);
