@@ -5,11 +5,16 @@ P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/path
 tiledlayout(2,2,"TileSpacing","tight","Padding","tight");
 
 %% read in the image
-impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
-im = imread(impath);
+% from circle on screen:
+%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
+% from light source not on monitor (xenon!)
+%impath = '/Users/oliverbroadrick/Downloads/2022-06-14T13,40,46Single-Glitter.jpg';
+ambient = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Glitter-Ambient.jpg'));
+shined = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Glitter-Point.jpg'));
+im = shined - ambient;
 % show original image
 ax1 = nexttile;
-imagesc(im);
+imagesc(im);colormap(gray);
 title('original image');
 
 %% get homography from image to canonical glitter coordinates
@@ -96,10 +101,10 @@ for ix=1:size(specPos,1)
     x = [specPos(ix,1) specPos(ix,1)+spec2cam(ix,1)]';
     y = [specPos(ix,2) specPos(ix,2)+spec2cam(ix,2)]';
     z = [specPos(ix,3) specPos(ix,3)+spec2cam(ix,3)]';
-    line(x,y,z);
+    %line(x,y,z);
 end
 Rlong = R .* 1000; %one meter in length
-for ix=1:size(specPos,1)
+for ix=1:100%size(specPos,1)
     % draw reflected rays
     x = [specPos(ix,1) specPos(ix,1)+Rlong(ix,1)]';
     y = [specPos(ix,2) specPos(ix,2)+Rlong(ix,2)]';
