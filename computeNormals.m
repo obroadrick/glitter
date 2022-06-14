@@ -3,7 +3,7 @@
 % inputs: P, matlab struct with paths to the data (means, spec locs)
 function specNormals = computeNormals(P)
     means = matfile(P.means).means;
-    C = matfile(P.imageCentroids).C;
+    C = matfile(P.imageCentroids).imageCentroids;
     M = matfile(P.measurements).M;
     cam = matfile(P.camPos).camera_in_glitter_coords;
     % seed the rng

@@ -119,8 +119,8 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     %% return and save them
     imageCentroids = C;
     canonicalCentroids = C_canonical;
-    imageCentroidsPath = [P.data 'canonical_centroids_' datestr(now, 'mm_dd_yyyy')];
-    canonicalCentroidsPath = [P.data 'image_centroids_' datestr(now, 'mm_dd_yyyy')];
-    save(imageCentroidsPath, "canonicalCentroids");
-    save(canonicalCentroidsPath, "imageCentroids");
+    imageCentroidsPath = [P.data 'image_centroids_' datestr(now, 'mm_dd_yyyy')];
+    canonicalCentroidsPath = [P.data 'canonical_centroids_' datestr(now, 'mm_dd_yyyy')];
+    save(imageCentroidsPath, "imageCentroids");
+    save(canonicalCentroidsPath, "canonicalCentroids");
 end

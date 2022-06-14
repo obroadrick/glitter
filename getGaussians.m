@@ -8,7 +8,7 @@ function meansPath = getGaussians(P)
     % and use them to 
     
     %% read in the centroids (in image coordinates)
-    C = matfile(P.imageCentroids).C;
+    C = matfile(P.imageCentroids).imageCentroids;
     
     %% find brightness distributions for all centroids
     % (over lighting positions)
@@ -16,7 +16,9 @@ function meansPath = getGaussians(P)
     % currently just vertical bars and horizontal bars
     numDirections = 2;
     numFrames = [254, 144];
-    paths = [P.leftRightSweep; P.upDownSweep];
+    paths = [convertCharsToStrings(P.leftRightSweep);...
+               convertCharsToStrings(P.upDownSweep)];
+    regexs = ["*calib", "*calib-h"];
     dists = zeros(size(C,1),numDirections,max(numFrames));
     means = zeros(numDirections,size(C,1));
     for direction=1:numDirections
@@ -25,8 +27,9 @@ function meansPath = getGaussians(P)
         for i=1:numFrames(direction)
             imx = (i-1)*3;
             cx = i;
-            p = paths(direction,:);
-            path = [convertStringsToChars(p) num2str(imx) '.0-Glitter.jpg'];
+            p = convertStringsToChars(paths(direction));
+            r = convertStringsToChars(regexs(direction));
+            path = [p r num2str(imx) '.0-Glitter.jpg'];
             files = dir(path);
             if length(files) < 1
                 disp(['no file found at:' path]);
@@ -34,7 +37,7 @@ function meansPath = getGaussians(P)
             if length(files) > 1
                 disp(['more than one file at:' path]);
             end
-            disp(imx);
+            %disp(imx);
             im = rgb2gray(imread([files(1).folder '/' files(1).name]));
             % update each of the dists with this im's data
             for ix=1:size(C,1)
@@ -55,9 +58,9 @@ function meansPath = getGaussians(P)
         % fit gaussians to brightness dists and record their means
         x = [1:numFrames(direction)]';
         parfor ix=1:size(C,1)
-            if mod(ix, 1000) == 0
-                disp([num2str(ix) ' of ' num2str(size(C,1))]);
-            end
+            %if mod(ix, 1000) == 0
+            %    disp([num2str(ix) ' of ' num2str(size(C,1))]);
+            %end
             dist = reshape(dists(ix,direction,1:numFrames(direction)), numFrames(direction), 1);
             [~, peakidx] = max(dist);
             l = int32(peakidx-10);
@@ -95,10 +98,7 @@ function meansPath = getGaussians(P)
     end % loop over sweep directions
     % save the means since finding them is the only
     % meaningful computational effort
-    time = datestr(now, 'yyyy_mm_dd');
-    filename = sprintf([P.data 'lightingmeans_%s'],time);
+    filename = sprintf([P.data 'lightingmeans_%s'],datestr(now, 'mm_dd_yyyy'));
     meansPath = filename;
     save(filename,'means');
-
-    % returns the means. already set...
 end

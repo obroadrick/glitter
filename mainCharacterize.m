@@ -11,8 +11,8 @@ fprintf("Computing homography...\n");
 P.tform = saveTransform(P);
 fprintf("Homography computed after %f minutes\n", toc(tStart)/60);
 
-%% Skip camera-calibration for now as it is done... %%%%%%%%%%%%%%%%%
-%% Calibrate camera:find the camera's position in the canonical
+%%% Skip camera-calibration for now as it is done... %%%%%%%%%%%%%%%%%
+%%% Calibrate camera:find the camera's position in the canonical
 %                   coordinate system using checkerboards
 %fprintf("Calibrating camera...\n");
 %P.camPos = calibrateCamera(P);
@@ -21,7 +21,7 @@ fprintf("Homography computed after %f minutes\n", toc(tStart)/60);
 %% Detect specs:    find specs that sparkled during a sweep of light
 fprintf("Detecting spec centroids...\n");
 [P.imageCentroids, P.canonicalCentroids] = detectSpecs(P);
-fprintf("%u specs detected after %f minutes\n", size(canonicalCentroids,1), toc(tStart)/60);
+fprintf("%u specs detected after %f minutes\n", size(matfile(P.canonicalCentroids).canonicalCentroids,1), toc(tStart)/60);
 
 %% Get gaussians:   fit gaussians to the brightness distributions of
 %                   specs across the lighting positions
