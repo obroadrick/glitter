@@ -45,20 +45,16 @@ function campath = newCalibrateCamera(P)
     legend('Detected Points');
     hold off;
     % get rotation and translation from checkerboard origin to camera
-    [Rc, tc] = extrinsics(imagePoints,worldPoints,params);
+    [rotationMatrix, translationVector] = extrinsics(imagePoints,worldPoints,params);
+    worldPoints3d = [worldPoints zeros(size(worldPoints,1),1)];
+    [worldOrientation,worldLocation] = estimateWorldCameraPose(imagePoints,worldPoints3d,params);
     % get checkerboard point in canonical glitter coords
     point_in_glitter_coords = [transformPointsForward(tform, [imagePoints(index,1) imagePoints(index,2)]) 0];
-    Rb = roty(180)*rotz(180); % i believe the y and z axes are flipped but otherwise all lined up
     tb = point_in_glitter_coords + [0 0 M.CALIBRATION_BOARD_THICKNESS];
     % rotation and translation from origin to camera coordinate system
-    R = Rb * Rc;
-    t = tb + tc*Rb;
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%cue
-    disp('camera translation');
-    disp(tc);
-    disp('board translation');
-    disp(tb);
-    t = tc+tb;
+    worldLocation = [worldLocation(1) worldLocation(2) -1*worldLocation(3)];
+    t = tb + worldLocation;
+    camera_in_glitter_coords = t;
     %% save and return
     campath = [P.data 'camera_in_glitter_coords_' datestr(now, 'mm_dd_yyyy')];
     save(campath, "camera_in_glitter_coords");

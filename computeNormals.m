@@ -1,7 +1,7 @@
 % computes the glitter specs' surface normals given already found
 % spec locations and brightness distribution gaussian means
 % inputs: P, matlab struct with paths to the data (means, spec locs)
-function specNormals = computeNormals(P)
+function specNormalsPath = computeNormals(P)
     means = matfile(P.means).means;
     C = matfile(P.imageCentroids).imageCentroids;
     M = matfile(P.measurements).M;

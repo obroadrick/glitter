@@ -108,7 +108,11 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
 
     % get the centroids in canonical glitter coordinates too
     % read in the homography that maps image coords to canonical coords
-    tform = matfile(P.tform).tform;
+    %tform = matfile(P.tform).tform;
+    % don't use that old stinky transform, instead use a fresh new one
+    % points in from addy:
+    pin = [1127. 5357.; 605. 392.; 6375.  372.; 6074. 5384.];
+    tform = getTransform(pin);
     
     % transform points
     cxs = [1:size(C,1)];
