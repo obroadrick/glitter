@@ -8,7 +8,7 @@ function C = singleImageFindSpecs(im)
     %F = fspecial('Gaussian',[40 40],7) - fspecial('Gaussian',[40 40],30);
     imf = imfilter(im, F);
     % apply threshold to get binary map with glitter spec regions
-    thresh = 120;
+    thresh = 30;
     Mt = imf > thresh;
     % get a list of the region centroids
     numPoints = 0;

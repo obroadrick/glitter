@@ -15,8 +15,8 @@ tiledlayout(2,2,"TileSpacing","tight","Padding","tight");
 %shined = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Poin-Captures-6-14-4_05/2022-06-14T16,05,41Single-Glitter.jpg'));
 %ambient = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Point-Captures-6-14-4_33/2022-06-14T16,33,02Single-Glitter.jpg'));
 %shined = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Point-Captures-6-14-4_33/2022-06-14T16,33,12Single-Glitter.jpg'));
-ambient = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Point-Captures-6-16-1_50/Background.jpg'));
-shined = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Point-Captures-6-16-1_50/Point2.jpg'));
+ambient = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Point-6-16-2_44/Background2.jpg'));
+shined = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Point-6-16-2_44/Point3.jpg'));
 im = shined-ambient;
 % show original image
 ax1 = nexttile;
@@ -32,6 +32,7 @@ title('original image');
 pin = [1127. 5357.; 605. 392.; 6375.  372.; 6074. 5384.];
 pin = [1128.2207 5358.38; 604.22656 391.15845; 6374.993 371.94476; 6073.0977 5384.163 ];
 pin = [3035.088 4434.6123; 2557.556 388.33606; 7115.98 307.2471; 7094.5967 5029.888];
+pin = [3011.927 4429.715; 2534.1902 384.72925; 7092.1978  303.4373; 7066.897 5026.835];
 tform = getTransform(P, pin);
 % show transformed image
 ax2 = nexttile;
@@ -61,7 +62,7 @@ linkaxes([ax3 ax4]);
 knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
 [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids, 'Distance', 'euclidean');
 % only consider specs whose match is within .5 millimeters
-closeEnough = .5;
+closeEnough = .5n;
 specIdxs = idx(dist<closeEnough);
 
 %% trace rays from camera to illuminated specs

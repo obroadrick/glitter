@@ -19,13 +19,13 @@ function camPos = findCamPos(P, camParams, imPath, pin)
     squareSizeInMM = M.CALIBRATION_SQUARE_SIZE;
     worldPoints = generateCheckerboardPoints(boardSize,squareSizeInMM);
     % show image with the checkerboard on the plane
-    imagesc(imread(imPath));hold on;
-    index = 1;%origin is always(?) first
+    %imagesc(imread(imPath));hold on;
+    %index = 1;%origin is always(?) first
     indexOrigin = 1;
     indexXfar = 17;
-    plot(imagePoints(index,1), imagePoints(index,2),'go');
-    legend('Detected Points');
-    hold off;
+    %plot(imagePoints(index,1), imagePoints(index,2),'go');
+    %legend('Detected Points');
+    %hold off;
     % get rotation and translation from checkerboard origin to camera
     worldPoints3d = [worldPoints zeros(size(worldPoints,1),1)];
     [~,tc] = estimateWorldCameraPose(imagePoints,worldPoints3d,params);
