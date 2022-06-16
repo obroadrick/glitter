@@ -6,6 +6,7 @@ function P = savePaths()
     P.imageCentroids = [P.data 'image_centroids_06_14_2022.mat'];
     P.canonicalCentroids = [P.data 'canonical_centroids_06_14_2022.mat'];
     P.tform = [P.data 'transform.mat'];
+    P.camParams = [P.data 'camParams'];
     P.measurements = [P.data 'measurements.mat'];
     P.camPos = [P.data 'camera_in_glitter_coords_06_14_2022.mat'];
     P.leftRightSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/left_right_captures/';
@@ -13,6 +14,7 @@ function P = savePaths()
     P.specNormals = [P.data 'spec_normals_06_14_2022.mat'];
     P.means = [P.data 'lightingmeans_06_14_2022.mat'];
     P.characterizationTest = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/';
+    P.extraOnGlitterPlane = '/Users/oliverbroadrick/Desktop/slant1.JPG';
 
     % save paths 
     save([P.data 'paths'], "P");

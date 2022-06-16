@@ -17,6 +17,8 @@ function campath = newCalibrateCamera(P)
     [imagePoints, boardSize, imagesUsed] = detectCheckerboardPoints(imageFileNames);
     squareSizeInMM = M.CALIBRATION_SQUARE_SIZE;
     worldPoints = generateCheckerboardPoints(boardSize,squareSizeInMM);
+    I = readimage(images,1); 
+    imageSize = [size(I, 1),size(I, 2)];
     % calibrate camera using checkerboard points
     [params, ~, estimationErrors] = estimateCameraParameters(imagePoints,worldPoints, ...
                     'ImageSize',imageSize);
