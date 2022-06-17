@@ -7,7 +7,7 @@
 % rotation and translation from checkerboard coordinates to camera 
 % coordinates (Rc, tc)
 
-function camPos = findCamPos(P, camParams, imPath, pin)
+function [t, R] = findCamPos(P, camParams, imPath, pin)
     % P is paths struct
     % cameraParams is the matlab camera parameters object
     % imPath is the path to the image with checkerboard on 
@@ -29,6 +29,7 @@ function camPos = findCamPos(P, camParams, imPath, pin)
     % get rotation and translation from checkerboard origin to camera
     worldPoints3d = [worldPoints zeros(size(worldPoints,1),1)];
     [~,tc] = estimateWorldCameraPose(imagePoints,worldPoints3d,params);
+    [Rc, ~] = extrinsics(imagePoints,worldPoints,params);
     % get checkerboard point in canonical glitter coords
     % TODO make it so that we find these pin points using the marker 
     % detection code right here rather than getting them manually from addy
@@ -69,4 +70,6 @@ function camPos = findCamPos(P, camParams, imPath, pin)
     Rg = Rflipaxes*Rrotate;
     t = (tg' + Rg*tc')';
     camPos = t;
+    R = Rc * Rg;
+    % R is rotation matrix from glitter to camera coordinates
 end

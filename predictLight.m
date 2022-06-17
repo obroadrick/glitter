@@ -18,6 +18,8 @@ tiledlayout(2,2,"TileSpacing","tight","Padding","tight");
 ambient = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Point-6-16-2_44/Background2.jpg'));
 shined = rgb2gray(imread('/Users/oliverbroadrick/Desktop/Point-6-16-2_44/Point3.jpg'));
 im = shined-ambient;
+impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
+im = imread(impath);
 % show original image
 ax1 = nexttile;
 imagesc(im);colormap(gray);
@@ -29,15 +31,17 @@ title('original image');
 %tform = matfile(P.tform).tform;
 % don't use that old stinky transform, instead use a fresh new one
 % points in from addy:
-pin = [1127. 5357.; 605. 392.; 6375.  372.; 6074. 5384.];
-pin = [1128.2207 5358.38; 604.22656 391.15845; 6374.993 371.94476; 6073.0977 5384.163 ];
-pin = [3035.088 4434.6123; 2557.556 388.33606; 7115.98 307.2471; 7094.5967 5029.888];
-pin = [3011.927 4429.715; 2534.1902 384.72925; 7092.1978  303.4373; 7066.897 5026.835];
+%pin = [1127. 5357.; 605. 392.; 6375.  372.; 6074. 5384.];
+%pin = [1128.2207 5358.38; 604.22656 391.15845; 6374.993 371.94476; 6073.0977 5384.163 ];
+%pin = [3035.088 4434.6123; 2557.556 388.33606; 7115.98 307.2471; 7094.5967 5029.888];
+%pin = [3011.927 4429.715; 2534.1902 384.72925; 7092.1978  303.4373; 7066.897 5026.835];
+pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
 tform = getTransform(P, pin);
 % show transformed image
 ax2 = nexttile;
 imw = imwarp(im,tform);
 imagesc(imw);
+
 
 %% find spec centroids
 imageCentroids = singleImageFindSpecs(im);
@@ -62,7 +66,7 @@ linkaxes([ax3 ax4]);
 knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
 [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids, 'Distance', 'euclidean');
 % only consider specs whose match is within .5 millimeters
-closeEnough = .5n;
+closeEnough = .5;
 specIdxs = idx(dist<closeEnough);
 
 %% trace rays from camera to illuminated specs
