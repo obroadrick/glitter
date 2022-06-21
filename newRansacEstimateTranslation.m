@@ -126,22 +126,31 @@ knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
 legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),100,'blue','filled','o','DisplayName','True Camera');
 % show light source as a dot
 legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3),'filled','DisplayName','Light');
-
+%draw all lines red to start
+Rlong = R .* 1000;
+for ix=1:size(Rlong,1)
+    % draw reflected rays
+    x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
+    y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
+    z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
+    color = [1 0 0];
+    %line(x,y,z,'Color',color);
+end
 numInliers = [];
 legPos = size(legendItems,2)+1;
 camroll(-80);
 mostInliersSpecPos = [];
 mostInliersR = [];
-for counter=1:100
+for counter=1:10
     % hypothesize a possible pair of inliers
-    idxs = randi(size(R,1),1,2);
-    k = 1; %when hypothesizing, just take the neareast neighbor specs
-    if nearestDistLines(specPos(idxs,k,:), R(idxs,k,:)) > 2 * inlierThreshold
+    idxsRandomTwo = randi(size(R,1),1,2);
+    %k = 1; %when hypothesizing, just take the neareast neighbor specs
+    if nearestDistLines(specPos(idxsRandomTwo,1,:), R(idxsRandomTwo,1,:)) > 2 * inlierThreshold
         continue
     end
     % find the corresponding candidate camera position
-    points = specPos(idxs,k,:);
-    directions = R(idxs,k,:);
+    points = specPos(idxsRandomTwo,1,:);
+    directions = R(idxsRandomTwo,1,:);
     candidate = pointBetweenLines(points, directions);
     % sometimes the lines cross near each other behind the glitter plane...
     if candidate(3) < 0
@@ -152,8 +161,9 @@ for counter=1:100
     legendItems(legPos) = scatter3(cam(1),cam(2),cam(3),25,'red','o','filled','DisplayName','Hypothesized Camera');
     % check how many of the other rays are inliers for this hypothesized
     % camera position
+    % compute dist from hypothesized cam pos to rays
     dists = [];
-    for k=1:size(R,2)%size(R,2) is also just K from knnsearch above
+    for k=1:size(R,2)%(size(R,2)=K)
         for ix=1:size(R,1)
             dists(ix,k) = distPointToLine(candidate, reshape(specPos(ix,k,:),1,3), reshape(R(ix,k,:),1,3));
         end
@@ -161,24 +171,27 @@ for counter=1:100
     % a single spec doesn't get multiple reflected rays, so we just
     % consider the best reflected ray, assuming that that one is the
     % correct one for this model probably
-    dists = min(dists, [], 2);
-    numInliers(counter) = sum(dists<=inlierThreshold);
-    inliersSpecPos = specPos(dists<=inlierThreshold,:);
-    inliersR = R(dists<=inlierThreshold,:);
-    inliersLogicalIdxs = dists<=inlierThreshold;
-    if size(inliersR) > size(mostInliersR)
+    [dists,kmin] = min(dists, [], 2);
+    inlierIdxs = find(dists<=inlierThreshold);
+    numInliers(counter) = size(inlierIdxs,1);
+    kmin = kmin(dists<=inlierThreshold);
+    overallInlierIdxs = [inlierIdxs kmin [1:size(inlierIdxs,1)]'];
+    inliersSpecPos = specPos(overallInlierIdxs);
+    inliersR = R(overallInlierIdxs);
+    if size(inliersR,1) > size(mostInliersR,1)
         mostInliersR = inliersR;
         mostInliersSpecPos = inliersSpecPos;
-        mostInliersLogicalIdxs = inliersLogicalIdxs;
+        mostInliersIdxs = inlierIdxs;
+        mostInliersKmin = kmin;
     end
     % now show the two lines
-    for i=1:size(idxs,1)
-        ix = idxs(i);
+    for i=1:size(idxsRandomTwo,2)
+        ix = idxsRandomTwo(i);
         % draw reflected rays
-        x = [specPos(ix,1) specPos(ix,1)+Rtocam(ix,1)]';
-        y = [specPos(ix,2) specPos(ix,2)+Rtocam(ix,2)]';
-        z = [specPos(ix,3) specPos(ix,3)+Rtocam(ix,3)]';
-        color = [1 0 0];
+        x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
+        y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
+        z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
+        color = [0 0 1];
         line(x,y,z,'Color',color);
     end
     % and their inliers as well
@@ -198,14 +211,15 @@ for counter=1:100
     drawnow;
     curNumInliers = numInliers(size(numInliers,2));
     title(['Number of inliers: ' num2str(curNumInliers) ' (max so far: ' num2str(max(numInliers)) ')']);
-    ot (.5);
+    pause(.5);break;%HEREhere
+    red = [1 0 0];
     % now go back over and draw them all back to red
-    for i=1:size(idxs,1)
-        ix = idxs(i);
+    for i=1:size(idxsRandomTwo,1)
+        ix = idxsRandomTwo(i);
         % draw reflected rays
-        x = [specPos(ix,1) specPos(ix,1)+Rtocam(ix,1)]';
-        y = [specPos(ix,2) specPos(ix,2)+Rtocam(ix,2)]';
-        z = [specPos(ix,3) specPos(ix,3)+Rtocam(ix,3)]';
+        x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
+        y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
+        z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
         line(x,y,z,'Color',red);
     end
     % and their inliers as well
@@ -233,11 +247,24 @@ disp(camPosEst);
 
 % also compute dists to the known camera location
 trueDists = [];
-for ix=1:size(R,1)
-    trueDists(ix) = distPointToLine(knownCamPos, specPos(ix,:), R(ix,:));
+for k=1:size(R,2)%size(R,2) is also just K from knnsearch above
+    for ix=1:size(R,1)
+        trueDists(ix,k) = distPointToLine(knownCamPos, reshape(specPos(ix,k,:),1,3), reshape(R(ix,k,:),1,3));
+    end
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+[trueDists,kmin] = min(dists, [], 2);
+inlierIdxs = find(dists<=inlierThreshold);
+numInliers(counter) = size(inlierIdxs,1);
+kmin = kmin(dists<=inlierThreshold);
+overallInlierIdxs = [inlierIdxs kmin [1:size(inlierIdxs,1)]'];
+inliersSpecPos = specPos(overallInlierIdxs);
+inliersR = R(overallInlierIdxs);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure;
 % show camera estimated position as a dot: (dots=cameras)
 cam=camPosEst;
 legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
@@ -288,13 +315,13 @@ for ix=1:size(R,1)
     line(x,y,z);
 end
 % get normalized spec distances for drawing
-distNormalized = dist / closeEnough;% color code for
+%distNormalized = dist / closeEnough;% color code for
 brightnessNormalized = double(brightness) / 255.0;% color code for
 for ix=1:size(R,1)
     % draw reflected rays
-    x = [specPos(ix,1) specPos(ix,1)+Rtocam(ix,1)]';
-    y = [specPos(ix,2) specPos(ix,2)+Rtocam(ix,2)]';
-    z = [specPos(ix,3) specPos(ix,3)+Rtocam(ix,3)]';
+    x = [specPos(ix,1) specPos(ix,1)+Rlong(ix,1)]';
+    y = [specPos(ix,2) specPos(ix,2)+Rlong(ix,2)]';
+    z = [specPos(ix,3) specPos(ix,3)+Rlong(ix,3)]';
     %distance form camera estimate
     green = [0 1 0];
     red = [1 0 0];
@@ -332,7 +359,7 @@ trueDistsInliersOnly = zeros(size(mostInliersR,1),1);
 for ix=1:size(mostInliersR,1)
     trueDistsInliersOnly(ix) = distPointToLine(knownCamPos, mostInliersSpecPos(ix,:), mostInliersR(ix,:));
 end
-brightnessNormalizedInliersOnly = brightnessNormalized(mostInliersLogicalIdxs);
+brightnessNormalizedInliersOnly = brightnessNormalized(mostInliersIdxs);
 figure;
 scatter(trueDistsInliersOnly, brightnessNormalizedInliersOnly);
 xlabel('Distance to pinhole (from reflected ray to true pinhole (millimeters))');
