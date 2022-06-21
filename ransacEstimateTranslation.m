@@ -24,10 +24,6 @@ imageCentroids = singleImageFindSpecs(im);
 out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
 canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
 
-% also get the brightness of those specs 
-for ix=1:size(imageCentroids,1)
-    brightness(ix) = interp2(im, imageCentroids(ix,1), imageCentroids(ix,2));
-end
 
 %% match canonical centroids to those in the characterization
 knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
@@ -38,6 +34,14 @@ specIdxs = idx(dist<closeEnough);
 specPos = knownCanonicalCentroids(specIdxs,:);
 allSpecNormals = matfile(P.specNormals).specNormals;
 specNormals = allSpecNormals(specIdxs,:);
+
+
+% also get the brightness of those specs
+brightness = [];
+imageCentroids = imageCentroids(dist<closeEnough,:);
+for ix=1:size(imageCentroids,1)
+    brightness(ix) = interp2(im, imageCentroids(ix,1), imageCentroids(ix,2));
+end
 %% also show the original max image so that we can compare the centroids
 % that we found with the centroids that we characterized from the start
 tiledlayout(1,1);colormap(gray);
@@ -152,9 +156,11 @@ for counter=1:100
     numInliers(counter) = sum(dists<=inlierThreshold);
     inliersSpecPos = specPos(dists<=inlierThreshold,:);
     inliersR = R(dists<=inlierThreshold,:);
+    inliersLogicalIdxs = dists<=inlierThreshold;
     if size(inliersR) > size(mostInliersR)
         mostInliersR = inliersR;
         mostInliersSpecPos = inliersSpecPos;
+        mostInliersLogicalIdxs = inliersLogicalIdxs;
     end
     % now show the two lines
     for i=1:size(idxs,1)
@@ -183,8 +189,8 @@ for counter=1:100
     drawnow;
     curNumInliers = numInliers(size(numInliers,2));
     title(['Number of inliers: ' num2str(curNumInliers) ' (max so far: ' num2str(max(numInliers)) ')']);
-    pause(.5);
-    %now go back over and draw them all back to red
+    ot (.5);
+    % now go back over and draw them all back to red
     for i=1:size(idxs,1)
         ix = idxs(i);
         % draw reflected rays
@@ -216,8 +222,11 @@ options = optimset('PlotFcns',@optimplotfval);
 camPosEst = fminsearch(errFun,x0,options)';
 disp(camPosEst);
 
-
-
+% also compute dists to the known camera location
+trueDists = [];
+for ix=1:size(R,1)
+    trueDists(ix) = distPointToLine(knownCamPos, specPos(ix,:), R(ix,:));
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % show camera estimated position as a dot: (dots=cameras)
@@ -287,11 +296,39 @@ for ix=1:size(R,1)
     %color = [1 c 1];
     line(x,y,z,'Color',color);
 end
+title('green rays are from a brighter sparkle, red from a dimmer one');
 % set viewpoint:
 view([-110 -30]);
 camroll(-80);
 daspect([1 1 1]);
 legend(legendItems);
+
+%
+%%%
+%%%
+%%%%%
+%%%%%%%%
+%%%%%%%%% now plot brightness vs distance to true pinhole
+%%%%%%    
+%%%%%
+%%%
+%
+figure;
+scatter(trueDists, brightnessNormalized);
+xlabel('Distance to pinhole (from reflected ray to true pinhole (millimeters))');
+ylabel('Intensity (of spec centroids, linearly interpolated, normalized)');
+title('Intensity vs Dist to Pinhole: All reflected rays');
+% also do so for just the inliers of the final estimate
+trueDistsInliersOnly = zeros(size(mostInliersR,1),1);
+for ix=1:size(mostInliersR,1)
+    trueDistsInliersOnly(ix) = distPointToLine(knownCamPos, mostInliersSpecPos(ix,:), mostInliersR(ix,:));
+end
+brightnessNormalizedInliersOnly = brightnessNormalized(mostInliersLogicalIdxs);
+figure;
+scatter(trueDistsInliersOnly, brightnessNormalizedInliersOnly);
+xlabel('Distance to pinhole (from reflected ray to true pinhole (millimeters))');
+ylabel('Intensity (of spec centroids, linearly interpolated, normalized)');
+title('Intensity vs Dist to Pinhole: Inliers Only');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -330,10 +367,11 @@ function p = pointBetweenLines(points, directions)
     Q = p1 + d1.*t;
     R = p2 + d2.*s;
     p = (Q+R)./2;
+    p = p';
 end
 function d = distPointToLine(point, pointOnLine, direction)
     a = pointOnLine';% point on the line
     n = (direction./norm(direction))';% unit vector in direction of line
-    p = point;% point whose distance is being computed
+    p = point';% point whose distance is being computed
     d = norm((p-a)-(dot((p-a),n,1)*n));
 end
