@@ -38,38 +38,87 @@ specPos = zeros(size(idx,1),K,3);
 for ix=1:size(idx,1)
     specPos(ix,:,:) = knownCanonicalCentroids(idx(ix,:),:);
 end
+% draw vector map where each vector goes from a spec to its nearest spec
+% neighbor
+figure;
+quiver(canonicalCentroids(:,1), canonicalCentroids(:,2), knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1), knownCanonicalCentroids(idx(:,1),2)-canonicalCentroids(:,2),'LineWidth',2);
+x = knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1);
+y = knownCanonicalCentroids(idx(:,1),2)-canonicalCentroids(:,2);
+figure;
+histogram(atan2(y, x));title('histogram of vector directions');
+xlabel('direction in radians');
 
+%%
 allSpecNormals = matfile(P.specNormals).specNormals;
 specNormals = zeros(size(idx,1),K,3);
 for ix=1:size(idx,1)
     specNormals(ix,:,:) = allSpecNormals(idx(ix,:),:);
 end
+allMaxBrightness = matfile(P.maxBrightness).maxBrightness;
+maxBrightness = zeros(size(idx,1),K);
+for ix=1:size(idx,1)
+    maxBrightness(ix,:) = allMaxBrightness(idx(ix,:));
+end
 
 
+%% NEW CODE TO FIND THE DIST OF RAY TO PINHOLE FOR ALL SPECS SO WE CAN VISUALIZE WHICH SPECS SEEM GOOD
+% compute reflected rays: Ri = Li − 2(Li dot Ni)Ni
+% where Li is normalized vector from spec to light
+%       Ni is normalized normal vector
+%       Ri is normalized reflected vector
+%reflect light off all the specs
+allSpecPos = knownCanonicalCentroids;
+for ix=1:size(allSpecPos)
+    L = (lightPos - allSpecPos(ix,:)) ./ vecnorm(lightPos - allSpecPos(ix,:),2, 2);
+    allR(ix,:) = L - 2 * dot(L, allSpecNormals(ix,:), 2) .* allSpecNormals(ix,:);
+    allR(ix,:) = -1.*allR(ix,:);
+end
+%compute distances to pinhole for these allR reflected rays
+knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
+allTrueDists = [];
+for ix=1:size(allR,1)
+    allTrueDists(ix) = distPointToLine(knownCamPos, allSpecPos(ix,:), allR(ix,:));
+end
+
+%%
 % also get the brightness of those specs
 brightness = [];
 %imageCentroids = imageCentroids(dist<closeEnough,:);
-for ix=1:size(imageCentroids,1)
-    brightness(ix) = interp2(im, imageCentroids(ix,1), imageCentroids(ix,2));
-end
+brightness = interp2(double(im), imageCentroids(:,1), imageCentroids(:,2));
 %% also show the original max image so that we can compare the centroids
 % that we found with the centroids that we characterized from the start
-tiledlayout(1,1);colormap(gray);
-ax3 = nexttile;
-imagesc(im); hold on;
 % now show the canonical spec centroids (mapped onto this image coordinate
 % system using the inverse homography) to show them 
 tforminv = invert(tform);
 characterizedCentroidsOnThisImage = transformPointsForward(tforminv, [knownCanonicalCentroids(:,1) knownCanonicalCentroids(:,2)]);
-plot(characterizedCentroidsOnThisImage(:,1),characterizedCentroidsOnThisImage(:,2),'r+');
-plot(imageCentroids(:,1),imageCentroids(:,2),'bx');
+allTrueDistsNormalized = exp(-allTrueDists.^2/50);
+%allTrueDistsNormalized = (allTrueDists - min(allTrueDists)) / max(allTrueDists);
+red = [1 0 0];
+green = [0 1 0];
+colors = [];
+for ix=1:size(allTrueDistsNormalized,2)
+    colors(ix,:) = green + (red-green)*allTrueDistsNormalized(ix);
+end
+% set specs not within 2cm to red
+% set specs 0 to 2cm from green to red
+%for ix=1:size(allTrueDistsNormalized,2)
+%    plot(characterizedCentroidsOnThisImage(ix,1),characterizedCentroidsOnThisImage(ix,2),'+','Color',colors(ix,:));
+%end
+%%
+disp('now plotting');
+figure;
+tiledlayout(1,2);colormap(gray);
+ax3 = nexttile;
+imagesc(im); hold on;
+scatter(characterizedCentroidsOnThisImage(:,1),characterizedCentroidsOnThisImage(:,2),18,colors,'filled');
+plot(imageCentroids(:,1),imageCentroids(:,2),'cx','MarkerSize',12,'LineWidth', 3);
 maxImagePath = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/maxImage.jpg';
 maxImage = imread(maxImagePath);
 knownImageCentroids = matfile(P.imageCentroids).imageCentroids;
-%ax4 = nexttile;
-%imagesc(maxImage); hold on;
-%plot(knownImageCentroids(:,1),knownImageCentroids(:,2),'r+');
-%linkaxes([ax3 ax4]);
+ax4 = nexttile;
+imagesc(maxImage); hold on;
+plot(knownImageCentroids(:,1),knownImageCentroids(:,2),'r+');
+linkaxes([ax3 ax4]);
 
 %% reflect rays from light off specs
 %reflect the ten nearest specs for each spec found
@@ -95,7 +144,7 @@ errFun = @(c) err(c, specPos, R);
 
 % find a good translation estimate using a RANSAC approach
 rng(314159);
-inlierThreshold = 10; % (mm) a reflected ray is an inlier
+inlierThreshold = 20; % (mm) a reflected ray is an inlier
                       % with respect to a hypothesized camera position
                       % if it pases within 10 millimeters of that 
                       % camera position
@@ -141,7 +190,7 @@ legPos = size(legendItems,2)+1;
 camroll(-80);
 mostInliersSpecPos = [];
 mostInliersR = [];
-for counter=1:10
+for counter=1:100
     % hypothesize a possible pair of inliers
     idxsRandomTwo = randi(size(R,1),1,2);
     %k = 1; %when hypothesizing, just take the neareast neighbor specs
@@ -171,18 +220,26 @@ for counter=1:10
     % a single spec doesn't get multiple reflected rays, so we just
     % consider the best reflected ray, assuming that that one is the
     % correct one for this model probably
-    [dists,kmin] = min(dists, [], 2);
-    inlierIdxs = find(dists<=inlierThreshold);
+    [minDists,kmin] = min(dists, [], 2);
+    inlierIdxs = find(minDists<=inlierThreshold);
     numInliers(counter) = size(inlierIdxs,1);
-    kmin = kmin(dists<=inlierThreshold);
-    overallInlierIdxs = [inlierIdxs kmin [1:size(inlierIdxs,1)]'];
-    inliersSpecPos = specPos(overallInlierIdxs);
-    inliersR = R(overallInlierIdxs);
+    kmin = kmin(minDists<=inlierThreshold);
+    overallInlierIdxs = [inlierIdxs kmin];
+    inliersSpecPos = [];
+    inliersR = [];
+    inliersMaxBrightness = [];
+    for ix=1:size(inlierIdxs)
+        inliersSpecPos(ix,:) = specPos(inlierIdxs(ix),kmin(ix),:);
+        inliersR(ix,:) = R(inlierIdxs(ix),kmin(ix),:);
+        inliersMaxBrightness(ix) = maxBrightness(inlierIdxs(ix),kmin(ix));
+    end
     if size(inliersR,1) > size(mostInliersR,1)
         mostInliersR = inliersR;
         mostInliersSpecPos = inliersSpecPos;
         mostInliersIdxs = inlierIdxs;
         mostInliersKmin = kmin;
+        mostInliersMinDists = minDists;
+        mostInliersMaxBrightness = inliersMaxBrightness;
     end
     % now show the two lines
     for i=1:size(idxsRandomTwo,2)
@@ -207,11 +264,9 @@ for counter=1:10
     view([-110 -30]);
     %camroll(-80);
     daspect([1 1 1]);
-    legend(legendItems);
-    drawnow;
     curNumInliers = numInliers(size(numInliers,2));
     title(['Number of inliers: ' num2str(curNumInliers) ' (max so far: ' num2str(max(numInliers)) ')']);
-    pause(.5);break;%HEREhere
+    %pause(.5);%
     red = [1 0 0];
     % now go back over and draw them all back to red
     for i=1:size(idxsRandomTwo,1)
@@ -231,6 +286,7 @@ for counter=1:10
         line(x,y,z,'Color',red);
     end
 end
+legend(legendItems);
 figure;
 histogram(numInliers);
 
@@ -245,22 +301,52 @@ options = optimset('PlotFcns',@optimplotfval);
 camPosEst = fminsearch(errFun,x0,options)';
 disp(camPosEst);
 
-% also compute dists to the known camera location
+% also compute dists to the known camera location for all shiny specs
 trueDists = [];
 for k=1:size(R,2)%size(R,2) is also just K from knnsearch above
     for ix=1:size(R,1)
         trueDists(ix,k) = distPointToLine(knownCamPos, reshape(specPos(ix,k,:),1,3), reshape(R(ix,k,:),1,3));
     end
 end
-[trueDists,kmin] = min(dists, [], 2);
-inlierIdxs = find(dists<=inlierThreshold);
+% let's have a look at the nearest to correct rays for each spec centroid
+[minTrueDists,kmin] = min(trueDists, [], 2);
+inlierIdxs = [1:size(minTrueDists,1)]';
 numInliers(counter) = size(inlierIdxs,1);
-kmin = kmin(dists<=inlierThreshold);
-overallInlierIdxs = [inlierIdxs kmin [1:size(inlierIdxs,1)]'];
-inliersSpecPos = specPos(overallInlierIdxs);
-inliersR = R(overallInlierIdxs);
+%kmin = kmin(minTrueDists<=inlierThreshold);
+overallInlierIdxs = [inlierIdxs kmin];
+bestSpecPos = [];
+bestR = [];
+bestMaxBrightness = [];
+for ix=1:size(inlierIdxs,1)
+    bestSpecPos(ix,:) = specPos(inlierIdxs(ix),kmin(ix),:);
+    bestR(ix,:) = R(inlierIdxs(ix),kmin(ix),:);
+    bestMaxBrightness(ix) = maxBrightness(inlierIdxs(ix),kmin(ix));
+end
+%FROMHERE
+% we can also get these distances for just inliers with respect to the 
+% true camera position
+trueInlierIdxs = find(minTrueDists<=inlierThreshold);
+numInliers(counter) = size(trueInlierIdxs,1);
+kmin = kmin(minTrueDists<=inlierThreshold);
+overallInlierIdxs = [trueInlierIdxs kmin];
+trueInlierSpecPos = [];
+trueInlierR = [];
+trueInlierMaxBrightness = [];
+for ix=1:size(trueInlierIdxs,1)
+    trueInlierSpecPos(ix,:) = specPos(trueInlierIdxs(ix),kmin(ix),:);
+    trueInlierR(ix,:) = R(trueInlierIdxs(ix),kmin(ix),:);
+    trueInlierMaxBrightness(ix) = maxBrightness(trueInlierIdxs(ix),kmin(ix));
+end
+%TOHERE
+% we can also get these "true" distances for just the inliers from RANSAC
+trueDistsInliers = [];
+for k=1:size(R,2)%size(R,2) is also just K from knnsearch above
+    for ix=1:size(mostInliersSpecPos,1)
+        trueDistsInliers(ix,k) = distPointToLine(knownCamPos, reshape(mostInliersSpecPos(ix,:),1,3), reshape(mostInliersR(ix,:),1,3));
+    end
+end
+[minTrueDistsInliers,kmin] = min(trueDistsInliers, [], 2);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -307,21 +393,15 @@ legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3
 specNormals = specNormals .* 50;
 Rtocam = R*1000;
 %reflectedRaysCamPlane = reflectedRaysCamPlane .* 100;
-for ix=1:size(R,1)
-    % draw normals
-    x = [specNormals(ix,1)+specPos(ix,1) specPos(ix,1)]';
-    y = [specNormals(ix,2)+specPos(ix,2) specPos(ix,2)]';
-    z = [specNormals(ix,3)+specPos(ix,3) specPos(ix,3)]';
-    line(x,y,z);
-end
 % get normalized spec distances for drawing
 %distNormalized = dist / closeEnough;% color code for
-brightnessNormalized = double(brightness) / 255.0;% color code for
+%get characterized max brightnesses
+brightnessNormalized = double(brightness) ./ bestMaxBrightness';% color code for
 for ix=1:size(R,1)
     % draw reflected rays
-    x = [specPos(ix,1) specPos(ix,1)+Rlong(ix,1)]';
-    y = [specPos(ix,2) specPos(ix,2)+Rlong(ix,2)]';
-    z = [specPos(ix,3) specPos(ix,3)+Rlong(ix,3)]';
+    x = [bestSpecPos(ix,1) bestSpecPos(ix,1)+bestR(ix,1)*1000]';
+    y = [bestSpecPos(ix,2) bestSpecPos(ix,2)+bestR(ix,2)*1000]';
+    z = [bestSpecPos(ix,3) bestSpecPos(ix,3)+bestR(ix,3)*1000]';
     %distance form camera estimate
     green = [0 1 0];
     red = [1 0 0];
@@ -350,7 +430,7 @@ legend(legendItems);
 %%%
 %
 figure;
-scatter(trueDists, brightnessNormalized);
+scatter(minTrueDists, brightnessNormalized');
 xlabel('Distance to pinhole (from reflected ray to true pinhole (millimeters))');
 ylabel('Intensity (of spec centroids, linearly interpolated, normalized)');
 title('Intensity vs Dist to Pinhole: All reflected rays');
@@ -359,14 +439,30 @@ trueDistsInliersOnly = zeros(size(mostInliersR,1),1);
 for ix=1:size(mostInliersR,1)
     trueDistsInliersOnly(ix) = distPointToLine(knownCamPos, mostInliersSpecPos(ix,:), mostInliersR(ix,:));
 end
-brightnessNormalizedInliersOnly = brightnessNormalized(mostInliersIdxs);
+%brightnessNormalizedInliersOnly = brightnessNormalized(mostInliersIdxs);
+%brightnessNormalizedInliersOnly = mostInliersMaxBrightness';
+brightnessNormalizedInliersOnly = brightness(mostInliersIdxs) ./ maxBrightness(mostInliersIdxs);
 figure;
-scatter(trueDistsInliersOnly, brightnessNormalizedInliersOnly);
+scatter(minTrueDistsInliers, brightnessNormalizedInliersOnly);
 xlabel('Distance to pinhole (from reflected ray to true pinhole (millimeters))');
 ylabel('Intensity (of spec centroids, linearly interpolated, normalized)');
 title('Intensity vs Dist to Pinhole: Inliers Only');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%brightnessNormalizedInliersOnly = brightnessNormalized(mostInliersIdxs);
+%brightnessNormalizedInliersOnly = mostInliersMaxBrightness';
+brightnessNormalizedInliersOnly = brightness(mostInliersIdxs) ./ maxBrightness(mostInliersIdxs);
+figure;
+scatter(minTrueDistsInliers, brightnessNormalizedInliersOnly);
+xlabel('Distance to pinhole (from reflected ray to true pinhole (millimeters))');
+ylabel('Intensity (of spec centroids, linearly interpolated, normalized)');
+title('Intensity vs Dist to Pinhole: "True" inliers only');
+
+scatter(exp(-minTrueDistsInliers.^2./50), brightnessNormalizedInliersOnly);
+xlabel('Bogus fraction of the ray in the aperture');
+ylabel('Intensity (of spec centroids, linearly interpolated, normalized)');
+title('Intensity vs Dist to Pinhole: "True" inliers only');
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -9,6 +9,8 @@ function C = singleImageFindSpecs(im)
     imf = imfilter(im, F);
     % apply threshold to get binary map with glitter spec regions
     thresh = 30;
+    %thresh = 150;%for the image i sent in glitter channel
+    %thresh = 120;
     Mt = imf > thresh;
     % get a list of the region centroids
     numPoints = 0;
@@ -19,4 +21,6 @@ function C = singleImageFindSpecs(im)
         numPoints = numPoints + 1;
         C(numPoints,:) = Pt;
     end
+    disp(thresh);
+    disp(size(C));
 end

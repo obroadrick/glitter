@@ -49,10 +49,12 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
         %ax2 = nexttile(2);
         %imagesc(idxs);title('indexes');
         %drawnow;
+        disp(ix);
     end
     %imagesc(ims(:,:,2));colormap(gray);
     m = ims(:,:,2);
-    
+    %SAVE THE MAX IMAGE
+    imwrite(cat(3, m/255, m/255, m/255),[P.data 'maxImage_' datestr(now, 'mm_dd_yyyy') '.jpg']);
     %% filter image to keep only specs of glitter bright enough to be of interest
     F = fspecial('Gaussian',[15 15],1) - fspecial('Gaussian',[15 15],7);
     M = imfilter(m, F);

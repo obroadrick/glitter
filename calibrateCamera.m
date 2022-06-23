@@ -8,9 +8,12 @@
 function campath = calibrateCamera(P)
     % read in the homography from image coords to canonical glitter coords
     M = matfile(P.measurements).M;
-    tform = matfile(P.tform).tform;
+    pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];% june 23 xenon captures
+    tform = getTransform(P,pin);
+    %tform = matfile(P.tform).tform;
     % read in the checkerboard images
-    imsp = P.checkerboardIms;
+    %imsp = P.checkerboardIms;
+    imsp = '/Users/oliverbroadrick/Downloads/Checkerboards-6-23-1_30/';
     images = imageSet(imsp);
     imageFileNames = images.Files();
     % find checkerboard points
@@ -27,7 +30,7 @@ function campath = calibrateCamera(P)
     % we can find the location of a new checkerboard in the space without
     % too much trouble (without rerunning the full camera calibration)
     camParams = params;
-    save([P.data 'camParams'], "camParams");
+    save([P.data 'camParams_' datestr(now, 'mm_dd_yyyy')], "camParams");
     %% show camera calibration results
     % plot reprojection errors
     showReprojectionErrors(params);
@@ -43,11 +46,13 @@ function campath = calibrateCamera(P)
     figure;
     montage(s);
     %% get coordinates for image with checkerboard on glitter plane
-    [imagePoints, boardSize, ~] = detectCheckerboardPoints(P.onGlitterPlane);
+    %[imagePoints, boardSize, ~] = detectCheckerboardPoints(P.onGlitterPlane);
+    [imagePoints, boardSize, ~] = detectCheckerboardPoints('/Users/oliverbroadrick/Downloads/Checkerboards-6-23-1_30/onGlitterPlane.jpg');
     squareSizeInMM = M.CALIBRATION_SQUARE_SIZE;
     worldPoints = generateCheckerboardPoints(boardSize,squareSizeInMM);
     % show image with the checkerboard on the plane
-    imagesc(imread(P.onGlitterPlane));hold on;
+    %imagesc(imread(P.onGlitterPlane));hold on;
+    imagesc(imread('/Users/oliverbroadrick/Downloads/Checkerboards-6-23-1_30/onGlitterPlane.jpg'));hold on;
     index = 1;%origin is always(?) first
     plot(imagePoints(index,1), imagePoints(index,2),'go');
     legend('Detected Points');
@@ -71,4 +76,4 @@ function campath = calibrateCamera(P)
     save(campath, "camera_in_glitter_coords");
     % also save the camera calibration (rotation/translation from canonical
     % coordinates)
-    end
+end

@@ -15,7 +15,8 @@ function P = savePaths()
     P.means = [P.data 'lightingmeans_06_14_2022.mat'];
     P.characterizationTest = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/';
     P.extraOnGlitterPlane = '/Users/oliverbroadrick/Desktop/slant1.JPG';
-
+    P.maxImage = [P.data 'maxImage.jpg'];
+    P.maxBrightness = [P.data 'maxBrightness.mat'];
     % save paths 
     save([P.data 'paths'], "P");
 end
