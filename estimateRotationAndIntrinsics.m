@@ -86,19 +86,20 @@ imageSpecs = mostInliersImageSpecPos; % the image coordinates of where we find t
 w = M.XRES;
 h = M.YRES;
 T = reshape(camPosEst,3,1);
-%             errRK(fx,   fy,   w, h, r1,   r2,   r3,   p, Pts, T)
+%             errRK(fx,   fy,   s, w, h, r1,   r2,   r3,   p, Pts, T)
 plottingFigure = figure;
-errFun = @(x) errRK(x(1), x(2), w, h, x(3), x(4), x(5), imageSpecs,...
+errFun = @(x) errRK(x(1), x(2), x(3), w, h, x(4), x(5), x(6), imageSpecs,...
     worldSpecs, imageFiducials, worldFiducials, T, plottingFigure);
-x0 = [10^(-3)*12000 10^(-3)*12000 3 -1.5 -1.5]';
+x0 = [10^(-3)*12000 10^(-3)*12000 0 3 -1.5 -1.5]';
 % use the camera known points for x0 TODO
 options = optimset('PlotFcns',@optimplotfval);
 xf = fminsearch(errFun, x0, options);
 fx = xf(1);
 fy = xf(2);
-r1 = xf(3);
-r2 = xf(4);
-r3 = xf(5);
+s = xf(3);
+r1 = xf(4);
+r2 = xf(5);
+r3 = xf(6);
 R = rodrigues(r1,r2,r3);
 
 %% draw the scene with camera and its frustrum

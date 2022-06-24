@@ -11,9 +11,10 @@
 % K = [f 0 w/2; 0 f h/2; 0 0 1]; where w and h are the width 
 % and height in pixels of the image
 
-function e = errRK(fx, fy, w, h, r1, r2, r3, imageSpecs, worldSpecs,...
+function e = errRK(fx, fy, s, w, h, r1, r2, r3, imageSpecs, worldSpecs,...
     imageFiducials, worldFiducials, T, plottingFigure)
-    % f is the focal length (assumed same for x and y)
+    % fx and fy are the x and y direction focal lengths
+    % s is the skew
     % w and h are width and height in pixels of the image
     % r1, r2, r2 are the rodrigues parameters of the candidate rotation
     % p is a list of the known image points
@@ -24,9 +25,11 @@ function e = errRK(fx, fy, w, h, r1, r2, r3, imageSpecs, worldSpecs,...
     disp(fx);
     disp('fy:');
     disp(fy);
+    disp('s:');
+    disp(s);
     disp('r1:');
     disp(r1);
-    K = [10^(3)*fx 0 w/2; 0 10^(3)*fy h/2; 0 0 1];
+    K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
 
     % get rotation matrix from rodrigues parameters
     R = rodrigues(r1,r2,r3);
