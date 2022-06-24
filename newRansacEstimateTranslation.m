@@ -134,7 +134,7 @@ for ix=1:K
 end
 
 % estimate camera position by minimizing some error function
-errFun = @(c) err(c, specPos, R);
+%errFun = @(c) errT(c, specPos, R);
 %x0 = [M.GLIT_SIDE/2;M.GLIT_SIDE/2;M.GLIT_SIDE];
 %x0 = [0;0;0];
 %x0 = [M.GLIT_SIDE;M.GLIT_SIDE;2*M.GLIT_SIDE];
@@ -293,7 +293,7 @@ histogram(numInliers);
 % now just for the model with the most inliers, we build up a 
 % camera position estimate
 % estimate camera position by minimizing some error function
-errFun = @(c) err(c, mostInliersSpecPos, mostInliersR);
+errFun = @(c) errT(c, mostInliersSpecPos, mostInliersR);
 %x0 = [M.GLIT_SIDE/2;M.GLIT_SIDE/2;M.GLIT_SIDE];
 %x0 = [0;0;0];
 x0 = [M.GLIT_SIDE;M.GLIT_SIDE;2*M.GLIT_SIDE];

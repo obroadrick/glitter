@@ -10,7 +10,6 @@
 % K = [f 0 w/2; 0 f h/2; 0 0 1]; where w and h are the width 
 % and height in pixels of the image
 
-clear;
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 M = matfile(P.measurements).M;
 
@@ -80,15 +79,22 @@ h = M.YRES;
 T = reshape(camPosEst,3,1);
 %             errRK(f,    w, h, r1,   r2,   r3,   p, P, T)
 errFun = @(x) errRK(x(1), w, h, x(2), x(3), x(4), p, P, T);
-x0 = [1000; 1; 1; 1];
+x0 = [1000 1 1 1]';%[100; 2; 1; 1;];
 options = optimset('PlotFcns',@optimplotfval);
 xf = fminsearch(errFun, x0, options);
+f = xf(1);
+r1 = xf(2);
+r2 = xf(3);
+r3 = xf(4);
+R = rodrigues(r1,r2,r3);
 
 %% draw the scene with camera and its frustrum
 figure;
+pose = rigid3d(R,T');
+camObj = plotCamera('AbsolutePose',pose,'Opacity',0,'Size',35);
 % glitter square:
-gx = [0 M.GLIT_SIDE M.GLIT_SIDE 0]; 
-gy = [0 0 M.GLIT_SIDE M.GLIT_SIDE]; 
+gx = [0 M.GLIT_SIDE M.GLIT_SIDE 0];
+gy = [0 0 M.GLIT_SIDE M.GLIT_SIDE];
 gz = [0 0 0 0];
 gc = ['b'];
 legendItems = [];
@@ -105,7 +111,3 @@ ty = [-120 -120 -120 -120];
 tz = [-250 1000 1000 -250];
 tc = ['k'];
 legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
-% shown known ground truth camera position
-knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
-legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),100,'blue','filled','o','DisplayName','True Camera');
-

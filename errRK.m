@@ -22,12 +22,13 @@ function e = errRK(f, w, h, r1, r2, r3, p, Pts, T)
     K = [f 0 w/2; 0 f h/2; 0 0 1];
 
     % get rotation matrix
-    omega = [r1;r2;r3]; % the vector we parameterized
-    theta = norm(omega); % angle to rotate by (following right hand rule)
-    n = omega ./ theta; % axis of rotation normalized
-    nx = [0 -n(3) n(2); n(3) 0 -n(1); -n(2) n(1) 0]; % cross product as a matrix
+    R = rodrigues(r1,r2,r3);
+    %omega = [r1;r2;r3]; % the vector we parameterized
+    %theta = norm(omega); % angle to rotate by (following right hand rule)
+    %n = omega ./ theta; % axis of rotation normalized
+    %nx = [0 -n(3) n(2); n(3) 0 -n(1); -n(2) n(1) 0]; % cross product as a matrix
     % rodrigues' formula to get rotation matrix from the parameters
-    R = [1 0 0; 0 1 0; 0 0 1] + sin(theta).*nx + (1-cos(theta)).*nx^2;
+    %R = [1 0 0; 0 1 0; 0 0 1] + sin(theta).*nx + (1-cos(theta)).*nx^2;
 
     % now estimate the image coordinates for all the world points in Pts
     pest = [];
@@ -36,7 +37,8 @@ function e = errRK(f, w, h, r1, r2, r3, p, Pts, T)
         %disp(size(R));
         %disp(size(Pts(ix,:)));
         %disp(size(T));
-        pest(ix,:) = K * (R * reshape(Pts(ix,:),3,1) + T);
+        Pnt = reshape(Pts(ix,:),3,1);
+        pest(ix,:) = K * (R * Pnt + T);
         pest(ix,:) = pest(ix,:) ./ pest(ix,3);
     end
 
@@ -47,4 +49,5 @@ function e = errRK(f, w, h, r1, r2, r3, p, Pts, T)
         %disp(size(p(ix,:)));
         e = e + norm(pest(ix,1:2) - p(ix, :))^2;
     end
+    e = sqrt(e / size(pest,1));
 end
