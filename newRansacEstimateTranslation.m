@@ -226,14 +226,17 @@ for counter=1:100
     kmin = kmin(minDists<=inlierThreshold);
     overallInlierIdxs = [inlierIdxs kmin];
     inliersSpecPos = [];
+    inliersImageSpecPos = [];
     inliersR = [];
     inliersMaxBrightness = [];
     for ix=1:size(inlierIdxs)
+        inliersImageSpecPos(ix,:) = imageCentroids(inlierIdxs(ix),:);
         inliersSpecPos(ix,:) = specPos(inlierIdxs(ix),kmin(ix),:);
         inliersR(ix,:) = R(inlierIdxs(ix),kmin(ix),:);
         inliersMaxBrightness(ix) = maxBrightness(inlierIdxs(ix),kmin(ix));
     end
     if size(inliersR,1) > size(mostInliersR,1)
+        mostInliersImageSpecPos = inliersImageSpecPos;
         mostInliersR = inliersR;
         mostInliersSpecPos = inliersSpecPos;
         mostInliersIdxs = inlierIdxs;

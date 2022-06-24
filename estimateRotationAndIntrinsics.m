@@ -31,7 +31,14 @@ tform = getTransform(P, pin);
 imageCentroids = singleImageFindSpecs(im);
 out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
 canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
-
+pout = [0 0; 0 M.GLIT_SIDE; M.GLIT_SIDE M.GLIT_SIDE; M.GLIT_SIDE 0];%x,y pairs...this is true to glitter coords for the project
+markeradjustments = [M.FIDUCIAL_MARKER_TO_EDGE M.FIDUCIAL_MARKER_TO_EDGE;...
+                    M.FIDUCIAL_MARKER_TO_EDGE (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE);...
+                    (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE) (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE);...
+                    (-M.FIDUCIAL_MARKER_TO_EDGE-M.FIDUCIAL_MARKER_SIZE) M.FIDUCIAL_MARKER_TO_EDGE];
+pout = pout + markeradjustments;
+worldFiducials = [pout zeros(size(pout,1),1)];
+imageFiducials = pin;
 
 %% match canonical centroids to those in the characterization
 knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
@@ -69,28 +76,34 @@ for ix=1:size(idx,1)
 end
 
 %% now make an estimate of the rotation and instrinsics matrices for this
-% camera calibration 
+% camera calibration
 
 % known points in world coordinates
-P = bestSpecPos; % the characterized, canonical spec positions that correspond to the sparkling specs in the image
-p = imageCentroids;
+worldSpecs = mostInliersSpecPos; % the characterized, canonical spec positions that correspond to the sparkling specs in the image
+imageSpecs = mostInliersImageSpecPos; % the image coordinates of where we find those specs in this image
+% also, worldFiducials and imageFiducials give the fiducial marker point
+% correspondences
 w = M.XRES;
 h = M.YRES;
 T = reshape(camPosEst,3,1);
-%             errRK(f,    w, h, r1,   r2,   r3,   p, P, T)
-errFun = @(x) errRK(x(1), w, h, x(2), x(3), x(4), p, P, T);
-x0 = [1000 1 1 1]';%[100; 2; 1; 1;];
+%             errRK(fx,   fy,   w, h, r1,   r2,   r3,   p, Pts, T)
+plottingFigure = figure;
+errFun = @(x) errRK(x(1), x(2), w, h, x(3), x(4), x(5), imageSpecs,...
+    worldSpecs, imageFiducials, worldFiducials, T, plottingFigure);
+x0 = [10^(-3)*12000 10^(-3)*12000 3 -1.5 -1.5]';
+% use the camera known points for x0 TODO
 options = optimset('PlotFcns',@optimplotfval);
 xf = fminsearch(errFun, x0, options);
-f = xf(1);
-r1 = xf(2);
-r2 = xf(3);
-r3 = xf(4);
+fx = xf(1);
+fy = xf(2);
+r1 = xf(3);
+r2 = xf(4);
+r3 = xf(5);
 R = rodrigues(r1,r2,r3);
 
 %% draw the scene with camera and its frustrum
 figure;
-pose = rigid3d(R,T');
+pose = rigid3d(R',(T)');
 camObj = plotCamera('AbsolutePose',pose,'Opacity',0,'Size',35);
 % glitter square:
 gx = [0 M.GLIT_SIDE M.GLIT_SIDE 0];
@@ -111,3 +124,6 @@ ty = [-120 -120 -120 -120];
 tz = [-250 1000 1000 -250];
 tc = ['k'];
 legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
+
+
+
