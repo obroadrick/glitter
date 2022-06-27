@@ -40,6 +40,10 @@ pout = pout + markeradjustments;
 worldFiducials = [pout zeros(size(pout,1),1)];
 imageFiducials = pin;
 
+%% get all 16 fiducial marker points (both world and image)
+% read in matfile
+%csv = matfile([P.data '16pts_june27']);
+
 %% match canonical centroids to those in the characterization
 knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
 K = 10;
@@ -101,11 +105,30 @@ r1 = xf(4);
 r2 = xf(5);
 r3 = xf(6);
 R = rodrigues(r1,r2,r3);
+%%
+s = 0;
+K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
 
 %% draw the scene with camera and its frustrum
 figure;
-pose = rigid3d(R',(T)');
+pose = rigid3d(R',T');hold on;
 camObj = plotCamera('AbsolutePose',pose,'Opacity',0,'Size',35);
+% draw frustum
+frustumImagePoints = [0 0; 0 M.YRES; M.XRES M.YRES; M.XRES 0];
+% since p = KR(P-T) for world point P to image points p,
+% we get that P = T+(KR)^-1(p)
+frustumWorldPoints = [];
+for ix=1:size(frustumImagePoints,1)
+    frustumWorldPoints(ix,:) = T + 1000*inv(K*R') * [frustumImagePoints(ix,:)';1];
+end
+for ix=1:size(frustumWorldPoints,1)
+    plot3([T(1) frustumWorldPoints(ix,1)],...
+          [T(2) frustumWorldPoints(ix,2)],...
+          [T(3) frustumWorldPoints(ix,3)],...
+          'Color', 'cyan');
+end
+axis vis3d;
+
 % glitter square:
 gx = [0 M.GLIT_SIDE M.GLIT_SIDE 0];
 gy = [0 0 M.GLIT_SIDE M.GLIT_SIDE];
@@ -117,7 +140,7 @@ legendItems(1) = patch(gx,gy,gz,gc,'DisplayName', 'Glitter');hold on;
 mx = [-M.GLIT_TO_MON_EDGES_X -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X]; 
 my = [-M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y -M.GLIT_TO_MON_EDGES_Y]; 
 mz = [M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES]; 
-mc = ['g'];
+mc = [.2 .2 .2];
 legendItems(size(legendItems,2)+1) = patch(mx,my,mz,mc,'DisplayName','Monitor');
 % table: (made up coords, doesn't matter, mostly for fun)
 tx = [-400 -400 600 600];
@@ -125,6 +148,4 @@ ty = [-120 -120 -120 -120];
 tz = [-250 1000 1000 -250];
 tc = ['k'];
 legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
-
-
 

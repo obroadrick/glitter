@@ -25,10 +25,14 @@ function e = errRK(fx, fy, s, w, h, r1, r2, r3, imageSpecs, worldSpecs,...
     disp(fx);
     disp('fy:');
     disp(fy);
+    s=0;
     disp('s:');
     disp(s);
-    disp('r1:');
+    disp('r123');
     disp(r1);
+    disp(r2);
+    disp(r3);
+            
     K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
 
     % get rotation matrix from rodrigues parameters
