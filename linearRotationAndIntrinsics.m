@@ -11,7 +11,7 @@
 % and height in pixels of the image
 
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
-M = matfile(P.measurements).M;
+MEAS = matfile(P.measurements).M;
 
 % read in image
 impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
@@ -91,11 +91,11 @@ worldSpecs = mostInliersSpecPos; % the characterized, canonical spec positions t
 imageSpecs = mostInliersImageSpecPos; % the image coordinates of where we find those specs in this image
 % also, worldFiducials and imageFiducials give the fiducial marker point
 % correspondences
-w = M.XRES;
-h = M.YRES;
+w = MEAS.XRES;
+h = MEAS.YRES;
 T = reshape(camPosEst,3,1);
 
-%% find R and K by solving linear system
+% find R and K by solving linear system
 Q = worldSpecs' - T;
 p = imageSpecs';
 % build matrix
@@ -113,17 +113,15 @@ for ix=1:size(p,2)
     b(2*ix) = -q3*py;
 end
 %solve
-x = lsqr(A,b');
+x1 = lsqr(A,b');
+x2 = lsqminnorm(A,b');
+x = A \ b';
 M = [x(1) x(2) x(3); x(4) x(5) x(6); x(7) x(8) 1];
-%[Q,R] = qr(M);
-%disp(Q);
-%disp(R);
 % getting RQ decomposition using matlab's QR decomp (doesn't have RQ)
-P_ = [0 0 1; 0 1 0; 1 0 0];
-M_ = P_ * M;
-[Q_, R_] = qr(M_');
-Q = P_ * Q_';
-R = P_ * R_' * P_;
+[R,Q] = rq(M);
+disp('should be the same');
+disp(M);
+disp(R*Q);
 % so R (upper triangular) is scaled K and Q (orthogonal) is the rotation
 K = R ./ R(3,3);
 R = Q;
@@ -131,9 +129,7 @@ disp('K');
 disp(K);
 disp('R');
 disp(R);
-disp('KR');
-disp(M);
-
+%[Q,R] = qr(M);
 
 % way of doing it with search:
 %             errRK(fx,   fy,   s, w, h, r1,   r2,   r3,   p, Pts, T)
@@ -157,9 +153,9 @@ disp(M);
 
 %% draw the scene with camera and its frustrum
 M = matfile(P.measurements).M;
-R=Q';
 figure;
-pose = rigid3d(R',T');hold on;
+pose = rigid3d(R,T');
+hold on;
 camObj = plotCamera('AbsolutePose',pose,'Opacity',0,'Size',35);
 % draw frustum
 frustumImagePoints = [0 0; 0 M.YRES; M.XRES M.YRES; M.XRES 0];

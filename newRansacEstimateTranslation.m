@@ -6,8 +6,8 @@ P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/path
 M = matfile(P.measurements).M;
 
 % read in image
-impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
-%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
+%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
+impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
 im = rgb2gray(imread(impath));
 
 % get lighting position in canonical coords form lighting position in
@@ -16,23 +16,23 @@ monitorCoords = [1127 574];
 x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
 y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
 lightPos = [x y M.GLIT_TO_MON_PLANES];
-%lightPos = [0 (130.1-84.05) 440];
+lightPos = [0 (130.1-84.05) 440];
 
 %% find spec centroids in image
 %pin = [1217.34838867 5145.87841797; 1005.55084  295.4278; 6501.5874  490.0575; 6501.952 5363.594];
-pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
+%pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
 %pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];
-%allPts = matfile([P.data '16pts_june23.mat']).arr;
-%pin = allPts(1,:);
-%pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
-%piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
-%pin = [pinx' piny'];
+allPts = matfile([P.data '16pts_june23.mat']).arr;
+pin = allPts(1,:);
+pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
+piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
+pin = [pinx' piny'];
 figure;
 testimpath = "/Users/oliverbroadrick/Downloads/DSC_1817.JPG";
 imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
 plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
 tform = getTransform(P, pin);
-imageCentroids = singleImageFindSpecs(im);
+[imageCentroids,~] = singleImageFindSpecs(im);
 out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
 canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
 
@@ -89,8 +89,9 @@ for ix=1:size(allSpecPos)
     allR(ix,:) = -1.*allR(ix,:);
 end
 %compute distances to pinhole for these allR reflected rays
-knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
+%knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
 %knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
+knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
 allTrueDists = [];
 for ix=1:size(allR,1)
     allTrueDists(ix) = distPointToLine(knownCamPos, allSpecPos(ix,:), allR(ix,:));
@@ -391,19 +392,19 @@ mx = [-M.GLIT_TO_MON_EDGES_X -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MO
 my = [-M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y -M.GLIT_TO_MON_EDGES_Y]; 
 mz = [M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES]; 
 mc = ['g'];
-legendItems(size(legendItems,2)+1) = patch(mx,my,mz,mc,'DisplayName','Monitor');
+%legendItems(size(legendItems,2)+1) = patch(mx,my,mz,mc,'DisplayName','Monitor');
 % table: (made up coords, doesn't matter, mostly for fun)
 tx = [-400 -400 600 600];
 ty = [-120 -120 -120 -120];
 tz = [-250 1000 1000 -250];
 tc = ['k'];
-legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
+%legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
 % show camera as a dot: (dots=cameras)
 cam=camPosEst;
 legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
 disp(cam);
 % shown known ground truth camera position
-knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
+%knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
 disp(knownCamPos);
 disp('difference (error):');
 disp(norm(cam - knownCamPos));
