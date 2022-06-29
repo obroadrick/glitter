@@ -7,6 +7,7 @@ M = matfile(P.measurements).M;
 
 % read in image
 impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
+%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
 im = rgb2gray(imread(impath));
 
 % get lighting position in canonical coords form lighting position in
@@ -15,10 +16,21 @@ monitorCoords = [1127 574];
 x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
 y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
 lightPos = [x y M.GLIT_TO_MON_PLANES];
+%lightPos = [0 (130.1-84.05) 440];
 
 %% find spec centroids in image
 %pin = [1217.34838867 5145.87841797; 1005.55084  295.4278; 6501.5874  490.0575; 6501.952 5363.594];
 pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
+%pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];
+%allPts = matfile([P.data '16pts_june23.mat']).arr;
+%pin = allPts(1,:);
+%pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
+%piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
+%pin = [pinx' piny'];
+figure;
+testimpath = "/Users/oliverbroadrick/Downloads/DSC_1817.JPG";
+imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
+plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
 tform = getTransform(P, pin);
 imageCentroids = singleImageFindSpecs(im);
 out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
@@ -41,7 +53,10 @@ end
 % draw vector map where each vector goes from a spec to its nearest spec
 % neighbor
 figure;
-quiver(canonicalCentroids(:,1), canonicalCentroids(:,2), knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1), knownCanonicalCentroids(idx(:,1),2)-canonicalCentroids(:,2),'LineWidth',2);
+quiver(canonicalCentroids(:,1), canonicalCentroids(:,2),...
+    knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1),...
+    knownCanonicalCentroids(idx(:,1),2)-canonicalCentroids(:,2),...
+    'LineWidth',2);
 x = knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1);
 y = knownCanonicalCentroids(idx(:,1),2)-canonicalCentroids(:,2);
 figure;
@@ -75,6 +90,7 @@ for ix=1:size(allSpecPos)
 end
 %compute distances to pinhole for these allR reflected rays
 knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
+%knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
 allTrueDists = [];
 for ix=1:size(allR,1)
     allTrueDists(ix) = distPointToLine(knownCamPos, allSpecPos(ix,:), allR(ix,:));
@@ -128,8 +144,11 @@ for ix=1:K
     % where Li is normalized vector from spec to light
     %       Ni is normalized normal vector
     %       Ri is normalized reflected vector
-    L = (lightPos - reshape(specPos(:,ix,:),size(specPos,1),size(specPos,3))) ./ vecnorm(lightPos - reshape(specPos(:,ix,:),size(specPos,1),size(specPos,3)), 2, 2);
-    R(:,ix,:) = L - 2 * dot(L, reshape(specNormals(:,ix,:),size(specNormals,1),size(specNormals,3)), 2) .* reshape(specNormals(:,ix,:),size(specNormals,1),size(specNormals,3));
+    L = (lightPos - reshape(specPos(:,ix,:),size(specPos,1),...
+        size(specPos,3))) ./ vecnorm(lightPos - reshape(specPos(:,ix,:),size(specPos,1),size(specPos,3)), 2, 2);
+    R(:,ix,:) = L - 2 * dot(L, reshape(specNormals(:,ix,:),...
+        size(specNormals,1),size(specNormals,3)), 2) .* reshape(specNormals(:,ix,:),...
+        size(specNormals,1),size(specNormals,3));
     R(:,ix,:) = -1.*R(:,ix,:);
 end
 
@@ -171,7 +190,7 @@ tz = [-250 1000 1000 -250];
 tc = ['k'];
 legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
 % shown known ground truth camera position
-knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
+%knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
 legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),100,'blue','filled','o','DisplayName','True Camera');
 % show light source as a dot
 legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3),'filled','DisplayName','Light');
@@ -293,7 +312,7 @@ legend(legendItems);
 figure;
 histogram(numInliers);
 
-% now just for the model with the most inliers, we build up a 
+%% now just for the model with the most inliers, we build up a 
 % camera position estimate
 % estimate camera position by minimizing some error function
 errFun = @(c) errT(c, mostInliersSpecPos, mostInliersR);
@@ -388,9 +407,11 @@ knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
 disp(knownCamPos);
 disp('difference (error):');
 disp(norm(cam - knownCamPos));
-legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),100,'blue','filled','o','DisplayName','True Camera');
+legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),...
+    100,'blue','filled','o','DisplayName','True Camera');
 % show light source as a dot
-legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3),'filled','DisplayName','Light');
+legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3),...
+    'filled','DisplayName','Light');
 % draw all the passed lines
 %scale for drawing
 specNormals = specNormals .* 50;
@@ -400,21 +421,36 @@ Rtocam = R*1000;
 %distNormalized = dist / closeEnough;% color code for
 %get characterized max brightnesses
 brightnessNormalized = double(brightness) ./ bestMaxBrightness';% color code for
-for ix=1:size(R,1)
+for ix=1:size(mostInliersSpecPos,1)
     % draw reflected rays
-    x = [bestSpecPos(ix,1) bestSpecPos(ix,1)+bestR(ix,1)*1000]';
-    y = [bestSpecPos(ix,2) bestSpecPos(ix,2)+bestR(ix,2)*1000]';
-    z = [bestSpecPos(ix,3) bestSpecPos(ix,3)+bestR(ix,3)*1000]';
+    x = [mostInliersSpecPos(ix,1) mostInliersSpecPos(ix,1)+mostInliersR(ix,1)*1000]';
+    y = [mostInliersSpecPos(ix,2) mostInliersSpecPos(ix,2)+mostInliersR(ix,2)*1000]';
+    z = [mostInliersSpecPos(ix,3) mostInliersSpecPos(ix,3)+mostInliersR(ix,3)*1000]';
     %distance form camera estimate
     green = [0 1 0];
     red = [1 0 0];
     %c = min(1, distNormalized(ix)); %color code by spec closeness
-    c = 1.0*min(1, brightnessNormalized(ix)); %color code by spec brightness
-    disp(c);
-    color = green + c*(red-green);
+    %c = 1.0*min(1, brightnessNormalized(ix)); %color code by spec brightness
+    %disp(c);
+    color = green;% + c*(red-green);
     %color = [1 c 1];
     line(x,y,z,'Color',color);
 end
+%for ix=1:size(R,1)
+%    % draw reflected rays
+%    x = [bestSpecPos(ix,1) bestSpecPos(ix,1)+bestR(ix,1)*1000]';
+%    y = [bestSpecPos(ix,2) bestSpecPos(ix,2)+bestR(ix,2)*1000]';
+%    z = [bestSpecPos(ix,3) bestSpecPos(ix,3)+bestR(ix,3)*1000]';
+%    %distance form camera estimate
+%    green = [0 1 0];
+%    red = [1 0 0];
+%    %c = min(1, distNormalized(ix)); %color code by spec closeness
+%    c = 1.0*min(1, brightnessNormalized(ix)); %color code by spec brightness
+%    %disp(c);
+%    color = green + c*(red-green);
+%    %color = [1 c 1];
+%    line(x,y,z,'Color',color);
+%end
 title('green rays are from a brighter sparkle, red from a dimmer one');
 % set viewpoint:
 view([-110 -30]);

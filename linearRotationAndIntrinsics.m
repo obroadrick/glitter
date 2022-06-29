@@ -94,32 +94,65 @@ imageSpecs = mostInliersImageSpecPos; % the image coordinates of where we find t
 w = M.XRES;
 h = M.YRES;
 T = reshape(camPosEst,3,1);
-%             errRK(fx,   fy,   s, w, h, r1,   r2,   r3,   p, Pts, T)
-plottingFigure = figure;
-errFun = @(x) errRK(x(1), x(2), x(3), w, h, x(4), x(5), x(6), imageSpecs,...
-    worldSpecs, imageFiducials, worldFiducials, T, plottingFigure);
-x0 = [10^(-3)*12000 10^(-3)*12000 0 3 -1.5 -1.5]';
-% use the camera known points for x0 TODO
-options = optimset('PlotFcns',@optimplotfval);
-xf = fminsearch(errFun, x0, options);
-fx = xf(1);
-fy = xf(2);
-s = xf(3);
-r1 = xf(4);
-r2 = xf(5);
-r3 = xf(6);
-R = rodrigues(r1,r2,r3);
-%%
-s = 0;
-K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
 
+%% find R and K by solving linear system
+Q = worldSpecs' - T;
+p = imageSpecs';
+% build matrix
+A = [];
+b = [];
+for ix=1:size(p,2)
+    q1 = Q(1,ix);
+    q2 = Q(2,ix);
+    q3 = Q(3,ix);
+    px = p(2,ix);
+    py = p(1,ix);    
+    A(2*ix-1,:) = [-q1 -q2 -q3 0 0 0 q1*px q2*px];
+    A(2*ix,:) = [0 0 0 -q1 -q2 -q3 q1*py q2*py];
+    b(2*ix-1) = [-q3*px];
+    b(2*ix) = [-q3*py];
+end
+%solve
+x = lsqr(A,b');
+M = [x(1) x(2) x(3); x(4) x(5) x(6); x(7) x(8) x(9)];
+%[Q,R] = qr(M);
+%disp(Q);
+%disp(R);
+% getting RQ decomposition using matlab's only available QR decomposition
+P = [0 0 1; 0 1 0; 1 0 0];
+M_ = P * M;
+[Q_, R_] = qr(M_');
+Q = P * Q_';
+R = P * R_' * P;
+% so R (upper triangular) is scaled K and Q (orthogonal) is the rotation
+K = R;% ./ R(3,3);
+R = Q;
 disp('K');
 disp(K);
 disp('R');
 disp(R);
 disp('KR');
-disp(K*R);
+disp(M);
 
+% way of doing it with search:
+%             errRK(fx,   fy,   s, w, h, r1,   r2,   r3,   p, Pts, T)
+%plottingFigure = figure;
+%errFun = @(x) errRK(x(1), x(2), x(3), w, h, x(4), x(5), x(6), imageSpecs,...
+%    worldSpecs, imageFiducials, worldFiducials, T, plottingFigure);
+%x0 = [10^(-3)*12000 10^(-3)*12000 0 3 -1.5 -1.5]';
+% use the camera known points for x0 TODO
+%options = optimset('PlotFcns',@optimplotfval);
+%xf = fminsearch(errFun, x0, options);
+%fx = xf(1);
+%fy = xf(2);
+%s = xf(3);
+%r1 = xf(4);
+%r2 = xf(5);
+%r3 = xf(6);
+%R = rodrigues(r1,r2,r3);
+%%
+%s = 0;
+%K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
 
 %% draw the scene with camera and its frustrum
 figure;

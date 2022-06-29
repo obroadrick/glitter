@@ -9,13 +9,18 @@ function parampath = calibrateCamera(P)
     % read in the homography from image coords to canonical glitter coords
     M = matfile(P.measurements).M;
     %pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];% june 23 xenon captures
-    pin = [1606.1387 5375.402; 1294.5402 724.4909; 6527.662 714.07513; 6190.397 5257.4106];%june 27 calibration
+    %pin = [1606.1387 5375.402; 1294.5402 724.4909; 6527.662 714.07513; 6190.397 5257.4106];%june 27 calibration
+    allPts = matfile([P.data '16pts_june23.mat']).arr;
+    pin = allPts(1,:);
+    pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
+    piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
+    pin = [pinx' piny'];
     tform = getTransform(P,pin);
     %tform = matfile(P.tform).tform;
     % read in the checkerboard images
     %imsp = P.checkerboardIms;
     %imsp = '/Users/oliverbroadrick/Downloads/Checkerboards-6-23-1_30/';
-    imsp = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_27_2020/';
+    imsp = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_23_2022/';
     images = imageSet(imsp);
     imageFileNames = images.Files();
     % find checkerboard points
@@ -54,6 +59,14 @@ function parampath = calibrateCamera(P)
     for ix=1:size(badImageNames,2)
         disp(badImageNames(ix));
     end
+    disp(imagesUsedNames(17));
+    disp(size(imagesUsedNames));
+    translationVectors = params.TranslationVectors;
+    norms = vecnorm(translationVectors, 2, 2);
+    hist(norms);
+    [~, ix] = max(norms);
+    disp('max translation distance image has file name:');
+    disp(imagesUsedNames(ix));
     %% show camera calibration results
     % plot reprojection errors
     showReprojectionErrors(params);
@@ -74,4 +87,6 @@ function parampath = calibrateCamera(P)
     [t, R] = findCamPos(P, camParams, onGlitterPlane, pin);
     disp(t);
     disp(R);
+    camPos = t;
+    save([P.data 'camPos_' datestr(now, 'mm_dd_yyyy')], "camPos");
 end

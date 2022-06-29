@@ -1,4 +1,4 @@
-function C = singleImageFindSpecs(im)
+function [C, Cmax] = singleImageFindSpecs(im)
     if size(im, 3) == 3
         %convery to grayscale if not already in grayscale
         im = rgb2gray(im);
@@ -15,11 +15,19 @@ function C = singleImageFindSpecs(im)
     % get a list of the region centroids
     numPoints = 0;
     C = [];
-    R = regionprops(Mt,'Centroid');
+    Cmax = [];
+    R = regionprops(Mt,'Centroid','PixelIdxList');
     for rx = 1:size(R,1)
         Pt = R(rx).Centroid;
         numPoints = numPoints + 1;
         C(numPoints,:) = Pt;
+        imLike = zeros(size(im));
+        imLike(R(rx).PixelIdxList) = im(R(rx).PixelIdxList);
+        %maximum = max(max(imLike));
+        %[x,y]=find(imLike==maximum);
+        [vals, max1] = max(imLike);
+        [~, max2] = max(vals);
+        Cmax(numPoints,:) = [max2, max1(max2)];
     end
     disp(thresh);
     disp(size(C));
