@@ -105,27 +105,27 @@ for ix=1:size(p,2)
     q1 = Q(1,ix);
     q2 = Q(2,ix);
     q3 = Q(3,ix);
-    px = p(2,ix);
-    py = p(1,ix);    
+    px = p(1,ix);
+    py = p(2,ix);    
     A(2*ix-1,:) = [-q1 -q2 -q3 0 0 0 q1*px q2*px];
     A(2*ix,:) = [0 0 0 -q1 -q2 -q3 q1*py q2*py];
-    b(2*ix-1) = [-q3*px];
-    b(2*ix) = [-q3*py];
+    b(2*ix-1) = -q3*px;
+    b(2*ix) = -q3*py;
 end
 %solve
 x = lsqr(A,b');
-M = [x(1) x(2) x(3); x(4) x(5) x(6); x(7) x(8) x(9)];
+M = [x(1) x(2) x(3); x(4) x(5) x(6); x(7) x(8) 1];
 %[Q,R] = qr(M);
 %disp(Q);
 %disp(R);
-% getting RQ decomposition using matlab's only available QR decomposition
-P = [0 0 1; 0 1 0; 1 0 0];
-M_ = P * M;
+% getting RQ decomposition using matlab's QR decomp (doesn't have RQ)
+P_ = [0 0 1; 0 1 0; 1 0 0];
+M_ = P_ * M;
 [Q_, R_] = qr(M_');
-Q = P * Q_';
-R = P * R_' * P;
+Q = P_ * Q_';
+R = P_ * R_' * P_;
 % so R (upper triangular) is scaled K and Q (orthogonal) is the rotation
-K = R;% ./ R(3,3);
+K = R ./ R(3,3);
 R = Q;
 disp('K');
 disp(K);
@@ -133,6 +133,7 @@ disp('R');
 disp(R);
 disp('KR');
 disp(M);
+
 
 % way of doing it with search:
 %             errRK(fx,   fy,   s, w, h, r1,   r2,   r3,   p, Pts, T)
@@ -155,6 +156,8 @@ disp(M);
 %K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
 
 %% draw the scene with camera and its frustrum
+M = matfile(P.measurements).M;
+R=Q';
 figure;
 pose = rigid3d(R',T');hold on;
 camObj = plotCamera('AbsolutePose',pose,'Opacity',0,'Size',35);
