@@ -178,9 +178,19 @@ disp('Rodrigues parameters as estimated by our glitter');
 disp(ourRodrig)
 disp('Rodrigues parameters as estimated by Matlab checkerboard calibration');
 disp(matlabRodrig);
-% now showing the same thing (reprojection) that we showed before
+%% we can also compare the rotations directly by measuring the angle or
+% rotation from one to the other (which gives a notion of how far one would
+% have to rotate to correct for the error)...
+% rotate the same vector by both rotation matrices
+v = [1;0;0];
+ourRv = R*v;
+matlabRv = camRot*v;
+theta = acos(dot(ourRv, matlabRv) / (norm(ourRv)*norm(matlabRv)));
+disp(theta);
+
+%% now showing the same thing (reprojection) that we showed before
 % SHOULD give the same result... we hope
-%% show (before decomposition) the reprojected points to confirm that they make sense
+% show (before decomposition) the reprojected points to confirm that they make sense
 figure;
 title('the original image specs (green) and projected by M specs (red)');
 plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;
