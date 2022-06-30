@@ -169,6 +169,15 @@ disp('K');
 disp(K);
 disp('R');
 disp(R);
+%% compare to expected rotation matrix by matlab checkerboard calibration
+camRot = matfile([P.data 'camRot__06_10_2022']).camRot;
+% get rorigues parameters from rotation matrix
+ourRodrig = undoRodrigues(R);
+matlabRodrig = undoRodrigues(camRot);
+disp('Rodrigues parameters as estimated by our glitter');
+disp(ourRodrig)
+disp('Rodrigues parameters as estimated by Matlab checkerboard calibration');
+disp(matlabRodrig);
 % now showing the same thing (reprojection) that we showed before
 % SHOULD give the same result... we hope
 %% show (before decomposition) the reprojected points to confirm that they make sense
@@ -205,7 +214,7 @@ end
 %% draw the scene with camera and its frustrum
 M = matfile(P.measurements).M;
 figure;
-pose = rigid3d(R',T');
+pose = rigid3d(R,T');
 hold on;
 camObj = plotCamera('AbsolutePose',pose,'Opacity',0,'Size',35);
 % draw frustum
@@ -214,7 +223,7 @@ frustumImagePoints = [0 0; 0 M.YRES; M.XRES M.YRES; M.XRES 0];
 % we get that P = T+(KR)^-1(p)
 frustumWorldPoints = [];
 for ix=1:size(frustumImagePoints,1)
-    frustumWorldPoints(ix,:) = T + 1000*inv(K*R') * [frustumImagePoints(ix,:)';1];
+    frustumWorldPoints(ix,:) = T + 1000*inv(K*R) * [frustumImagePoints(ix,:)';1];
 end
 for ix=1:size(frustumWorldPoints,1)
     plot3([T(1) frustumWorldPoints(ix,1)],...

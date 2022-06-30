@@ -87,12 +87,13 @@ function parampath = calibrateCamera(P)
     montage(s);
 
     %% get the camera position for this camera calibration
-    onGlitterPlane = [imsp 'onGlitterPlane.JPG'];
+    onGlitterPlane = [imsp '/onGlitterPlane.JPG'];
     [t, R] = findCamPos(P, camParams, onGlitterPlane, pin);
     disp(t);
     disp(R);
     camPos = t;
-    save([P.data 'camRot__06_10_2022'], "camPos");
+    camRot = R;
+    save([P.data 'camRot__06_10_2022'], "camRot");
     save([P.data 'camPos__06_10_2022'], "camPos");
     %save([P.data 'camRot_' datestr(now, 'mm_dd_yyyy')], "camPos");
     %save([P.data 'camPos_' datestr(now, 'mm_dd_yyyy')], "camPos");
