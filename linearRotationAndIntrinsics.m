@@ -89,6 +89,14 @@ end
 % known points in world coordinates
 worldSpecs = mostInliersSpecPos; % the characterized, canonical spec positions that correspond to the sparkling specs in the image
 imageSpecs = mostInliersImageSpecPos; % the image coordinates of where we find those specs in this image
+figure;
+tiledlayout(1,2);
+nexttile;
+title('world specs');
+plot(worldSpecs(:,1),worldSpecs(:,2));
+nexttile;
+title('image specs');
+plot(imageSpecs(:,1),imageSpecs(:,2));
 % also, worldFiducials and imageFiducials give the fiducial marker point
 % correspondences
 w = MEAS.XRES;
@@ -117,6 +125,17 @@ x1 = lsqr(A,b');
 x2 = lsqminnorm(A,b');
 x = A \ b';
 M = [x(1) x(2) x(3); x(4) x(5) x(6); x(7) x(8) 1];
+%% show (before decomposition) the reprojected points to confirm that they make sense
+figure;
+title('the original image specs (green) and projected by M specs (red)');
+plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;
+for ix=1:size(imageSpecs,1)
+    projectedSpec = M * (worldSpecs(ix,:)' - T);
+    projectedSpec = projectedSpec ./ projectedSpec(3);
+    plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
+end
+
+%%
 % getting RQ decomposition using matlab's QR decomp (doesn't have RQ)
 [R,Q] = rq(M);
 disp('should be the same');
@@ -129,6 +148,38 @@ disp('K');
 disp(K);
 disp('R');
 disp(R);
+%problem and solution alert! woohoo maybe i just need positive
+% entries in k and so i multiply by the right identity matrix (
+% with negatives ones and ones) on the right of k and left of r
+% and then since it is its own inverse i have changed nothin :)?
+%shitty implementation to make sure it is doing what i want at first
+Icorrection = [1 0 0; 0 1 0; 0 0 1];
+if K(1,1) < 0
+    Icorrection(1,1) = -1;
+end
+if K(2,2) < 0
+    Icorrection(2,2) = -1;
+end
+if K(3,3) < 0
+    Icorrection(3,3) = -1;
+end
+K = K * Icorrection;
+R = Icorrection * R;
+disp('K');
+disp(K);
+disp('R');
+disp(R);
+% now showing the same thing (reprojection) that we showed before
+% SHOULD give the same result... we hope
+%% show (before decomposition) the reprojected points to confirm that they make sense
+figure;
+title('the original image specs (green) and projected by M specs (red)');
+plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;
+for ix=1:size(imageSpecs,1)
+    projectedSpec = K*R * (worldSpecs(ix,:)' - T);
+    projectedSpec = projectedSpec ./ projectedSpec(3);
+    plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
+end
 %[Q,R] = qr(M);
 
 % way of doing it with search:
@@ -154,7 +205,7 @@ disp(R);
 %% draw the scene with camera and its frustrum
 M = matfile(P.measurements).M;
 figure;
-pose = rigid3d(R,T');
+pose = rigid3d(R',T');
 hold on;
 camObj = plotCamera('AbsolutePose',pose,'Opacity',0,'Size',35);
 % draw frustum

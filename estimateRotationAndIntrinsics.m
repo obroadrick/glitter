@@ -94,6 +94,7 @@ imageSpecs = mostInliersImageSpecPos; % the image coordinates of where we find t
 w = M.XRES;
 h = M.YRES;
 T = reshape(camPosEst,3,1);
+T = reshape(knownCamPos,3,1);
 %             errRK(fx,   fy,   s, w, h, r1,   r2,   r3,   p, Pts, T)
 plottingFigure = figure;
 errFun = @(x) errRK(x(1), x(2), x(3), w, h, x(4), x(5), x(6), imageSpecs,...
