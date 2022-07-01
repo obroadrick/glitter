@@ -185,8 +185,13 @@ disp(matlabRodrig);
 v = [1;0;0];
 ourRv = R*v;
 matlabRv = camRot*v;
-theta = acos(dot(ourRv, matlabRv) / (norm(ourRv)*norm(matlabRv)));
+diffR = R * camRot';
+theta = acos((trace(diffR) - 1) / 2);%how to find angle of rotation
+%alsoshouldbetheta = norm(undoRodrigues(diffR));
+%disp(alsoshouldbetheta);%useful debugging to confirm angle computation
+thetadegs = theta * 180 / pi;
 disp(theta);
+disp(thetadegs);
 
 %% now showing the same thing (reprojection) that we showed before
 % SHOULD give the same result... we hope
