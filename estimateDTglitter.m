@@ -101,8 +101,8 @@ tform = getTransform(P, pinorig);
 % this will give an error measure for various candidate distortion
 % coefficients and so will let us make a little optimization for them
 
-k1s = -.05:.02:.05;
-k2s = -.05:.01:.05;
+k1s = -.04:.02:.04;
+k2s = -.04:.02:.04;
 %% grid search for the best radial distortion parameters
 for k1ix=1:size(k1s,2)
     for k2ix=1:size(k2s,2)
@@ -134,10 +134,12 @@ for k1ix=1:size(k1s,2)
         %pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
         %piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
         %pin = [pinx' piny'];
+        %{
         figure;
         testimpath = "/Users/oliverbroadrick/Downloads/DSC_1817.JPG";
         imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
         plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
+        %}
         tform = getTransform(P, pin);
         %[imageCentroids,~] = singleImageFindSpecs(im);
         % instead of using singleImageFindSpecs to look for centroids of spec
@@ -163,6 +165,7 @@ for k1ix=1:size(k1s,2)
         end
         % draw vector map where each vector goes from a spec to its nearest spec
         % neighbor
+        %{
         figure;
         quiver(canonicalCentroids(:,1), canonicalCentroids(:,2),...
             knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1),...
@@ -173,6 +176,7 @@ for k1ix=1:size(k1s,2)
         figure;
         histogram(atan2(y, x));title('histogram of vector directions');
         xlabel('direction in radians');
+        %}
         
         %%
         allSpecNormals = matfile(P.specNormals).specNormals;
@@ -213,6 +217,7 @@ for k1ix=1:size(k1s,2)
         brightness = [];
         %imageCentroids = imageCentroids(dist<closeEnough,:);
         brightness = interp2(double(im), imageCentroids(:,1), imageCentroids(:,2));
+        %{
         %% also show the original max image so that we can compare the centroids
         % that we found with the centroids that we characterized from the start
         % now show the canonical spec centroids (mapped onto this image coordinate
@@ -247,6 +252,7 @@ for k1ix=1:size(k1s,2)
         %imagesc(maxImage); hold on;
         %plot(knownImageCentroids(:,1),knownImageCentroids(:,2),'r+');
         %linkaxes([ax3 ax4]);
+        %}
         
         %% reflect rays from light off specs
         %reflect the ten nearest specs for each spec found
@@ -280,7 +286,8 @@ for k1ix=1:size(k1s,2)
                               % if it pases within 10 millimeters of that 
                               % camera position
         
-                              % draw rig
+        %{
+        % draw rig
         figure;
         % glitter square:
         gx = [0 M.GLIT_SIDE M.GLIT_SIDE 0]; 
@@ -318,7 +325,8 @@ for k1ix=1:size(k1s,2)
         end
         numInliers = [];
         legPos = size(legendItems,2)+1;
-        camroll(-80);
+        %camroll(-80);
+        %}
         mostInliersSpecPos = [];
         mostInliersR = [];
         minPropInliers = .6; % this threshold means that 60% of the rays must be 
@@ -392,6 +400,7 @@ for k1ix=1:size(k1s,2)
                 mostInliersMinDists = minDists;
                 mostInliersMaxBrightness = inliersMaxBrightness;
             end
+            %{
             % now show the two lines
             for i=1:size(idxsRandomTwo,2)
                 ix = idxsRandomTwo(i);
@@ -436,14 +445,15 @@ for k1ix=1:size(k1s,2)
                 z = [inliersSpecPos(ix,3) inliersSpecPos(ix,3)+inliersR(ix,3)]';
                 line(x,y,z,'Color',red);
             end
+            %}
             if size(inliersR,1) > minPropInliers * size(R,1)
                 % break from the loop once sufficiently many inliers are found
                 break
             end
         end
-        legend(legendItems);
-        figure;
-        histogram(numInliers);
+        %legend(legendItems);
+        %figure;
+        %histogram(numInliers);
         
         %% now just for the model with the most inliers, we build up a 
         % camera position estimate
@@ -506,21 +516,22 @@ for k1ix=1:size(k1s,2)
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        figure;
+        %{
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %figure;
         % show camera estimated position as a dot: (dots=cameras)
         cam=camPosEstLinear;
-        legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
+        %legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
         %disp(cam);
         % draw rig
-        figure;
+        %figure;
         % glitter square:
         gx = [0 M.GLIT_SIDE M.GLIT_SIDE 0]; 
         gy = [0 0 M.GLIT_SIDE M.GLIT_SIDE]; 
         gz = [0 0 0 0];
         gc = ['b'];
         legendItems = [];
-        legendItems(1) = patch(gx,gy,gz,gc,'DisplayName', 'Glitter');hold on;
+        %legendItems(1) = patch(gx,gy,gz,gc,'DisplayName', 'Glitter');hold on;
         % monitor:
         mx = [-M.GLIT_TO_MON_EDGES_X -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X]; 
         my = [-M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y -M.GLIT_TO_MON_EDGES_Y]; 
@@ -537,27 +548,28 @@ for k1ix=1:size(k1s,2)
         %cam=camPosEst;
         %legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
         cam = camPosEstLinear;
-        legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
+        %legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
         %disp(cam);
         % shown known ground truth camera position
         %knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
         %disp(knownCamPos);
         %disp('difference (error):');
         %disp(norm(cam - knownCamPos));
-        legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),...
-            100,'blue','filled','o','DisplayName','True Camera');
+        %legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),...
+        %    100,'blue','filled','o','DisplayName','True Camera');
         % show light source as a dot
-        legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3),...
-            'filled','DisplayName','Light');
+        %legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3),...
+        %    'filled','DisplayName','Light');
         % draw all the passed lines
         %scale for drawing
-        specNormals = specNormals .* 50;
-        Rtocam = R*1000;
+        %specNormals = specNormals .* 50;
+        %Rtocam = R*1000;
         %reflectedRaysCamPlane = reflectedRaysCamPlane .* 100;
         % get normalized spec distances for drawing
         %distNormalized = dist / closeEnough;% color code for
         %get characterized max brightnesses
         brightnessNormalized = double(brightness) ./ bestMaxBrightness';% color code for
+        %{
         for ix=1:size(mostInliersSpecPos,1)
             % draw reflected rays
             x = [mostInliersSpecPos(ix,1) mostInliersSpecPos(ix,1)+mostInliersR(ix,1)*1000]';
@@ -571,8 +583,9 @@ for k1ix=1:size(k1s,2)
             %disp(c);
             color = green;% + c*(red-green);
             %color = [1 c 1];
-            line(x,y,z,'Color',color);
+            %line(x,y,z,'Color',color);
         end
+        %
         %for ix=1:size(R,1)
         %    % draw reflected rays
         %    x = [bestSpecPos(ix,1) bestSpecPos(ix,1)+bestR(ix,1)*1000]';
@@ -594,13 +607,14 @@ for k1ix=1:size(k1s,2)
         camroll(-80);
         daspect([1 1 1]);
         legend(legendItems);
-    
+        %}
+        %}
     
         % main things to consider for the current pair of radial distortion
         % coefficients, k1 and k2
         numInliersByRadialsCoefs(k1ix,k2ix) = size(mostInliersSpecPos,1);
         distsByRadialsCoefs(k1ix,k2ix,:) = mostInliersMinDists;
-        disp(k1)
+        disp(k1);
         disp(k2);
     end
 end
