@@ -316,13 +316,15 @@ histogram(numInliers);
 %% now just for the model with the most inliers, we build up a 
 % camera position estimate
 % estimate camera position by minimizing some error function
-errFun = @(c) errT(c, mostInliersSpecPos, mostInliersR);
+%errFun = @(c) errT(c, mostInliersSpecPos, mostInliersR);
 %x0 = [M.GLIT_SIDE/2;M.GLIT_SIDE/2;M.GLIT_SIDE];
 %x0 = [0;0;0];
-x0 = [M.GLIT_SIDE;M.GLIT_SIDE;2*M.GLIT_SIDE];
-options = optimset('PlotFcns',@optimplotfval);
-camPosEst = fminsearch(errFun,x0,options)';
-disp(camPosEst);
+%x0 = [M.GLIT_SIDE;M.GLIT_SIDE;2*M.GLIT_SIDE];
+%options = optimset('PlotFcns',@optimplotfval);
+%camPosEst = fminsearch(errFun,x0,options)';
+%disp(camPosEst);
+camPosEst = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR);
+
 
 % also compute dists to the known camera location for all shiny specs
 trueDists = [];

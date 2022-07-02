@@ -21,17 +21,18 @@ function e = errRK(fx, fy, s, w, h, r1, r2, r3, imageSpecs, worldSpecs,...
     % Pts is a corresponding list of the known world points
 
     % get intrinsics matrix
+    %{ 
     disp('fx:');
     disp(fx);
     disp('fy:');
     disp(fy);
-    s=0;
     disp('s:');
     disp(s);
     disp('r123');
     disp(r1);
     disp(r2);
     disp(r3);
+    %}
             
     K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
 
@@ -137,7 +138,7 @@ function e = errRK(fx, fy, s, w, h, r1, r2, r3, imageSpecs, worldSpecs,...
 
     % give a soft penalty for guesses with very different fx and fy's
     % to help steer the optimization a bit towards reasonable answers
-    fxfyPenalty = .5*(fx - fy)^2;
+    fxfyPenalty = (fx - fy)^2;
 
-    e = eFiducials + eSpecs - fxfyPenalty;% + eSpecs;
+    e = eFiducials + eSpecs + fxfyPenalty;% + eSpecs;
 end

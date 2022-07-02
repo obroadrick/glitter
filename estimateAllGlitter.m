@@ -20,9 +20,9 @@ im = rgb2gray(imread(impath));
 %% get lighting position in canonical coords form lighting position in
 % monitor pixel coords
 monitorCoords = [1127 574];
-x = -MEAS.GLIT_TO_MON_EDGES_X + MEAS.MON_WIDTH_MM - MEAS.PX2MM_X * monitorCoords(1); 
-y = -MEAS.GLIT_TO_MON_EDGES_Y + MEAS.MON_HEIGHT_MM - MEAS.PX2MM_Y * monitorCoords(2); 
-lightPos = [x y MEAS.GLIT_TO_MON_PLANES];
+x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
+y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
+lightPos = [x y M.GLIT_TO_MON_PLANES];
 %lightPos = [0 (130.1-84.05) 440];
 
 
@@ -30,7 +30,7 @@ lightPos = [x y MEAS.GLIT_TO_MON_PLANES];
 %pin = [1217.34838867 5145.87841797; 1005.55084  295.4278; 6501.5874  490.0575; 6501.952 5363.594];
 pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y
 %pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];
-M=MEAS;
+
 tform = getTransform(P, pin);
 imageCentroids = singleImageFindSpecs(im);
 out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
@@ -208,30 +208,24 @@ end
 
 % way of doing it with search:
 %             errRK(fx,   fy,   s, w, h, r1,   r2,   r3,   p, Pts, T)
-plottingFigure = figure;
-errFun = @(x) errRK(x(1), x(2), x(3), w, h, x(4), x(5), x(6), imageSpecs,...
-    worldSpecs, imageFiducials, worldFiducials, T, plottingFigure);
-%x0 = [10^(-3)*12000 10^(-3)*12000 0 3 -1.5 -1.5]';% old starting guess
-% use the results of the linear system solution to give us the starting
-% guess for the minimization
-x0 = [10^(-3)*K(1,1) 10^(-3)*K(2,2) K(1,2) ourRodrig(1) ourRodrig(2) ourRodrig(3)];
+%plottingFigure = figure;
+%errFun = @(x) errRK(x(1), x(2), x(3), w, h, x(4), x(5), x(6), imageSpecs,...
+%    worldSpecs, imageFiducials, worldFiducials, T, plottingFigure);
+%x0 = [10^(-3)*12000 10^(-3)*12000 0 3 -1.5 -1.5]';
 % use the camera known points for x0 TODO
-options = optimset('PlotFcns',@optimplotfval);
-xf = fminsearch(errFun, x0, options);
-fx = xf(1);
-fy = xf(2);
-s = xf(3);
-r1 = xf(4);
-r2 = xf(5);
-r3 = xf(6);
-R = rodrigues(r1,r2,r3);
+%options = optimset('PlotFcns',@optimplotfval);
+%xf = fminsearch(errFun, x0, options);
+%fx = xf(1);
+%fy = xf(2);
+%s = xf(3);
+%r1 = xf(4);
+%r2 = xf(5);
+%r3 = xf(6);
+%R = rodrigues(r1,r2,r3);
 %%
-s = 0;
-K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
+%s = 0;
+%K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
 
-disp('and here are the optimized K and R respectively matrices from using initial guess from linear system:');
-disp(K);
-disp(R);
 %% draw the scene with camera and its frustrum
 M = matfile(P.measurements).M;
 figure;
