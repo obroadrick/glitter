@@ -12,10 +12,22 @@ function PtsU = undistortRadially(Pts, k1, k2)
     %Pts(:,:) = (Pts(:,:)./ (res/2.0)) - res/2.0 ;
     disp(Pts);
 
-    % undistort according to p' = p(1+k1r^2 +k2r^4)
-    for ix=1:size(Pts,1)
-        r2 = Pts(ix,1)^2 + Pts(ix,2)^2;
-        PtsU(ix,:) = Pts(ix,:) * (1 + k1*r2 + k2*r2^2);
+    % undistort by approximating the true point as the distorted point,
+    % finding the distortion, then getting a better estimate of the true
+    % point, then finding its distortion, and so forth a few times to get
+    % an approximately undistorted point.
+    % begin assuming PtsU = Pts (undistorted points are just the distorted)
+    PtsU = Pts;
+    distortion = 0;
+    numIters = 5; % same as opencv and noted that 2 already is very accurate
+    % for little distortion in:
+    % https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=609468
+    for iters=1:numIters
+        for ix=1:size(PtsU,1)
+            r2 = PtsU(ix,1)^2 + PtsU(ix,2)^2;
+            distortion = PtsU(ix,:) * (k1*r2 + k2*r2^2);
+            PtsU(ix,:) = Pts(ix,:) - distortion;
+        end
     end
     disp(PtsU);
     % get back into image coordinates
