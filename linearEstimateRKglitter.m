@@ -10,6 +10,8 @@
 % K = [f 0 w/2; 0 f h/2; 0 0 1]; where w and h are the width 
 % and height in pixels of the image
 
+
+
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 MEAS = matfile(P.measurements).M;
 

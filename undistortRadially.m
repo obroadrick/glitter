@@ -6,11 +6,11 @@ function PtsU = undistortRadially(Pts, k1, k2)
     res = [double(M.XRES) double(M.YRES)];
     
     Pts = double(Pts);
-    disp(Pts);
+    %disp(Pts);
     % get porig from image coordinates into centered, normalized coordinates
     Pts(:,:) = (Pts(:,:) - (res/2.0)) ./ (res/2.0);
     %Pts(:,:) = (Pts(:,:)./ (res/2.0)) - res/2.0 ;
-    disp(Pts);
+    %disp(Pts);
 
     % undistort by approximating the true point as the distorted point,
     % finding the distortion, then getting a better estimate of the true
@@ -19,8 +19,8 @@ function PtsU = undistortRadially(Pts, k1, k2)
     % begin assuming PtsU = Pts (undistorted points are just the distorted)
     PtsU = Pts;
     distortion = 0;
-    numIters = 5; % same as opencv and noted that 2 already is very accurate
-    % for little distortion in:
+    numIters = 5; % same as opencv (5) and it is noted that 2 iterations
+    % already is very accurate for little distortion in:
     % https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=609468
     for iters=1:numIters
         for ix=1:size(PtsU,1)
@@ -29,10 +29,9 @@ function PtsU = undistortRadially(Pts, k1, k2)
             PtsU(ix,:) = Pts(ix,:) - distortion;
         end
     end
-    disp(PtsU);
+    %disp(PtsU);
     % get back into image coordinates
     PtsU(:,:) = PtsU(:,:) .* (res/2.0) + (res/2.0);    
     %PtsU(:,:) = (PtsU(:,:) + res/2.0) .* double(res/2.0);    
-    disp(PtsU);
-
+    %disp(PtsU);
 end

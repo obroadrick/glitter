@@ -29,6 +29,6 @@ function [C, Cmax] = singleImageFindSpecs(im)
         [~, max2] = max(vals);
         Cmax(numPoints,:) = [max2, max1(max2)];
     end
-    disp(thresh);
-    disp(size(C));
+    %disp(thresh);
+    %disp(size(C));
 end
