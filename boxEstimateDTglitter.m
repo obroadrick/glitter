@@ -127,6 +127,30 @@ for kix=1:size(kspace,1)
         R(:,ix,:) = -1.*R(:,ix,:);
     end
     
+    %% find a good translation estimate NOT using a RANSAC approach
+    % and instead by searching over candidate camera positions in some
+    % volume (box) in the world
+    % reminiscent of a hough (rhymes with rough) transform
+    x0 = 0;
+    y0 = 200;
+    z0 = 400;
+    xf = x0 + 300;
+    yf = y0 + 300;
+    zf = z0 + 300;
+    step = 10; % 1 centimeter
+    x = x0:step:xf;
+    y = y0:step:yf;
+    z = z0:step:zf;
+    [X,Y,Z] = ndgrid(x,y,z);
+
+    %%%%%%%%%%%%%%%%%%%%%%%
+    votes = empty thing like box
+    for spec reflected ray
+
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%
+    
+    %{
     %% find a good translation estimate using a RANSAC approach
     inlierThreshold = 15; % (mm) a reflected ray is an inlier
                           % with respect to a hypothesized camera position
@@ -213,7 +237,8 @@ for kix=1:size(kspace,1)
         %    break
         %end
     end
-    
+    %}
+
     %{
     %% now just for the model with the most inliers, we compute the translation estimate
     if size(mostInliersSpecPos) == 0

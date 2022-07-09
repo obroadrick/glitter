@@ -3,10 +3,11 @@
 % (https://www.mathworks.com/matlabcentral/fileexchange/37192-intersection-point-of-lines-in-3d-space), 
 % MATLAB Central File Exchange. 
 % Retrieved June 30, 2022.
-function [P_intersect,distances] = lineIntersect3D(PA,PB)
+function [P_intersect,distances] = nearestPointManyLines(PA,PB)%lineIntersect3D
     % Find intersection point of lines in 3D space, in the least squares sense.
     % PA :          Nx3-matrix containing starting point of N lines
-    % PB :          Nx3-matrix containing end point of N lines
+    % PB :          Nx3-matrix containing end point of
+    % N lines
     % P_Intersect : Best intersection point of the N lines, in least squares sense.
     % distances   : Distances from intersection point to the input lines
     % Anders Eikenes, 2012

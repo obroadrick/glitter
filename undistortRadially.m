@@ -25,7 +25,7 @@ function PtsU = undistortRadially(Pts, k1, k2)
     for iters=1:numIters
         for ix=1:size(PtsU,1)
             r2 = PtsU(ix,1)^2 + PtsU(ix,2)^2;
-            distortion = PtsU(ix,:) * (k1*r2 + k2*r2^2);
+            distortion = PtsU(ix,:) * (k1*r2 + k2*(r2^2));
             PtsU(ix,:) = Pts(ix,:) - distortion;
         end
     end

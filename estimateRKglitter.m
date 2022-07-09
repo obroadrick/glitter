@@ -86,6 +86,10 @@ end
 %% now make an estimate of the rotation and instrinsics matrices for this
 % camera calibration
 
+% NOTE OF WHAT IS USED FROM PREVIOUS ESTIMATETGLITTER.M SCRIPT:
+% mostInliersSpecPos
+% mostInliersImageSpecPos
+
 % known points in world coordinates
 worldSpecs = mostInliersSpecPos; % the characterized, canonical spec positions that correspond to the sparkling specs in the image
 imageSpecs = mostInliersImageSpecPos; % the image coordinates of where we find those specs in this image
