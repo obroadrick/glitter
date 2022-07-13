@@ -8,19 +8,20 @@ M = matfile(P.measurements).M;
 % read in image
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july_characterization/pointLightSource2.JPG';
-impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/pointLightSource/DSC_2202.JPG';
+%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/pointLightSource/DSC_2202.JPG';
+impath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
 im = rgb2gray(imread(impath));
 
 % get lighting position in canonical coords form lighting position in
 % monitor pixel coords
-%monitorCoords = [1127 574];
-%x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
-%y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
-%lightPos = [x y M.GLIT_TO_MON_PLANES];
+monitorCoords = [1127 574];
+x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
+y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
+lightPos = [x y M.GLIT_TO_MON_PLANES];
 %lightPos = [0 (130.1-84.05) 440];
 %lightPos = [0 133.1-72.9 465];%TODO
-lightPos = [0 132.1-72.7 461];%TODO
+%lightPos = [0 132.1-72.7 461];%TODO
 
 %% find spec centroids in image
 %pin = [1217.34838867 5145.87841797; 1005.55084  295.4278; 6501.5874  490.0575; 6501.952 5363.594];
@@ -40,18 +41,21 @@ pin = [850.0531005859375	4638.21875;...
 pin = [865.933837890625	4639.2392578125; 473.364990234375	505.5672302246094; 7731.4736328125	541.7628173828125; 7294.72216796875	4668.791015625];
 
 figure;
-testimpath = "/Users/oliverbroadrick/Desktop/glitter-stuff/july_characterization/homography images/DSC_1931.JPG";
+%testimpath = "/Users/oliverbroadrick/Desktop/glitter-stuff/july_characterization/homography images/DSC_1931.JPG";
+%testimpath = [P.homographyImages 'DSC_2192.JPG'];
+%testimpath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/pointLightSource/DSC_2202.JPG';
+testimpath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
 imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
 plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
 tform = getTransform(P, pin);
 [imageCentroids,~] = singleImageFindSpecs(im);
+plot(imageCentroids(:,1),imageCentroids(:,2),'b+');
 out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
 canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
 
-
 %% match canonical centroids to those in the characterization
 knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-K = 10;
+K = 4;
 [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                              'K', K, 'Distance', 'euclidean');
 % only consider specs whose match is within .xx millimeters
@@ -93,7 +97,7 @@ end
 % where Li is normalized vector from spec to light
 %       Ni is normalized normal vector
 %       Ri is normalized reflected vector
-%reflect light off all the specs
+% reflect light off all the specs
 allSpecPos = knownCanonicalCentroids;
 for ix=1:size(allSpecPos)
     L = (lightPos - allSpecPos(ix,:)) ./ vecnorm(lightPos - allSpecPos(ix,:),2, 2);
