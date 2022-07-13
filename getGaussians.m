@@ -15,7 +15,7 @@ function meansPath = getGaussians(P)
     % track distributions for each sweep direction
     % currently just vertical bars and horizontal bars
     numDirections = 2;
-    numFrames = [254, 144];
+    numFrames = [253, 144];
     paths = [convertCharsToStrings(P.leftRightSweep);...
                convertCharsToStrings(P.upDownSweep)];
     regexs = ["*calib", "*calib-h"];
@@ -29,7 +29,7 @@ function meansPath = getGaussians(P)
             cx = i;
             p = convertStringsToChars(paths(direction));
             r = convertStringsToChars(regexs(direction));
-            path = [p r num2str(imx) '.0-Glitter.jpg'];
+            path = [p r num2str(imx) '.0-Glitter.JPG'];
             files = dir(path);
             if length(files) < 1
                 disp(['no file found at:' path]);

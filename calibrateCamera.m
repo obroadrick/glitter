@@ -15,14 +15,23 @@ function parampath = calibrateCamera(P)
     %pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
     %piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
     %pin = [pinx' piny'];
-    pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
+    %pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
+    %{
+    pin = [850.0531005859375	4638.21875;...
+            454.743408203125	503.7138366699219;...
+            7711.8046875	540.760009765625;...
+            7277.14111328125	4664.25];
+    %}
+    pin = [865.933837890625	4639.2392578125; 473.364990234375	505.5672302246094; 7731.4736328125	541.7628173828125; 7294.72216796875	4668.791015625];
+
+
     tform = getTransform(P,pin);
     %tform = matfile(P.tform).tform;
     % read in the checkerboard images
-    %imsp = P.checkerboardIms;
+    imsp = P.checkerboardIms;
     %imsp = '/Users/oliverbroadrick/Downloads/Checkerboards-6-23-1_30/';
     %imsp = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_23_2022/';
-    imsp = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_10_2022';
+    %imsp = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_10_2022';
     images = imageSet(imsp);
     imageFileNames = images.Files();
     % find checkerboard points
@@ -49,10 +58,10 @@ function parampath = calibrateCamera(P)
     camParams = params;
     camParamsErrors = estimationErrors;
     parampath = [P.data 'camParams_' datestr(now, 'mm_dd_yyyy')];
-    save([P.data 'camParams__06_10_2022'], "camParams");
-    save([P.data 'camParamsErrors__06_10_2022'], "camParamsErrors");
-    %save([P.data 'camParams_' datestr(now, 'mm_dd_yyyy')], "camParams");
-    %save([P.data 'camParamsErrors_' datestr(now, 'mm_dd_yyyy')], "camParamsErrors");
+    %save([P.data 'camParams__06_10_2022'], "camParams");
+    %save([P.data 'camParamsErrors__06_10_2022'], "camParamsErrors");
+    save([P.data 'camParams_' datestr(now, 'mm_dd_yyyy')], "camParams");
+    save([P.data 'camParamsErrors_' datestr(now, 'mm_dd_yyyy')], "camParamsErrors");
     %% find images with above average mean reprojection error
     errs = params.ReprojectionErrors;
     meanErrs = abs(reshape(mean(mean(errs,1,'omitnan'),2,'omitnan'), size(errs,3), 1));
@@ -63,7 +72,7 @@ function parampath = calibrateCamera(P)
     for ix=1:size(badImageNames,2)
         disp(badImageNames(ix));
     end
-    disp(imagesUsedNames(17));
+    disp(imagesUsedNames(34));
     disp(size(imagesUsedNames));
     translationVectors = params.TranslationVectors;
     norms = vecnorm(translationVectors, 2, 2);
@@ -87,14 +96,14 @@ function parampath = calibrateCamera(P)
     montage(s);
 
     %% get the camera position for this camera calibration
-    onGlitterPlane = [imsp '/onGlitterPlane.JPG'];
+    onGlitterPlane = [imsp 'onGlitterPlane.JPG'];
     [t, R] = findCamPos(P, camParams, onGlitterPlane, pin);
     disp(t);
     disp(R);
     camPos = t;
     camRot = R;
-    save([P.data 'camRot__06_10_2022'], "camRot");
-    save([P.data 'camPos__06_10_2022'], "camPos");
-    %save([P.data 'camRot_' datestr(now, 'mm_dd_yyyy')], "camPos");
-    %save([P.data 'camPos_' datestr(now, 'mm_dd_yyyy')], "camPos");
+    P.camPos = [P.data 'camPos_' datestr(now, 'mm_dd_yyyy')];
+    P.camRot = [P.data 'camRot_' datestr(now, 'mm_dd_yyyy')];
+    save([P.data 'camPos_' datestr(now, 'mm_dd_yyyy')], "camPos");
+    save([P.data 'camRot_' datestr(now, 'mm_dd_yyyy')], "camRot");
 end

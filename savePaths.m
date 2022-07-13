@@ -1,22 +1,31 @@
 function P = savePaths()
-    % Saves relevant file paths for the project (data, images, etc)
-    P.data = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
-    P.checkerboardIms = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_10_2022/';    
-    P.onGlitterPlane = '/Users/oliverbroadrick/Desktop/glitter-stuff/checkerboards_06_10_2022/onglitterplane.JPG';
-    P.imageCentroids = [P.data 'image_centroids_06_14_2022.mat'];
-    P.canonicalCentroids = [P.data 'canonical_centroids_06_14_2022.mat'];
-    P.tform = [P.data 'transform.mat'];
-    P.camParams = [P.data 'camParams'];
-    P.measurements = [P.data 'measurements.mat'];
-    P.camPos = [P.data 'camera_in_glitter_coords_06_14_2022.mat'];
-    P.leftRightSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/left_right_captures/';
-    P.upDownSweep = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/up_down_captures/';
-    P.specNormals = [P.data 'spec_normals_06_14_2022.mat'];
-    P.means = [P.data 'lightingmeans_06_14_2022.mat'];
-    P.characterizationTest = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/';
+    % raw images/inputs to the current characterization
+    P.characterizationDirectory = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/';
+    P.leftRightSweep = [P.characterizationDirectory 'verBarSweep/'];
+    P.upDownSweep = [P.characterizationDirectory 'horBarSweep/'];
+    P.checkerboardIms = [P.characterizationDirectory 'checkerboards/'];
+    P.onGlitterPlane = [P.checkerboardIms 'onGlitterPlane.JPG'];
+    P.homographyImages = [P.characterizationDirectory 'homography/'];
+    P.pointLightImages = [P.characterizationDirectory 'pointLightImages/'];
+
+    % specific image paths for testing and such
     P.extraOnGlitterPlane = '/Users/oliverbroadrick/Desktop/slant1.JPG';
-    P.maxImage = [P.data 'maxImage.jpg'];
-    P.maxBrightness = [P.data 'maxBrightness.mat'];
+    P.characterizationTest = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/';
+
+    % data created by processing the images (surface normals, peak lighting
+    % positions, camera parameters, etc)
+    P.data = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
+    P.imageCentroids = [P.data 'image_centroids_07_13_2022.mat'];
+    P.canonicalCentroids = [P.data 'canonical_centroids_07_13_2022.mat'];
+    P.tform = [P.data 'transform.mat'];
+    P.camParams = [P.data 'camParams_07_13_2022'];
+    P.measurements = [P.data 'measurements.mat'];
+    P.camPos = [P.data 'camPos_07_13_2022.mat'];
+    P.specNormals = [P.data 'spec_normals_07_13_2022.mat'];
+    P.means = [P.data 'lightingmeans_07_13_2022.mat'];
+    P.maxImage = [P.data 'maxImageLeftRight_07_13_2022.jpg'];
+    P.maxBrightness = [P.data 'maxBrightness_07_13_2022.mat'];
+
     % save paths 
     save([P.data 'paths'], "P");
 end

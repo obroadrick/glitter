@@ -5,7 +5,7 @@ function specNormalsPath = computeNormals(P)
     means = matfile(P.means).means;
     C = matfile(P.imageCentroids).imageCentroids;
     M = matfile(P.measurements).M;
-    cam = matfile(P.camPos).camera_in_glitter_coords;
+    cam = matfile(P.camPos).camPos;
     % seed the rng
     seed = 125;
     rng(seed);

@@ -16,10 +16,13 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     %TODO add code to find the highest index of sweepimage for each
     %     direction so that we don't manually enter it like animals
     %...... 
-    maxIndexLeftRight = 759;
-    for ix = 0:3:maxIndexLeftRight
+    maxIndexLeftRight = 758;
+    maxIndexUpDown = 429;
+    indexStep = 1;%formerly 3
+    for ix = 0:indexStep:maxIndexLeftRight
         i = i + 1;
-        path = [P.leftRightSweep '*calib' num2str(ix) '.0-Glitter.jpg'];
+        path = [P.leftRightSweep '*calib' num2str(ix) '.0-Glitter.JPG'];
+        %path = [P.upDownSweep '*calib-h' num2str(ix) '.0-Glitter.JPG'];
         files = dir(path);
         if length(files) < 1
             disp(['no file found at:' path]);
@@ -54,17 +57,18 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     %imagesc(ims(:,:,2));colormap(gray);
     m = ims(:,:,2);
     %SAVE THE MAX IMAGE
-    imwrite(cat(3, m/255, m/255, m/255),[P.data 'maxImage_' datestr(now, 'mm_dd_yyyy') '.jpg']);
+    imwrite(cat(3, m/255, m/255, m/255),[P.data 'maxImageLeftRight_' datestr(now, 'mm_dd_yyyy') '.jpg']);
     %% filter image to keep only specs of glitter bright enough to be of interest
     F = fspecial('Gaussian',[15 15],1) - fspecial('Gaussian',[15 15],7);
-    M = imfilter(m, F);
+    Mp = imfilter(m, F);
     %imagesc(M);colormap(gray);
     
     %% apply threshold to get binary map with glitter spec regions
     thresh = 30;
-    Mt = M > thresh;
+    Mt = Mp > thresh;
     %imagesc(Mt);colormap(gray);
     %% get a list of the region centroids
+    % if a spec region has max images 
     overlap_threshold = 8; % frame variation > thresh are two specs maybe
     numPoints = 0;
     C = [];
@@ -113,8 +117,15 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     %tform = matfile(P.tform).tform;
     % don't use that old stinky transform, instead use a fresh new one
     % points in from addy:
-    pin = [1127. 5357.; 605. 392.; 6375.  372.; 6074. 5384.];
-    tform = getTransform(pin);
+    %{
+    pin = [850.0531005859375	4638.21875;...
+            454.743408203125	503.7138366699219;...
+            7711.8046875	540.760009765625;...
+            7277.14111328125	4664.25];
+    %}
+    pin = [865.933837890625	4639.2392578125; 473.364990234375	505.5672302246094; 7731.4736328125	541.7628173828125; 7294.72216796875	4668.791015625];
+
+    tform = getTransform(P,pin);
     
     % transform points
     cxs = [1:size(C,1)];
