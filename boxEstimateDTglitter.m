@@ -64,6 +64,7 @@ kspace = generateDistortionSearchSpace(wiggleRoom, stepSize);
 % minNumInliers is used both to (1) stop RANSAC and (2) be a threshold
 % above which inlier sets are conidered in the error function
 minNumInliers = 30;
+maxVotesByCoefs = [];
 for kix=1:size(kspace,1)
     ks = kspace(kix,:);
     k1 = ks(1);
@@ -131,6 +132,8 @@ for kix=1:size(kspace,1)
     % and instead by searching over candidate camera positions in some
     % volume (box) in the world
     % reminiscent of a hough (rhymes with rough) transform
+
+    % define box coordinates
     x0 = 0;
     y0 = 200;
     z0 = 400;
@@ -141,15 +144,32 @@ for kix=1:size(kspace,1)
     x = x0:step:xf;
     y = y0:step:yf;
     z = z0:step:zf;
+    % get grid of points in the box
     [X,Y,Z] = ndgrid(x,y,z);
-
-    %%%%%%%%%%%%%%%%%%%%%%%
-    votes = empty thing like box
-    for spec reflected ray
-
+    points = [X(:) Y(:) Z(:)];
+    % set a threshold distance below which a ray votes for a gridpoint
+    distThreshold = 5; % millimeters
+    votes = zeros(size(points,1),1);
+    for ix=1:size(R,1)
+        v1 = specPos(ix,:);
+        v2 = R(ix,:);
+        point = points(ix,:);
+        dists = point_to_line(point, v1, v2);
+        % only increment a gridpoint's votes when the ray is close enough
+        newVotes = dists < distThreshold;
+        votes(newVotes) = votes(newVotes) + 1;
     end
-    %%%%%%%%%%%%%%%%%%%%%%%
-    
+    % whichever position got the most votes is the candidate position
+    % hypothesized by this set of rays
+    [maxVotes,maxVotesIx] = max(votes);
+    % track the max votes value (this correponds to numInliers in previous
+    % method)
+    maxVotesByCoefs(kix) = maxVotes;
+    % update greatest number of votes found for any distortion coefs
+    if maxVotes > mostMaxVotes
+        mostMaxVotes = maxVotes;
+    end
+
     %{
     %% find a good translation estimate using a RANSAC approach
     inlierThreshold = 15; % (mm) a reflected ray is an inlier
@@ -303,3 +323,24 @@ for kix=1:size(kspace,1)
 end
 
 %% now show the average distance 
+
+
+
+
+
+
+
+
+function d = point_to_line(pt, v1, v2)
+    % pt should be nx3
+    % v1 and v2 are vertices on the line (each 1x3)
+    % d is a nx1 vector with the orthogonal distances
+    v1 = repmat(v1,size(pt,1),1);
+    v2 = repmat(v2,size(pt,1),1);
+    a = v1 - v2;
+    b = pt - v2;
+    d = sqrt(sum(cross(a,b,2).^2,2)) ./ sqrt(sum(a.^2,2));
+end
+
+
+

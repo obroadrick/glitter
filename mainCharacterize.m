@@ -4,6 +4,10 @@
 % surface normals.
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 
+%% Get homography:  
+% open and interprety addy's homogrpahy points file then pass 
+% the points to the future programs
+
 %% Find transform:  compute homography from images to canonical
 %                   coordinate system
 tStart = tic;
