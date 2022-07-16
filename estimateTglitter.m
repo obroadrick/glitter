@@ -9,42 +9,47 @@ M = matfile(P.measurements).M;
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july_characterization/pointLightSource2.JPG';
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/pointLightSource/DSC_2202.JPG';
-impath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
+%impath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
+impath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/verybright.JPG';
 im = rgb2gray(imread(impath));
 
 % get lighting position in canonical coords form lighting position in
 % monitor pixel coords
-monitorCoords = [1127 574];
-x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
-y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
-lightPos = [x y M.GLIT_TO_MON_PLANES];
+%monitorCoords = [1127 574];
+%x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
+%y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
+%lightPos = [x y M.GLIT_TO_MON_PLANES];
 %lightPos = [0 (130.1-84.05) 440];
 %lightPos = [0 133.1-72.9 465];%TODO
 %lightPos = [0 132.1-72.7 461];%TODO
+lightPos = [0, 131.1-72.9 462];
 
 %% find spec centroids in image
 %pin = [1217.34838867 5145.87841797; 1005.55084  295.4278; 6501.5874  490.0575; 6501.952 5363.594];
 %pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
 %pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];
-%rallPts = matfile([P.data '16pts_june23.mat']).arr;
-%pin = allPts(1,:);
-%pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
-%piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
-%pin = [pinx' piny'];
+allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/16ptsJuly16.mat']).arr;
+pin = allPts(1,:);
+pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
+piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
+pin = double([pinx' piny']);
 %{
 pin = [850.0531005859375	4638.21875;...
         454.743408203125	503.7138366699219;...
         7711.8046875	540.760009765625;...
         7277.14111328125	4664.25];
 %}
-pin = [865.933837890625	4639.2392578125; 473.364990234375	505.5672302246094; 7731.4736328125	541.7628173828125; 7294.72216796875	4668.791015625];
+%pin = [865.933837890625	4639.2392578125; 473.364990234375	505.5672302246094; 7731.4736328125	541.7628173828125; 7294.72216796875	4668.791015625];
 
 figure;
 %testimpath = "/Users/oliverbroadrick/Desktop/glitter-stuff/july_characterization/homography images/DSC_1931.JPG";
 %testimpath = [P.homographyImages 'DSC_2192.JPG'];
 %testimpath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/pointLightSource/DSC_2202.JPG';
-testimpath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
+%testimpath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
+testimpath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/DSC_2538.JPG';
+testimpath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/verybright.JPG';
+
 imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
 plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
 tform = getTransform(P, pin);
@@ -55,7 +60,7 @@ canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
 
 %% match canonical centroids to those in the characterization
 knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-K = 4;
+K = 15;
 [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                              'K', K, 'Distance', 'euclidean');
 % only consider specs whose match is within .xx millimeters
@@ -226,7 +231,7 @@ legPos = size(legendItems,2)+1;
 camroll(-80);
 mostInliersSpecPos = [];
 mostInliersR = [];
-for counter=1:100
+for counter=1:1000
     % hypothesize a possible pair of inliers
     idxsRandomTwo = randi(size(R,1),1,2);
     %k = 1; %when hypothesizing, just take the neareast neighbor specs
