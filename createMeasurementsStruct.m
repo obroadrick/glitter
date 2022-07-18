@@ -11,11 +11,11 @@ function M = createMeasurementsStruct()
     M.GLIT_HEIGHT = 304.8;%computed as 12in to mm
     M.CALIBRATION_SQUARE_SIZE = 147.1 / 6;%MEASURED six of them (calipers)
     M.CALIBRATION_BOARD_THICKNESS = 3.2;%MEASURED (calipers)
-    M.FIDUCIAL_MARKER_TO_EDGE = 10.3;%MEASURED (calipers)
-    M.FIDUCIAL_MARKER_SIZE = 15.3;%MEASURED (calipers)
+    %M.FIDUCIAL_MARKER_TO_EDGE = 10.3;%MEASURED (calipers)
+    %M.FIDUCIAL_MARKER_SIZE = 15.3;%MEASURED (calipers)
     M.FIDUCIAL_MARKER_TO_EDGE = 10.2305;%computed from 
     M.FIDUCIAL_MARKER_SIZE = 15.1694;%computed from addy
-    M.FIDUCIAL_MARKER_SIZE = 5.3003;%computed line width on glitter board (Addy)
+    M.BOARD_LINE_WIDTH = 5.3003;%computed line width on glitter board (Addy)
 
     % other useful constants
     M.MON_WIDTH_PXS = 3840;

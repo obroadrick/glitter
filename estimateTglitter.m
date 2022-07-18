@@ -23,7 +23,7 @@ im = rgb2gray(imread(impath));
 %lightPos = [0 (130.1-84.05) 440];
 %lightPos = [0 133.1-72.9 465];%TODO
 %lightPos = [0 132.1-72.7 461];%TODO
-lightPos = [0, 131.1-72.9 462];
+lightPos = [0 131.1-72.9 462];
 
 %% find spec centroids in image
 %pin = [1217.34838867 5145.87841797; 1005.55084  295.4278; 6501.5874  490.0575; 6501.952 5363.594];
@@ -47,7 +47,7 @@ figure;
 %testimpath = [P.homographyImages 'DSC_2192.JPG'];
 %testimpath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/pointLightSource/DSC_2202.JPG';
 %testimpath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
-testimpath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/DSC_2538.JPG';
+%testimpath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/DSC_2538.JPG';
 testimpath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/verybright.JPG';
 
 imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
@@ -95,7 +95,6 @@ maxBrightness = zeros(size(idx,1),K);
 for ix=1:size(idx,1)
     maxBrightness(ix,:) = allMaxBrightness(idx(ix,:));
 end
-
 
 %% NEW CODE TO FIND THE DIST OF RAY TO PINHOLE FOR ALL SPECS SO WE CAN VISUALIZE WHICH SPECS SEEM GOOD
 % compute reflected rays: Ri = Li − 2(Li dot Ni)Ni
