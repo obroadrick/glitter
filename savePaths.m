@@ -1,6 +1,6 @@
 function P = savePaths()
     % raw images/inputs to the current characterization
-    P.characterizationDirectory = '/Users/oliverbroadrick/Desktop/glitter-stuff/SaturdayCharacterization/';
+    P.characterizationDirectory = '/Users/oliverbroadrick/Desktop/glitter-stuff/july15characterization/';
     P.leftRightSweep = [P.characterizationDirectory 'verBarSweep/'];
     P.upDownSweep = [P.characterizationDirectory 'horBarSweep/'];
     P.checkerboardIms = [P.characterizationDirectory 'checkerboards/'];
@@ -15,16 +15,17 @@ function P = savePaths()
     % data created by processing the images (surface normals, peak lighting
     % positions, camera parameters, etc)
     P.data = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
-    P.imageCentroids = [P.data 'image_centroids_07_16_2022.mat'];
-    P.canonicalCentroids = [P.data 'canonical_centroids_07_16_2022.mat'];
+    P.imageCentroids = [P.data 'image_centroids_07_18_2022.mat'];
+    P.canonicalCentroids = [P.data 'canonical_centroids_07_18_2022.mat'];
     P.tform = [P.data 'transform.mat'];
-    P.camParams = [P.data 'camParams_07_16_2022'];
+    P.camParams = [P.data 'camParams_07_19_2022'];
     P.measurements = [P.data 'measurements.mat'];
-    P.camPos = [P.data 'camPos_07_16_2022.mat'];
-    P.specNormals = [P.data 'spec_normals_07_17_2022.mat'];
-    P.means = [P.data 'lightingmeans_07_17_2022.mat'];
-    P.maxImage = [P.data 'maxImageLeftRight_07_16_2022.jpg'];
-    P.maxBrightness = [P.data 'maxBrightness_07_16_2022.mat'];
+    P.camPos = [P.data 'camPos_07_19_2022.mat'];
+    P.camRot = [P.data 'camRot_07_19_2022.mat'];
+    P.specNormals = [P.data 'spec_normals_07_18_2022.mat'];
+    P.means = [P.data 'lightingmeans_07_18_2022.mat'];
+    P.maxImage = [P.data 'maxImageLeftRight_07_18_2022.jpg'];
+    P.maxBrightness = [P.data 'maxBrightness_07_18_2022.mat'];
 
     % save paths 
     save([P.data 'paths'], "P");

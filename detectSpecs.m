@@ -17,7 +17,7 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     %     direction so that we don't manually enter it like animals
     %...... 
     maxIndexLeftRight = 758;
-    maxIndexUpDown = 429;
+    maxIndexUpDown = 430;
     indexStep = 1;%formerly 3
     for ix = 0:indexStep:maxIndexLeftRight
         i = i + 1;

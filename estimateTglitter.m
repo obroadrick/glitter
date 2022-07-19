@@ -11,25 +11,26 @@ M = matfile(P.measurements).M;
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/pointLightSource/DSC_2202.JPG';
 %impath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
-impath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/verybright.JPG';
+%impath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/hilight.JPG';
+impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19test/circleOnMonitor/2022-07-19T08,02,28circle-calib-W1127-H574-S48.jpg';
 im = rgb2gray(imread(impath));
 
 % get lighting position in canonical coords form lighting position in
 % monitor pixel coords
-%monitorCoords = [1127 574];
-%x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
-%y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
-%lightPos = [x y M.GLIT_TO_MON_PLANES];
+monitorCoords = [1127 574];
+x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
+y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
+lightPos = [x y M.GLIT_TO_MON_PLANES];
 %lightPos = [0 (130.1-84.05) 440];
 %lightPos = [0 133.1-72.9 465];%TODO
 %lightPos = [0 132.1-72.7 461];%TODO
-lightPos = [0 131.1-72.9 462];
+%lightPos = [0 131.1-72.9 462];
 
 %% find spec centroids in image
 %pin = [1217.34838867 5145.87841797; 1005.55084  295.4278; 6501.5874  490.0575; 6501.952 5363.594];
 %pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
 %pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];
-allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/16ptsJuly16.mat']).arr;
+allPts = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/july19test/16ptsJuly19.mat').arr;
 pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
@@ -48,8 +49,8 @@ figure;
 %testimpath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/pointLightSource/DSC_2202.JPG';
 %testimpath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
 %testimpath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/DSC_2538.JPG';
-testimpath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/verybright.JPG';
-
+%testimpath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/verybright.JPG';
+testimpath=impath;
 imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
 plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
 tform = getTransform(P, pin);
@@ -60,7 +61,7 @@ canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
 
 %% match canonical centroids to those in the characterization
 knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-K = 15;
+K = 10;
 [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                              'K', K, 'Distance', 'euclidean');
 % only consider specs whose match is within .xx millimeters
@@ -184,7 +185,7 @@ end
 
 % find a good translation estimate using a RANSAC approach
 rng(314159);
-inlierThreshold = 20; % (mm) a reflected ray is an inlier
+inlierThreshold = 15; % (mm) a reflected ray is an inlier
                       % with respect to a hypothesized camera position
                       % if it pases within 10 millimeters of that 
                       % camera position
@@ -230,7 +231,8 @@ legPos = size(legendItems,2)+1;
 camroll(-80);
 mostInliersSpecPos = [];
 mostInliersR = [];
-for counter=1:1000
+for counter=1:100
+    
     % hypothesize a possible pair of inliers
     idxsRandomTwo = randi(size(R,1),1,2);
     %k = 1; %when hypothesizing, just take the neareast neighbor specs

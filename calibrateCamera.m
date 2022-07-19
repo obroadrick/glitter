@@ -5,16 +5,18 @@
 
 % inputs: P, a matlab struct containing paths to the necessary images 
 %            and homography
-function parampath = calibrateCamera(P)
+function parampath = calibrateCamera(P, fiducialMarkerPoints)
     % read in the homography from image coords to canonical glitter coords
     M = matfile(P.measurements).M;
     %pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];% june 23 xenon captures
     %pin = [1606.1387 5375.402; 1294.5402 724.4909; 6527.662 714.07513; 6190.397 5257.4106];%june 27 calibration
-    %allPts = matfile([P.data '16pts_june23.mat']).arr;
-    %pin = allPts(1,:);
-    %pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
-    %piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
-    %pin = [pinx' piny'];
+    %{
+    allPts = matfile(['/Us '16pts_june23.mat']).arr;
+    pin = allPts(1,:);
+    pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
+    piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
+    pin = [pinx' piny'];
+    %}
     %pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
     %{
     pin = [850.0531005859375	4638.21875;...
@@ -24,11 +26,13 @@ function parampath = calibrateCamera(P)
     %}
     %pin = [865.933837890625	4639.2392578125; 473.364990234375	505.5672302246094; 7731.4736328125	541.7628173828125; 7294.72216796875	4668.791015625];
     %pin = [ 0.7212   4.7309  ;   0.3320   0.5870  ;     7.5774     0.6397  ;     7.1542  4.7480] .* 1000;
-    pin = [718, 4738; 329, 598; 7577, 648; 7153, 4758];
+    %pin = [718, 4738; 329, 598; 7577, 648; 7153, 4758];
+    pin = fiducialMarkerPoints;
+    %= [ 0.7212   4.7309  ;   0.3320   0.5870  ;     7.5774     0.6397  ;     7.1542  4.7480] .* 1000;
 
 
-    %tform = getTransform(P,pin);
-    tform = matfile(P.tform).tform;
+    tform = getTransform(P,pin);
+    %tform = matfile(P.tform).tform;
     % read in the checkerboard images
     imsp = P.checkerboardIms;
     %imsp = '/Users/oliverbroadrick/Downloads/Checkerboards-6-23-1_30/';
@@ -74,7 +78,6 @@ function parampath = calibrateCamera(P)
     for ix=1:size(badImageNames,2)
         disp(badImageNames(ix));
     end
-    disp(imagesUsedNames(34));
     disp(size(imagesUsedNames));
     translationVectors = params.TranslationVectors;
     norms = vecnorm(translationVectors, 2, 2);

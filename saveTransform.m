@@ -3,7 +3,7 @@
 % which are currenlty just literals I copy and paste from Addy
 % TODO: take marker positions as CSV, etc (a file not literal)
 % inputs: P, matlab struct with paths to necessary data (measurements)
-function tformpath = saveTransform(P)
+function tformpath = saveTransform(P, fiducialMarkerPoints)
     M = matfile(P.measurements).M;
     % point correspondences from Addy from fiducial markers (all lower left
     % corners)
@@ -18,8 +18,8 @@ function tformpath = saveTransform(P)
     %pin = [865.933837890625	4639.2392578125; 473.364990234375	505.5672302246094; 7731.4736328125	541.7628173828125; 7294.72216796875	4668.791015625];
     %pin = [863.2531127929688	4634.79931640625; 472.058349609375	501.9744567871094; 7727.5888671875	543.5863037109375; 7290.06298828125	4667.3486328125];
     %pin = [863.2531127929688	4634.79931640625;472.058349609375	501.9744567871094; 7727.5888671875	543.5863037109375; 7290.06298828125	4667.3486328125];
-    pin = [ 0.7212   4.7309  ;   0.3320   0.5870  ;     7.5774     0.6397  ;     7.1542  4.7480] .* 1000;
-    pin = [718, 4738; 329, 598; 7577, 648; 7153, 4758];
+    pin = fiducialMarkerPoints;
+    %[ 0.7212   4.7309  ;   0.3320   0.5870  ;     7.5774     0.6397  ;     7.1542  4.7480] .* 1000;
 
     %order: bottom-left, top-left, top-right, bottom-right]
     %pout = [0 305; 0 0; 305 0; 305 305];%this is true to image coords for 2d showing    

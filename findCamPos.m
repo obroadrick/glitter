@@ -42,21 +42,21 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     %thetafirsttry = asin(anglevec(2)/norm(anglevec));
     theta = atan2(anglevec(2), anglevec(1));
     theta = theta*-1;%need to unrotate this
-    %figure;
-    %line([origin_in_glitter_coords2d(1) xfar_in_glitter_coords2d(1)], [origin_in_glitter_coords2d(2) xfar_in_glitter_coords2d(2)]);
-    %hold on; plot(anglevec(1),anglevec(2),'go');
-    %disp(theta);
-    %thetadeg = theta * 180 / pi;
-    %disp(thetadeg);
+    figure;
+    line([origin_in_glitter_coords2d(1) xfar_in_glitter_coords2d(1)], [origin_in_glitter_coords2d(2) xfar_in_glitter_coords2d(2)]);
+    hold on; plot(anglevec(1),anglevec(2),'go');
+    disp(theta);
+    thetadeg = theta * 180 / pi;
+    disp(thetadeg);
     %draw to check
-    %figure;
-    %imagesc(imread(imPath));hold on;
-    %plot(imagePoints([indexOrigin],1),imagePoints([indexOrigin],2),'go');
-    %plot(imagePoints([indexXfar],1),imagePoints([indexXfar],2),'r+');
-    %plot(pin(:,1),pin(:,2),'gx');
-    %figure;
-    %plot(xfar_in_glitter_coords2d(1), xfar_in_glitter_coords2d(2),'r+');
-    %plot(origin_in_glitter_coords2d(1), origin_in_glitter_coords2d(2), 'go');
+    figure;
+    imagesc(imread(imPath));hold on;
+    plot(imagePoints([indexOrigin],1),imagePoints([indexOrigin],2),'go');
+    plot(imagePoints([indexXfar],1),imagePoints([indexXfar],2),'r+');
+    plot(pin(:,1),pin(:,2),'gx');
+    figure;
+    plot(xfar_in_glitter_coords2d(1), xfar_in_glitter_coords2d(2),'r+');
+    plot(origin_in_glitter_coords2d(1), origin_in_glitter_coords2d(2), 'go');
 
     % find rotation from glitter coords to checkerboard coords
     %TODO as below
