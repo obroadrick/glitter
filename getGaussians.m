@@ -23,6 +23,7 @@ function meansPath = getGaussians(P)
     regexs = ["*calib", "*calib-h"];
     dists = zeros(size(C,1),numDirections,max(numFrames));
     means = [];%zeros(numDirections,size(C,1));
+    %%
     for direction=1:numDirections
         num = size(C,1);
         % read thru the images to get brightnesses
@@ -57,6 +58,7 @@ function meansPath = getGaussians(P)
                                                im(d1-1,d2)]);
             end
         end
+        %%
         % fit gaussians to brightness dists and record their means
         x = [1:numFrames(direction)]';
         parfor ix=1:size(C,1)
@@ -68,6 +70,7 @@ function meansPath = getGaussians(P)
                 % if past an edge, throw out
                 means(direction, ix) = -1;
                 stds(direction, ix) = -1;
+                continue
             end
             tight = dist(l:r);
             tightx = x(l:r);

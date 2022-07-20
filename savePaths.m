@@ -1,12 +1,13 @@
 function P = savePaths()
     % raw images/inputs to the current characterization
-    P.characterizationDirectory = '/Users/oliverbroadrick/Desktop/glitter-stuff/july15characterization/';
+    P.characterizationDirectory = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/';
     P.leftRightSweep = [P.characterizationDirectory 'verBarSweep/'];
     P.upDownSweep = [P.characterizationDirectory 'horBarSweep/'];
     P.checkerboardIms = [P.characterizationDirectory 'checkerboards/'];
     P.onGlitterPlane = [P.checkerboardIms 'onGlitterPlane.JPG'];
     P.homographyImages = [P.characterizationDirectory 'homography/'];
     P.pointLightImages = [P.characterizationDirectory 'pointLightImages/'];
+    P.characterizationPoints = [P.characterizationDirectory 'homographyPoints/16ptsJuly19-1.mat'];
 
     % specific image paths for testing and such
     %P.extraOnGlitterPlane = '/Users/oliverbroadrick/Desktop/slant1.JPG';

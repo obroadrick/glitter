@@ -7,7 +7,7 @@ P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/path
 %% Fiducial marker points:  
 % open and interprety addy's homography points file then pass 
 % the points to the future programs
-allPts = matfile([P.characterizationDirectory '16ptsJuly15.mat']).arr;
+allPts = matfile([P.characterizationPoints '16ptsJuly15.mat']).arr;
 pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
@@ -20,8 +20,8 @@ fprintf("Computing homography...\n");
 P.tform = saveTransform(P, fiducialMarkerPoints);
 fprintf("Homography computed after %f minutes\n", toc(tStart)/60);
 
-%% Calibrate camera:find the camera's position in the canonical
-%                   coordinate system using checkerboards
+%% Calibrate camera: find the camera's position in the canonical
+%                    coordinate system using checkerboards
 fprintf("Calibrating camera...\n");
 P.camParams = calibrateCamera(P, fiducialMarkerPoints);
 fprintf("Camera calibrated after %f minutes\n", toc(tStart)/60);
