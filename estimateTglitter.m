@@ -12,7 +12,7 @@ M = matfile(P.measurements).M;
 %impath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
 %impath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/hilight.JPG';
-impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19test/circleOnMonitor/2022-07-19T08,02,28circle-calib-W1127-H574-S48.jpg';
+impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
 im = rgb2gray(imread(impath));
 
 % get lighting position in canonical coords form lighting position in
@@ -30,7 +30,7 @@ lightPos = [x y M.GLIT_TO_MON_PLANES];
 %pin = [1217.34838867 5145.87841797; 1005.55084  295.4278; 6501.5874  490.0575; 6501.952 5363.594];
 %pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
 %pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];
-allPts = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/july19test/16ptsJuly19.mat').arr;
+allPts = matfile(P.characterizationPoints).arr;
 pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
@@ -61,7 +61,7 @@ canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
 
 %% match canonical centroids to those in the characterization
 knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-K = 10;
+K = 4;
 [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                              'K', K, 'Distance', 'euclidean');
 % only consider specs whose match is within .xx millimeters
@@ -189,7 +189,6 @@ inlierThreshold = 15; % (mm) a reflected ray is an inlier
                       % with respect to a hypothesized camera position
                       % if it pases within 10 millimeters of that 
                       % camera position
-
                       % draw rig
 figure;
 % glitter square:
@@ -426,7 +425,7 @@ tc = ['k'];
 % show camera as a dot: (dots=cameras)
 cam=camPosEst;
 legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
-disp(cam);
+%disp(cam);
 % shown known ground truth camera position
 %knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
 disp(knownCamPos);

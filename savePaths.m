@@ -16,17 +16,25 @@ function P = savePaths()
     % data created by processing the images (surface normals, peak lighting
     % positions, camera parameters, etc)
     P.data = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
-    P.imageCentroids = [P.data 'image_centroids_07_18_2022.mat'];
-    P.canonicalCentroids = [P.data 'canonical_centroids_07_18_2022.mat'];
-    P.tform = [P.data 'transform.mat'];
-    P.camParams = [P.data 'camParams_07_19_2022'];
     P.measurements = [P.data 'measurements.mat'];
-    P.camPos = [P.data 'camPos_07_19_2022.mat'];
-    P.camRot = [P.data 'camRot_07_19_2022.mat'];
-    P.specNormals = [P.data 'spec_normals_07_18_2022.mat'];
-    P.means = [P.data 'lightingmeans_07_18_2022.mat'];
-    P.maxImage = [P.data 'maxImageLeftRight_07_18_2022.jpg'];
-    P.maxBrightness = [P.data 'maxBrightness_07_18_2022.mat'];
+    
+    P.tform = [P.data 'transform.mat'];
+
+    P.camParams = [P.data 'camParams_07_20_2022'];
+    P.camParamsErrors = [P.data 'camParamsErrors_07_20_2022'];
+    P.camPos = [P.data 'camPos_07_20_2022.mat'];
+    P.camRot = [P.data 'camRot_07_20_2022.mat'];
+
+    P.maxImage = [P.data 'maxImageLeftRight_07_20_2022.jpg'];
+
+    P.imageCentroids = [P.data 'image_centroids_07_22_2022.mat'];
+    P.canonicalCentroids = [P.data 'canonical_centroids_07_22_2022.mat'];
+
+    P.maxBrightness = [P.data 'maxBrightness_07_21_2022.mat'];
+
+    P.means = [P.data 'lightingmeans_07_22_2022.mat'];
+
+    P.specNormals = [P.data 'spec_normals_07_22_2022.mat'];
 
     % save paths 
     save([P.data 'paths'], "P");

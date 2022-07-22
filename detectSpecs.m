@@ -16,10 +16,11 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     %TODO add code to find the highest index of sweepimage for each
     %     direction so that we don't manually enter it like animals
     %...... 
-    maxIndexLeftRight = 758;
-    maxIndexUpDown = 430;
+    maxIndexLeftRight = size(dir(P.leftRightSweep),1)-3;
+    maxIndexUpDown = size(dir(P.upDownSweep),1)-3;
+
     indexStep = 1;%formerly 3
-    for ix = 0:indexStep:maxIndexLeftRight
+    for ix = 0:indexStep:maxIndexLeftRight-1
         i = i + 1;
         path = [P.leftRightSweep '*calib' num2str(ix) '.0-Glitter.JPG'];
         %path = [P.upDownSweep '*calib-h' num2str(ix) '.0-Glitter.JPG'];
