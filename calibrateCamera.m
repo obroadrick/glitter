@@ -55,8 +55,17 @@ function parampath = calibrateCamera(P, fiducialMarkerPoints)
     worldPoints = generateCheckerboardPoints(boardSize,squareSizeInMM);
     % calibrate camera using checkerboard points
 
+    % TODO / NOTE
+    % this is where i could start saving information so that i don't have
+    % to go back thru the images (slow) to get it again but can still make
+    % new camera calibration estimates for example with and without skew
+
+    % for now avoiding the headache and not doing it partially bc it seems
+    % fair to default to using skew from now on and this may only seem like
+    % a problem now bc i accidentally ran it without skew last time
+
     [params, ~, estimationErrors] = estimateCameraParameters(imagePoints,worldPoints, ...
-                    'ImageSize',imageSize);%,"estimateSkew",true);
+                    'ImageSize',imageSize,"estimateSkew",true);
     displayErrors(estimationErrors, params);
     % save the camera parameters so later with the camera in this position,
     % we can find the location of a new checkerboard in the space without

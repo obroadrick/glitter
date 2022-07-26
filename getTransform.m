@@ -4,8 +4,10 @@
 % TODO: take marker positions as CSV, etc (a file not literal)
 % inputs: P, matlab struct with paths to necessary data (measurements)
 function tform = getTransform(P, pin)
+    %{
     disp(P);
     disp(P.measurements);
+    %}
     M = matfile(P.measurements).M;
     % point correspondences from Addy from fiducial markers (all lower left
     % corners)

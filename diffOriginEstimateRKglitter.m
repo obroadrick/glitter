@@ -10,8 +10,10 @@
 % K = [f 0 w/2; 0 f h/2; 0 0 1]; where w and h are the width 
 % and height in pixels of the image
 
+% returns rotAndIntrinsics = 
+% [omega1 omega2 omega3 fx fy cx cy s]
 
-function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos)
+function rotAndIntrinsics = diffOriginEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos)
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     MEAS = matfile(P.measurements).M;
     
@@ -23,7 +25,7 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     %pin = [1217.34838867 5145.87841797; 1005.55084  295.4278; 6501.5874  490.0575; 6501.952 5363.594];
     %pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y
     %pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];
-    M=MEAS;
+    M = MEAS;
     tform = getTransform(P, pin);
     imageCentroids = singleImageFindSpecs(im);
     out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
@@ -80,6 +82,23 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     % known points in world coordinates
     worldSpecs = mostInliersSpecPos; % the characterized, canonical spec positions that correspond to the sparkling specs in the image
     imageSpecs = mostInliersImageSpecPos; % the image coordinates of where we find those specs in this image
+
+    % translate and scale these points so that the origin is at the center
+    % and they are normalized (-1,1) so that the different points are not 
+    % weighted differently first translate
+    translationMatrix = [1 0 -MEAS.XRES/2; 0 1 -MEAS.YRES/2; 0 0 1];
+    scaleMatrix = [1/MEAS.XRES/2 0 0; 0 1/MEAS.XRES/2 0; 0 0 1];
+    changeMatrix = scaleMatrix * translationMatrix;
+    %imageSpecsChanged = changeMatrix * [imageSpecs zeros(size(imageSpecs,1),1)];
+    imageSpecsChanged = [];
+    for ix=1:size(imageSpecs,1)
+        imageSpecsChanged(ix,:) = changeMatrix * [imageSpecs(ix,:) 1]';
+    end
+    %{
+    disp('here we go again');
+    disp(size(imageSpecsChanged));
+    %}  
+
     figure;
     tiledlayout(1,2);
     nexttile;
@@ -96,7 +115,11 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     
     % find R and K by solving linear system
     Q = worldSpecs' - T;
-    p = imageSpecs';
+    p = imageSpecsChanged';
+    %{
+    disp(imageSpecsChanged(1:10,:));
+    disp(imageSpecs(1:10,:));
+    %}
     % build matrix
     %{
     skewiszero = true;%solve for skew or not
@@ -139,10 +162,16 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     %x2 = lsqminnorm(A,b');
     x = A \ b';
     M = [x(1) x(2) x(3); x(4) x(5) x(6); x(7) x(8) 1];
+
+    % since this M is the solution homography only for the translated and 
+    % scaled image points, we now need to undo those changes
+    M = inv(changeMatrix) * M;% oh shoot that doesn't look right
+    
     %% show (before decomposition) the reprojected points to confirm that they make sense
     figure;
     plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;
-    title('BEFORE DECOMPOSITION: the original image specs (green) and projected by M specs (red)');
+        title('BEFORE DECOMPOSITION: the original image specs (green) and projected by M specs (red)');
+
     for ix=1:size(imageSpecs,1)
         projectedSpec = M * (worldSpecs(ix,:)' - T);
         projectedSpec = projectedSpec ./ projectedSpec(3);
