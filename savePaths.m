@@ -20,10 +20,10 @@ function P = savePaths()
     
     P.tform = [P.data 'transform.mat'];
 
-    P.camParams = [P.data 'camParams_07_25_2022'];
-    P.camParamsErrors = [P.data 'camParamsErrors_07_25_2022'];
-    P.camPos = [P.data 'camPos_07_25_2022.mat'];
-    P.camRot = [P.data 'camRot_07_25_2022.mat'];
+    P.camParams = [P.data 'camParams_07_26_2022'];
+    P.camParamsErrors = [P.data 'camParamsErrors_07_26_2022'];
+    P.camPos = [P.data 'camPos_07_26_2022.mat'];
+    P.camRot = [P.data 'camRot_07_26_2022.mat'];
 
     P.maxImage = [P.data 'maxImageLeftRight_07_20_2022.jpg'];
 

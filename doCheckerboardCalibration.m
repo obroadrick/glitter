@@ -1,6 +1,7 @@
 %% do a checkerboard camera calibration
 % set path to directory with checkerboards
 % one of the files in this directory should be called onGlitterPlane.JPG
+P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 P.checkerboardIms = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/checkerboards/';
 
 

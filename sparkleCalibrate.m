@@ -56,6 +56,7 @@ disp('Estimating camera position with sparkles...');
 disp('Position estimate complete!');
 
 %% first retrieve the checkerboard calibration information for comparison along the way
+format shortG;%display numbers in more reasonable way
 camParams = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/camParams_07_25_2022.mat').camParams;
 camParamsErrors = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/camParamsErrors_07_25_2022.mat').camParamsErrors;
 camPos = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/camPos_07_25_2022.mat').camPos;
@@ -81,15 +82,14 @@ disp('Errors estimates from checkerboards');
 disp(rotAndIntrinsicsCheckerboardsErrors);
 
 %% estimate rotation and intrinsics
-format shortG;%display numbers in more reasonable way
 % rotAndIntrinsics = [omega1 omega2 omega3 fx fy cx cy s]
 
-%%
+%{
 % use fminsearch parameterized by (fx,fy,s,cx,cy,r1,r2,r3)
 disp('SparkleCalibrate - fminsearch over the camera params');
 rotAndIntrinsics1 = estimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
 disp(rotAndIntrinsics1);
-
+%}
 
 %%
 % solve the linear system and do RQ decomposition to get K and R
