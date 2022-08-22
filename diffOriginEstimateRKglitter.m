@@ -217,7 +217,7 @@ function rotAndIntrinsics = diffOriginEstimateRKglitter(impath, camPosEst, pin, 
     end
     K = K * Icorrection;
     R = Icorrection * R;
-    R = rotx(180) * roty(180) * rotz(180) * R;
+    %R = rotx(180) * roty(180) * rotz(180) * R;
     %{
     disp('K');
     disp(K);
@@ -265,17 +265,6 @@ function rotAndIntrinsics = diffOriginEstimateRKglitter(impath, camPosEst, pin, 
     disp(thetadegs);
     %}
     
-    %% now showing the same thing (reprojection) that we showed before
-    % SHOULD give the same result... we hope
-    % show (before decomposition) the reprojected points to confirm that they make sense
-    figure;
-    plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;    
-    title('the original image specs (green) and projected by M specs (red)');
-    for ix=1:size(imageSpecs,1)
-        projectedSpec = K*R * (worldSpecs(ix,:)' - T);
-        projectedSpec = projectedSpec ./ projectedSpec(3);
-        plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
-    end
     %[Q,R] = qr(M);
     
     % way of doing it with search:

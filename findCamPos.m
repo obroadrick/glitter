@@ -71,5 +71,55 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     t = (tg' + Rg*tc')';
     camPos = t;
     R = Rc * Rg;
+
+    
+    
+    
+    
+    %% draw the scene with camera and its frustrum
+    %R=R';
+    M = matfile(P.measurements).M;
+    figure;
+    %pose = rigid3d(R,T');
+    hold on;
+    %camObj = plotCamera('AbsolutePose',pose,'Opacity',0,'Size',35);
+    % draw frustum
+    T=t';
+    frustumImagePoints = [0 0; 0 M.YRES; M.XRES M.YRES; M.XRES 0];
+    % since p = KR(P-T) for world point P to image points p,
+    % we get that P = T+(KR)^-1(p)
+    K = camParams.Intrinsics.IntrinsicMatrix';
+    frustumWorldPoints = [];
+    for ix=1:size(frustumImagePoints,1)
+        frustumWorldPoints(ix,:) = T + 1000 * inv(K*R) * [frustumImagePoints(ix,:)';1];
+    end
+    for ix=1:size(frustumWorldPoints,1)
+        plot3([T(1) -frustumWorldPoints(ix,1)],...
+              [T(2) -frustumWorldPoints(ix,2)],...
+              [T(3) -frustumWorldPoints(ix,3)],...
+              'Color', 'cyan');
+    end
+    axis vis3d;
+     % glitter square:
+    gx = [0 M.GLIT_WIDTH M.GLIT_WIDTH 0];
+    gy = [0 0 M.GLIT_HEIGHT M.GLIT_HEIGHT];
+    gz = [0 0 0 0];
+    gc = ['b'];
+    legendItems = [];
+    legendItems(1) = patch(gx,gy,gz,gc,'DisplayName', 'Glitter');hold on;
+    % monitor:
+    mx = [-M.GLIT_TO_MON_EDGES_X -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X]; 
+    my = [-M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y -M.GLIT_TO_MON_EDGES_Y]; 
+    mz = [M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES]; 
+    mc = [.2 .2 .2];
+    legendItems(size(legendItems,2)+1) = patch(mx,my,mz,mc,'DisplayName','Monitor');
+    % table: (made up coords, doesn't matter, mostly for fun)
+    tx = [-400 -400 600 600];
+    ty = [-120 -120 -120 -120];
+    tz = [-250 1000 1000 -250];
+    tc = ['k'];
+    legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
+
+    axis vis3d;
     % R is rotation matrix from glitter to camera coordinates
 end

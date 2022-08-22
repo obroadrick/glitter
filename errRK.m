@@ -11,7 +11,7 @@
 % K = [f 0 w/2; 0 f h/2; 0 0 1]; where w and h are the width 
 % and height in pixels of the image
 
-function e = errRK(fx, fy, s, w, h, r1, r2, r3, imageSpecs, worldSpecs,...
+function e = errRK(fx, fy, s, w, h, r1, r2, r3, cx, cy, imageSpecs, worldSpecs,...
     imageFiducials, worldFiducials, T, plottingFigure)
     % fx and fy are the x and y direction focal lengths
     % s is the skew
@@ -34,16 +34,21 @@ function e = errRK(fx, fy, s, w, h, r1, r2, r3, imageSpecs, worldSpecs,...
     disp(r3);
     %}
             
-    K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
+    %K = [10^(3)*fx s w/2; 0 10^(3)*fy h/2; 0 0 1];
+    K = [10^(3)*fx s cx; 0 10^(3)*fy cy; 0 0 1];
 
     % get rotation matrix from rodrigues parameters
     R = rodrigues(r1,r2,r3);
+    disp(r1,r2,r3);
+    disp('initial R and K interpreted in errRK');
+    disp(R);
+    disp(K);
 
     % estimate image spec coordinates for world spec points
     imageSpecEstimates = [];
     for ix=1:size(worldSpecs,1)
         worldSpec = reshape(worldSpecs(ix,:),3,1);
-        imageSpecEstimates(ix,:) = K * (R' * (worldSpec - T));
+        imageSpecEstimates(ix,:) = K * (R * (worldSpec - T));
         imageSpecEstimates(ix,:) = imageSpecEstimates(ix,:) ./ imageSpecEstimates(ix,3);
     end
     
@@ -52,9 +57,26 @@ function e = errRK(fx, fy, s, w, h, r1, r2, r3, imageSpecs, worldSpecs,...
     for ix=1:size(worldFiducials,1)
         %disp(size(worldFiducials));
         worldFiducial = reshape(worldFiducials(ix,:),3,1);
-        imageFiducialEstimates(ix,:) = K * (R' * (worldFiducial - T));
+        imageFiducialEstimates(ix,:) = K * (R * (worldFiducial - T));
         imageFiducialEstimates(ix,:) = imageFiducialEstimates(ix,:) ./ imageFiducialEstimates(ix,3);
     end
+
+
+    % draw the same way as done in the linear script to confirm that the
+    % information made its way here without issues
+    %{
+    figure;
+    plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;    
+    title('AFTER PASSING TO ERRRK: the original image specs (green) and projected by M specs (red)');
+    for ix=1:size(imageSpecs,1)
+        projectedSpec = K*R * (worldSpecs(ix,:)' - T);
+        projectedSpec = projectedSpec ./ projectedSpec(3);
+        plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
+    end
+    disp('here we are');
+    disp(R);
+    disp(K);
+    %}
 
     % compute error for specs as a sum of the square differences
     eSpecs = 0;
