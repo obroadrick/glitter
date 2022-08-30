@@ -39,10 +39,10 @@ function e = errRK(fx, fy, s, w, h, r1, r2, r3, cx, cy, imageSpecs, worldSpecs,.
 
     % get rotation matrix from rodrigues parameters
     R = rodrigues(r1,r2,r3);
-    disp(r1,r2,r3);
-    disp('initial R and K interpreted in errRK');
-    disp(R);
-    disp(K);
+    %disp(r1,r2,r3);
+    %disp('initial R and K interpreted in errRK');
+    %disp(R);
+    %disp(K);
 
     % estimate image spec coordinates for world spec points
     imageSpecEstimates = [];
@@ -98,7 +98,7 @@ function e = errRK(fx, fy, s, w, h, r1, r2, r3, cx, cy, imageSpecs, worldSpecs,.
         %disp(norm(imageSpecEstimates(ix,1:2) - imageSpecs(ix, :)));
         %disp('specs: norm of difference squared');
         %disp(norm(imageSpecEstimates(ix,1:2) - imageSpecs(ix, :))^2);
-        eSpecs = eSpecs + norm(imageSpecEstimates(ix,1:2) - imageSpecs(ix, :));
+        eSpecs = eSpecs + (norm(imageSpecEstimates(ix,1:2) - imageSpecs(ix, :)))^2;
     end
     %disp('specs: size imageSpecEstimates:');
     %disp(size(imageSpecEstimates));
@@ -128,7 +128,7 @@ function e = errRK(fx, fy, s, w, h, r1, r2, r3, cx, cy, imageSpecs, worldSpecs,.
         %disp(norm(imageFiducialEstimates(ix,1:2) - imageFiducials(ix, :)));
         %disp('fiducials: norm of difference squared');
         %disp(norm(imageFiducialEstimates(ix,1:2) - imageSpecs(ix, :))^2);
-        eFiducials = eFiducials + norm(imageFiducialEstimates(ix,1:2) - imageFiducials(ix, :))^1;
+        eFiducials = eFiducials + norm(imageFiducialEstimates(ix,1:2) - imageFiducials(ix, :))^2;
     end
     %disp('fiducials: size imageFiducialEstimates:');
     %disp(size(imageFiducialEstimates));
@@ -162,5 +162,5 @@ function e = errRK(fx, fy, s, w, h, r1, r2, r3, cx, cy, imageSpecs, worldSpecs,.
     % to help steer the optimization a bit towards reasonable answers
     fxfyPenalty = (fx - fy)^2;
 
-    e = eFiducials + eSpecs + fxfyPenalty;% + eSpecs;
+    e = eFiducials + eSpecs;% + fxfyPenalty;
 end

@@ -20,13 +20,13 @@
 
 %  path to the single image
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
-impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
-%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/singleImageAug18.JPG';
+%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
+impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/singleImageAug18.JPG';
 
 % path to single image fiducial marker points
 % get by running Addy's Python script on the single image:
-allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/16ptsJuly25.mat']).arr;
-%allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/16ptsAug18.mat']).arr;
+%allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/16ptsJuly25.mat']).arr;
+allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/16ptsAug18.mat']).arr;
 pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
@@ -47,8 +47,8 @@ x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1);
 y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
 lightPos = [x y M.GLIT_TO_MON_PLANES];
 %}
-lightPos = [0 125-73 535];%july25nikonz7
-%lightPos = [0 129-72.9 527];%aug18nikonz7
+%lightPos = [0 125-73 535];%july25nikonz7 %TODO store in exp dir
+lightPos = [0 129-72.9 527];%aug18nikonz7
 
 % estimate translation and distortion
 % todo/future version
@@ -64,6 +64,16 @@ camParams = matfile(P.camParams).camParams;
 camParamsErrors = matfile(P.camParamsErrors).camParamsErrors;
 camPos = matfile(P.camPos).camPos;
 camRot = matfile(P.camRot).camRot;
+%%%%%%%%%%%
+%% manually set path literals to control the checkerboard outputs being used
+expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
+camParams = matfile([expir 'camParams']).camParams;
+camParamsErrors = matfile([expir 'camParamsErrors']).camParamsErrors;
+camPos = matfile([expir 'camPos']).camPos;
+camRot = matfile([expir 'camRot']).camRot;
+
+%%
+%%%%%%%%%%%
 % rotAndIntrinsics = [omega1 omega2 omega3 fx fy cx cy s]
 omega = undoRodrigues(camRot);
 fx = camParams.Intrinsics.FocalLength(1);
@@ -103,6 +113,12 @@ rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersS
 disp(rotAndIntrinsics2);
 disp('difference with checkerboards');
 disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics2);
+disp('percent error (%)');
+disp((rotAndIntrinsicsCheckerboards - rotAndIntrinsics2) ./ rotAndIntrinsicsCheckerboards .* 100);
+R2 = rod2mat(rotAndIntrinsics2(1),rotAndIntrinsics2(2),rotAndIntrinsics2(3));
+Rerr = (180 / pi) * acos((trace(R2 * camRot') - 1) / 2);% angle of rotation difference
+disp('difference in rotation (degrees):');
+disp(Rerr);
 
 %%
 % solve linear system but with positions in coordinate system with origin
@@ -112,9 +128,13 @@ rotAndIntrinsics3 = diffOriginEstimateRKglitter(impath, camPosEst, pin, mostInli
 disp(rotAndIntrinsics3);
 disp('difference with checkerboards');
 disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics3);
+R3 = rod2mat(rotAndIntrinsics3(1),rotAndIntrinsics3(2),rotAndIntrinsics3(3));
+Rerr = (180 / pi) * acos((trace(R3 * camRot') - 1) / 2);% angle of rotation difference
+disp('difference in rotation (degrees):');
+disp(Rerr);
 
+%%
 %{
-
 disp('SparkleCalibrate - fminsearch parameterized by four corners');
 rotAndIntrinsics4 = diffOriginEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
 disp(rotAndIntrinsics4);
@@ -129,8 +149,13 @@ rotAndIntrinsics5 = startPointEstimateRKglitter(impath, camPosEst, pin, mostInli
 disp(rotAndIntrinsics5);
 disp('difference with checkerboards');
 disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics5);
+disp('percent error (%)');
+disp((rotAndIntrinsicsCheckerboards - rotAndIntrinsics5) ./ rotAndIntrinsicsCheckerboards .* 100);
+R5 = rod2mat(rotAndIntrinsics5(1),rotAndIntrinsics5(2),rotAndIntrinsics5(3));
+Rerr = (180 / pi) * acos((trace(R5 * camRot') - 1) / 2);% angle of rotation difference
+disp('difference in rotation (degrees):');
+disp(Rerr);
 %} %
-
 
 %% save outputs
 %TODO

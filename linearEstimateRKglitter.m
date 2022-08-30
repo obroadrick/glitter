@@ -184,6 +184,10 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     K = K * Icorrection;
     R = Icorrection * R;
 
+    % and then just make it negative. because.
+    R = -R;
+
+    %{
     if det(R) < 0
         disp('det(R) < 0 rn');
         
@@ -196,6 +200,7 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
         disp('now det(R) = ');
         disp(det(R));
     end
+    %}
 
     %R = rotx(180) * roty(180) * rotz(180) * R;
     %{
@@ -468,9 +473,9 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     disp(R);
     disp(T);
     %}
-    pose = rigid3d(R',T');
+    %pose = rigid3d(R',T');
     hold on;
-    camObj = plotCamera('AbsolutePose',pose,'Opacity',0,'Size',35);
+    %camObj = plotCamera('AbsolutePose',pose,'Opacity',0,'Size',35);
     % draw frustum
 
     frustumImagePoints = [0 0; 0 M.YRES; M.XRES M.YRES; M.XRES 0];
@@ -484,9 +489,9 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
         frustumWorldPointsCheck(ix,:) = inv(Mmatrix) * ([frustumImagePoints(ix,:)';1].*1000) + T;
     end
     for ix=1:size(frustumWorldPoints,1)
-        plot3([T(1) -frustumWorldPoints(ix,1)],...
-              [T(2) -frustumWorldPoints(ix,2)],...
-              [T(3) -frustumWorldPoints(ix,3)],...
+        plot3([T(1) frustumWorldPoints(ix,1)],...
+              [T(2) frustumWorldPoints(ix,2)],...
+              [T(3) frustumWorldPoints(ix,3)],...
               'Color', 'cyan');
     end
     %%%%%%%%
@@ -514,9 +519,9 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     figure; hold on;
     for ix=1:size(frustumWorldPoints,1)
-        plot3([T(1) -frustumWorldPointsCheck(ix,1)],...
-              [T(2) -frustumWorldPointsCheck(ix,2)],...
-              [T(3) -frustumWorldPointsCheck(ix,3)],...
+        plot3([T(1) frustumWorldPointsCheck(ix,1)],...
+              [T(2) frustumWorldPointsCheck(ix,2)],...
+              [T(3) frustumWorldPointsCheck(ix,3)],...
               'Color', 'cyan');
     end
     %disp(frustumWorldPoints);
@@ -543,6 +548,9 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     tc = ['k'];
     legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
 
+    % visualize the predicted transformation being applied to the canonical
+    % axes
+    visAxesRT(R,T);
 
     % returns
     omega = undoRodrigues(R);

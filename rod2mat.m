@@ -1,4 +1,4 @@
-% get rotation matrix from rodrigues parameters
+% get rotation matrix from rodrigues parameters r1, r2, r3
 function R = rodrigues(r1,r2,r3)
     % an alternative implementation to test/check
     ang = norm([r1 r2 r3]);

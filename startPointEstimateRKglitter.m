@@ -188,17 +188,22 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     end
     K = K * Icorrection;
     R = Icorrection * R;
+
+    % and then just make it negative. because. :'(
+    R = -R;
+
+
     %R = rotx(180) * roty(180) * rotz(180) * R;
     %{
     disp('K');
     disp(K);
     disp('R');
     disp(R);
-    %}
+    
     disp('result from linear programming (R and K):');
     disp(R);
     disp(K);
-
+    %}
     %%
     figure;
     plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;    
@@ -265,7 +270,8 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     % guess for the minimization
     x0 = [10^(-3)*K(1,1) 10^(-3)*K(2,2) ourRodrig(1) ourRodrig(2) ourRodrig(3) K(1,3) K(2,3)];
     % use the camera known points for x0 TODO
-    options = optimset('PlotFcns',@optimplotfval);
+    options = optimset('PlotFcns',@optimplotfval,'MaxFunEvals',100);%cap number of iterations
+    %options = optimset('PlotFcns',@optimplotfval);%don't cap number of iterations
     xf = fminsearch(errFun, x0, options);
     fx = 10^(3)*xf(1);
     fy = 10^(3)*xf(2);
@@ -301,9 +307,9 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
         frustumWorldPoints(ix,:) = T + 1000 * inv(K*R) * [frustumImagePoints(ix,:)';1];
     end
     for ix=1:size(frustumWorldPoints,1)
-        plot3([T(1) -frustumWorldPoints(ix,1)],...
-              [T(2) -frustumWorldPoints(ix,2)],...
-              [T(3) -frustumWorldPoints(ix,3)],...
+        plot3([T(1) frustumWorldPoints(ix,1)],...
+              [T(2) frustumWorldPoints(ix,2)],...
+              [T(3) frustumWorldPoints(ix,3)],...
               'Color', 'cyan');
     end
     axis vis3d;

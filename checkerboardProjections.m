@@ -17,6 +17,7 @@ camParamsErrors = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-
 camPos = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/camPos_08_23_2022').camPos;
 camRot = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/camRot_08_23_2022').camRot;
 %}
+T = reshape(t,3,1);
 % get these into K and R as we use them
 K = camParams.IntrinsicMatrix';
 % temporarily using what is in workspace for R and T for testing purposes.
