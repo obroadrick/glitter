@@ -7,7 +7,7 @@
 % rotation and translation from checkerboard coordinates to camera 
 % coordinates (Rc, tc)
 
-function [t, R] = findCamPos(P, camParams, imPath, pin)
+%function [t, R] = findCamPos(P, camParams, imPath, pin)
     % P is paths struct
     % cameraParams is the matlab camera parameters object
     % imPath is the path to the image with checkerboard on 
@@ -33,7 +33,6 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     indexXfar = intersect(find(worldPoints(:,2)==0),find(worldPoints(:,1)==max(worldPoints(:,1))));
     indexYfar = intersect(find(worldPoints(:,1)==0),find(worldPoints(:,2)==max(worldPoints(:,2))));
 
-    %{
     % sometimes these 'world' axes will have x and y axes not pointing in a
     % consistent way... up to rotations there are two possible
     % orientations, one in which the z axis is pointing out of the board
@@ -44,6 +43,7 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     % we need to know how to reconstruct a rotation matrix that will get us
     % the coordinate system found here which involves rotating 180 around
     % the z axis potentially or potentially not depending on this question.
+    %{
     cp = cross([imagePoints(indexXfar,:) 0]-[imagePoints(indexOrigin,:) 0],...
         [imagePoints(indexYfar,:) 0]-[imagePoints(indexOrigin,:) 0]);
     if cp < 0
@@ -65,52 +65,18 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     % get rotation and translation from checkerboard origin to camera
     worldPoints3d = [worldPoints zeros(size(worldPoints,1),1)];
     [Rc,tcam] = estimateWorldCameraPose(imagePoints,worldPoints3d,params);
-    [~, translationVector] = extrinsics(imagePoints,worldPoints,params);% bad, bad function, as far as my use goes apparently
+    %[Rc, ~] = extrinsics(imagePoints,worldPoints,params);% bad, bad function, as far as my use goes apparently
     % get checkerboard point in canonical glitter coords
     % TODO make it so that we find these pin points using the marker 
     % detection code right here rather than getting them manually from addy
     tform = getTransform(P,pin);
-    %origin_in_image_coords2d = [imagePoints(indexOrigin,1) imagePoints(indexOrigin,2)];
-
-    % now get checker points in world coords 
-    origin_in_world_coords = [worldPoints3d(indexOrigin,:)];
-    xfar_in_world_coords = [worldPoints3d(indexXfar,:)];
-    yfar_in_world_coords = [worldPoints3d(indexYfar,:)];
-
-    % now we can find these points (in world coordinates) directly back
-    % on the glitter plane (perpendicularly projected on the glitter plane)
-    % which is useful since we can use these points to find the rotation
-    % in the xy-plane from glitter coordinates to world/checker coordinates
-    origin_in_world_coords = origin_in_world_coords + [0 0 M.CALIBRATION_BOARD_THICKNESS];
-    xfar_in_world_coords = xfar_in_world_coords + [0 0 M.CALIBRATION_BOARD_THICKNESS];
-    yfar_in_world_coords = yfar_in_world_coords + [0 0 M.CALIBRATION_BOARD_THICKNESS];
-
-    % now we can find the corresponding image coordinates for those points
-    % since we know the rotation and intrinsic matrix K from this
-    % checkerboard calibration
-    rotationMatrix = Rc';
-    origin_in_image_coords = worldToImage(params.Intrinsics,rotationMatrix,translationVector,origin_in_world_coords);
-    xfar_in_image_coords = worldToImage(params.Intrinsics,rotationMatrix,translationVector,xfar_in_world_coords);
-    yfar_in_image_coords = worldToImage(params.Intrinsics,rotationMatrix,translationVector,yfar_in_world_coords);
-    
-
-    % finally we can use our homograpy from image coordinates to glitter
-    % plane coordinates
-
-    %%%%%
-    % what we were doing before:
-    origin_in_glitter_coords2d = transformPointsForward(tform, origin_in_image_coords);
-    %origin_in_glitter_coords = [origin_in_glitter_coords2d 0] + [0 0 M.CALIBRATION_BOARD_THICKNESS];
-    origin_in_glitter_coords = [origin_in_glitter_coords2d 0];% + [0 0 M.CALIBRATION_BOARD_THICKNESS];
-    tg = origin_in_glitter_coords + [0 0 M.CALIBRATION_BOARD_THICKNESS];
-    %xfar_in_glitter_coords2d = transformPointsForward(tform, [imagePoints(indexXfar,1) imagePoints(indexXfar,2)]);
-    xfar_in_glitter_coords2d = transformPointsForward(tform, xfar_in_image_coords);
-    %xfar_in_glitter_coords = [xfar_in_glitter_coords2d 0] + [0 0 M.CALIBRATION_BOARD_THICKNESS];
-    xfar_in_glitter_coords = [xfar_in_glitter_coords2d 0];% + [0 0 M.CALIBRATION_BOARD_THICKNESS];
-    %yfar_in_glitter_coords2d = transformPointsForward(tform, [imagePoints(indexYfar,1) imagePoints(indexYfar,2)]);
-    yfar_in_glitter_coords2d = transformPointsForward(tform, yfar_in_image_coords);
-    %yfar_in_glitter_coords = [yfar_in_glitter_coords2d 0] + [0 0 M.CALIBRATION_BOARD_THICKNESS];
-    yfar_in_glitter_coords = [yfar_in_glitter_coords2d 0];% + [0 0 M.CALIBRATION_BOARD_THICKNESS];
+    origin_in_glitter_coords2d = transformPointsForward(tform, [imagePoints(indexOrigin,1) imagePoints(indexOrigin,2)]);
+    origin_in_glitter_coords = [origin_in_glitter_coords2d 0] + [0 0 M.CALIBRATION_BOARD_THICKNESS];
+    tg = origin_in_glitter_coords;
+    xfar_in_glitter_coords2d = transformPointsForward(tform, [imagePoints(indexXfar,1) imagePoints(indexXfar,2)]);
+    xfar_in_glitter_coords = [xfar_in_glitter_coords2d 0]+ [0 0 M.CALIBRATION_BOARD_THICKNESS];
+    yfar_in_glitter_coords2d = transformPointsForward(tform, [imagePoints(indexYfar,1) imagePoints(indexYfar,2)]);
+    yfar_in_glitter_coords = [yfar_in_glitter_coords2d 0] + [0 0 M.CALIBRATION_BOARD_THICKNESS];
     anglevec = xfar_in_glitter_coords2d - origin_in_glitter_coords2d;
     
     %thetafirsttry = asin(anglevec(2)/norm(anglevec));
@@ -197,7 +163,6 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     tc = ['k'];
     legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
 
-    %visAxesRT(R,T);
     %%
     axis vis3d;
     % R is rotation matrix from glitter to camera coordinates
@@ -285,4 +250,4 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-end
+%end
