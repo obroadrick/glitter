@@ -26,7 +26,7 @@ impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/singleImageAug1
 % path to single image fiducial marker points
 % get by running Addy's Python script on the single image:
 %allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/16ptsJuly25.mat']).arr;
-allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/16ptsAug18.mat']).arr;
+allPts = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/16ptsAug18.mat').arr;
 pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
@@ -66,12 +66,19 @@ camPos = matfile(P.camPos).camPos;
 camRot = matfile(P.camRot).camRot;
 %%%%%%%%%%%
 %% manually set path literals to control the checkerboard outputs being used
+format shortG;%display numbers in more reasonable way
 expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
 camParams = matfile([expir 'camParams']).camParams;
 camParamsErrors = matfile([expir 'camParamsErrors']).camParamsErrors;
 camPos = matfile([expir 'camPos']).camPos;
 camRot = matfile([expir 'camRot']).camRot;
-
+%% manually set path literals to control the checkerboard outputs being used
+format shortG;%display numbers in more reasonable way
+expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
+camParams = matfile([expir 'camParamsSkew']).camParams;
+camParamsErrors = matfile([expir 'camParamsErrorsSkew']).camParamsErrors;
+camPos = matfile([expir 'camPosSkew']).camPos;
+camRot = matfile([expir 'camRotSkew']).camRot;
 %%
 %%%%%%%%%%%
 % rotAndIntrinsics = [omega1 omega2 omega3 fx fy cx cy s]
@@ -108,8 +115,8 @@ disp(rotAndIntrinsics1);
 
 %%
 % solve the linear system and do RQ decomposition to get K and R
-disp('SparkleCalibrate - linear solution');
-rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
+disp('SparkleCalibrate - linear solution (but cheating and giving the checkerboard translation estimate)');
+rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPos, pin, mostInliersSpecPos, mostInliersImageSpecPos);
 disp(rotAndIntrinsics2);
 disp('difference with checkerboards');
 disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics2);

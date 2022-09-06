@@ -234,7 +234,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     camroll(-80);
     mostInliersSpecPos = [];
     mostInliersR = [];
-    for counter=1:100
+    for counter=1:150 %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
         idxsRandomTwo = randi(size(R,1),1,2);
@@ -247,7 +247,9 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
         directions = R(idxsRandomTwo,1,:);
         candidate = pointBetweenLines(points, directions);
         % sometimes the lines cross near each other behind the glitter plane...
-        if candidate(3) < 0
+        % but also a position within a few cm in front of the plane is not
+        % cool... call it 150 = 15cm
+        if candidate(3) < 150
             continue
         end
         % show camera estimated position as a dot: (dots=cameras)

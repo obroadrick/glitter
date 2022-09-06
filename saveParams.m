@@ -12,3 +12,9 @@ camParamsErrors = estimationErrors;
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 save([P.data 'camParams_' datestr(now, 'mm_dd_yyyy')], "camParams");
 save([P.data 'camParamsErrors_' datestr(now, 'mm_dd_yyyy')], "camParamsErrors");
+
+% save in the experiment/characterization directory
+%chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug31characterization/';
+chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
+save([chardir 'camParamsSkew'], "camParams");
+save([chardir 'camParamsErrorsSkew'], "camParamsErrors");

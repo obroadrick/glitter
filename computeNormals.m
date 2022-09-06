@@ -1,11 +1,11 @@
 % computes the glitter specs' surface normals given already found
 % spec locations and brightness distribution gaussian means
 % inputs: P, matlab struct with paths to the data (means, spec locs)
-function specNormalsPath = computeNormals(P)
+function specNormalsPath = computeNormals(P, chardir)
     means = matfile(P.means).means;
     C = matfile(P.imageCentroids).imageCentroids;
     M = matfile(P.measurements).M;
-    cam = matfile(P.camPos).camPos;
+    cam = matfile([chardir 'camPos.mat']).camPos;
     % seed the rng
     seed = 125;
     rng(seed);
@@ -37,6 +37,8 @@ function specNormalsPath = computeNormals(P)
     specNormals = spec2light + spec2cam; %just add since they are normalized
     specNormals = specNormals ./ vecnorm(specNormals, 2, 2);
     specNormalsPath = [P.data 'spec_normals_' datestr(now, 'mm_dd_yyyy')];
+    save(specNormalsPath, "specNormals");
+    specNormalsPath = [chardir 'spec_normals.mat'];
     save(specNormalsPath, "specNormals");
     
     %% pretty picture of it all

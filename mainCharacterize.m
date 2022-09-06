@@ -3,11 +3,12 @@
 % That is, it estimates the position of specs of glitter and their
 % surface normals.
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
+chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization/';
 
 %% Fiducial marker points:  
 % open and interprety addy's homography points file then pass 
 % the points to the future programs
-allPts = matfile(P.characterizationPoints).arr;
+allPts = matfile([chardir '16pts.mat']).arr;
 pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
@@ -17,35 +18,38 @@ fiducialMarkerPoints = double([pinx' piny']);
 %                   coordinate system
 tStart = tic;
 fprintf("Computing homography...\n");
-P.tform = saveTransform(P, fiducialMarkerPoints);
+P.tform = saveTransform(P, fiducialMarkerPoints, chardir);
 fprintf("Homography computed after %f minutes\n", toc(tStart)/60);
 
+%%
+%{
 %% Calibrate camera: find the camera's position in the canonical
 %                    coordinate system using checkerboards
 fprintf("Calibrating camera...\n");
 P.camParams = calibrateCamera(P, fiducialMarkerPoints);
 fprintf("Camera calibrated after %f minutes\n", toc(tStart)/60);
+%}
 
 %% Detect specs:    find specs that sparkled during a sweep of light
 fprintf("Detecting spec centroids...\n");
-[P.imageCentroids, P.canonicalCentroids] = detectSpecs(P);
+[P.imageCentroids, P.canonicalCentroids] = detectSpecs(P, chardir);
 fprintf("%u specs detected after %f minutes\n", size(matfile(P.canonicalCentroids).canonicalCentroids,1), toc(tStart)/60);
 
 %% Max brightnesses:    find the peak brightness for each spec
 fprintf("Finding spec max brightnesses...\n");
-[P.maxBrightness] = maxBrightnesses(P);
+[P.maxBrightness] = maxBrightnesses(P, chardir);
 fprintf("Brightnesses found after %f minutes\n", toc(tStart)/60);
 
 %% Get gaussians:   fit gaussians to the brightness distributions of
 %                   specs across the lighting positions
 fprintf("Fitting Gaussians to specs' brightness distributions...\n");
-[P.means, P.imageCentroids, P.canonicalCentroids] = getGaussians(P);
+[P.means, P.imageCentroids, P.canonicalCentroids] = getGaussians(P, chardir);
 fprintf("Gaussians fit after %f minutes\n", toc(tStart)/60);
 
 %% Compute normals: using the known lighting positions and spec
 %                   positions, compute the spec surface normals
 fprintf("Computing spec surface normals...\n");
-P.specNormals = computeNormals(P);
+P.specNormals = computeNormals(P, chardir);
 fprintf("Spec surface normals found after %f minutes\n", toc(tStart)/60);
 
 % Save the updated paths struct

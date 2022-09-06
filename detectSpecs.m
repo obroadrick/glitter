@@ -4,7 +4,7 @@
 % from image coordinates to canonical (glitter) coordinates
 
 % inputs: P, a matlab struct containing paths to relevant images/data
-function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
+function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P, chardir)
     %% get max image
     ims = [];
     idxs = [];
@@ -19,14 +19,16 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     maxIndexLeftRight = size(dir(P.leftRightSweep),1)-3;
     maxIndexUpDown = size(dir(P.upDownSweep),1)-3;
 
+    % compute the max image
     indexStep = 1;%formerly 3
     for ix = 0:indexStep:maxIndexLeftRight-1
         i = i + 1;
-        path = [P.leftRightSweep '*calib' num2str(ix) '.0-Glitter.JPG'];
+        path = [P.leftRightSweep '*calib' num2str(i) '.0-Glitter.JPG'];
         %path = [P.upDownSweep '*calib-h' num2str(ix) '.0-Glitter.JPG'];
         files = dir(path);
         if length(files) < 1
-            disp(['no file found at:' path]);
+            continue
+            %disp(['no file found at:' path]);
         end
         if length(files) > 1
             disp(['more than one file at:' path]);
@@ -58,7 +60,8 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     %imagesc(ims(:,:,2));colormap(gray);
     m = ims(:,:,2);
     %SAVE THE MAX IMAGE
-    imwrite(cat(3, m/255, m/255, m/255),[P.data 'maxImageLeftRight_' datestr(now, 'mm_dd_yyyy') '.jpg']);
+    %imwrite(cat(3, m/255, m/255, m/255),[P.data 'maxImageLeftRight_' datestr(now, 'mm_dd_yyyy') '.jpg']);
+    imwrite(cat(3, m/255, m/255, m/255),[chardir 'maxImageLeftRight.jpg']);
     %% filter image to keep only specs of glitter bright enough to be of interest
     F = fspecial('Gaussian',[15 15],1) - fspecial('Gaussian',[15 15],7);
     Mp = imfilter(m, F);
@@ -139,8 +142,14 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P)
     %% return and save them
     imageCentroids = C;
     canonicalCentroids = C_canonical;
+    %{
     imageCentroidsPath = [P.data 'image_centroids_' datestr(now, 'mm_dd_yyyy')];
     canonicalCentroidsPath = [P.data 'canonical_centroids_' datestr(now, 'mm_dd_yyyy')];
+    save(imageCentroidsPath, "imageCentroids");
+    save(canonicalCentroidsPath, "canonicalCentroids");
+    %}
+    imageCentroidsPath = [chardir 'image_centroids_detect_specs'];
+    canonicalCentroidsPath = [chardir 'canonical_centroids_detect_specs'];
     save(imageCentroidsPath, "imageCentroids");
     save(canonicalCentroidsPath, "canonicalCentroids");
 end

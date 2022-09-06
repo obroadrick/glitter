@@ -3,10 +3,10 @@
 % and then this can be used to scale the brightness of observed sparkles
 % according to each specs own unique max brightness.
 
-function maxbpath = maxBrightnesses(P)
+function maxbpath = maxBrightnesses(P, chardir)
     M = matfile(P.measurements).M;
     
-    m = rgb2gray(imread(P.maxImage));
+    m = rgb2gray(imread([chardir 'maxImageLeftRight.jpg']));
     figure;imagesc(m);colormap(gray);drawnow;
     
     %% use image centroids (rather than the canonical centroids) from the
@@ -21,6 +21,6 @@ function maxbpath = maxBrightnesses(P)
     maxBrightness(:) = interp2(double(m),imageCentroids(:,1)',imageCentroids(:,2)');
     
     %% save results
-    maxbpath = [P.data 'maxBrightness.mat'];
-    save(sprintf([P.data 'maxBrightness_%s'],datestr(now, 'mm_dd_yyyy')), "maxBrightness");
+    maxbpath = [chardir 'maxBrightness.mat'];
+    save([chardir 'maxBrightness'], "maxBrightness");
 end

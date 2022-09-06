@@ -1,6 +1,6 @@
 function P = savePaths()
     % raw images/inputs to the current characterization
-    P.characterizationDirectory = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/';
+    P.characterizationDirectory = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization/';
     P.leftRightSweep = [P.characterizationDirectory 'verBarSweep/'];
     P.upDownSweep = [P.characterizationDirectory 'horBarSweep/'];
     P.checkerboardIms = [P.characterizationDirectory 'checkerboards/'];
@@ -8,6 +8,16 @@ function P = savePaths()
     P.homographyImages = [P.characterizationDirectory 'homography/'];
     P.pointLightImages = [P.characterizationDirectory 'pointLightImages/'];
     P.characterizationPoints = [P.characterizationDirectory 'homographyPoints/16ptsJuly19-1.mat'];
+    P.maxBrightness = [P.characterizationDirectory 'maxBrightness.mat'];
+    P.maxImage = [P.characterizationDirectory 'maxImageLeftRight.jpg'];
+    P.imageCentroids = [P.characterizationDirectory 'image_centroids.mat'];
+    P.canonicalCentroids = [P.characterizationDirectory 'canonical_centroids.mat'];
+    P.means = [P.characterizationDirectory 'lightingmeans.mat'];
+    P.specNormals = [P.characterizationDirectory 'spec_normals.mat'];
+    P.camParams = [P.characterizationDirectory 'camParams'];
+    P.camParamsErrors = [P.characterizationDirectory 'camParamsErrors'];
+    P.camPos = [P.characterizationDirectory 'camPos.mat'];
+    P.camRot = [P.characterizationDirectory 'camRot.mat'];
 
     % specific image paths for testing and such
     %P.extraOnGlitterPlane = '/Users/oliverbroadrick/Desktop/slant1.JPG';
@@ -20,21 +30,13 @@ function P = savePaths()
     
     P.tform = [P.data 'transform.mat'];
 
+    %{
     P.camParams = [P.data 'camParams_08_18_2022'];
     P.camParamsErrors = [P.data 'camParamsErrors_08_18_2022'];
     P.camPos = [P.data 'camPos_08_18_2022.mat'];
     P.camRot = [P.data 'camRot_08_18_2022.mat'];
+    %}
 
-    P.maxImage = [P.data 'maxImageLeftRight_07_20_2022.jpg'];
-
-    P.imageCentroids = [P.data 'image_centroids_07_22_2022.mat'];
-    P.canonicalCentroids = [P.data 'canonical_centroids_07_22_2022.mat'];
-
-    P.maxBrightness = [P.data 'maxBrightness_07_21_2022.mat'];
-
-    P.means = [P.data 'lightingmeans_07_22_2022.mat'];
-
-    P.specNormals = [P.data 'spec_normals_07_22_2022.mat'];
 
     % save paths 
     save([P.data 'paths'], "P");
