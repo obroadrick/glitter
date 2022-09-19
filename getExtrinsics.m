@@ -7,7 +7,7 @@
 % for this particular experiment is stored)
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
-expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization/';
+expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep12characterization1/';
 % get P
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 % get camParams

@@ -4,11 +4,10 @@
 function specNormalsPath = computeNormals(P, chardir)
     means = matfile(P.means).means;
     C = matfile(P.imageCentroids).imageCentroids;
-    M = matfile(P.measurements).M;
+    %M = matfile(P.measurements).M;
+    M = matfile([chardir '/measurements.mat']).M;
     cam = matfile([chardir 'camPos.mat']).camPos;
-    % seed the rng
-    seed = 125;
-    rng(seed);
+
     %% spec to lightsource vectors in glitter coords
     % map the gaussian means to lighting positions
     howmany = size(C,1);

@@ -3,7 +3,7 @@
 % That is, it estimates the position of specs of glitter and their
 % surface normals.
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
-chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization/';
+chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization/';
 
 %% Fiducial marker points:  
 % open and interprety addy's homography points file then pass 
@@ -13,6 +13,7 @@ pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
 fiducialMarkerPoints = double([pinx' piny']);
+pin = fiducialMarkerPoints;
 
 %% Find transform:  compute homography from images to canonical
 %                   coordinate system

@@ -2,9 +2,9 @@
 % only need to run this when we update/add measurements
 function M = createMeasurementsStruct()
     % directly measured distances (by Oliver, poorly, with named tool)
-    M.GLIT_TO_MON_PLANES = 627;%MEASURED (laser)
-    M.GLIT_TO_MON_EDGES_X = 133.9;%MEASURED (jenky laser rig with calipers)
-    M.GLIT_TO_MON_EDGES_Y = 79.1;%MEASURED (jenky laser rig with calipers)
+    M.GLIT_TO_MON_PLANES = 628;%MEASURED (laser)
+    M.GLIT_TO_MON_EDGES_X = 130.8;%MEASURED (jenky laser rig with calipers)
+    M.GLIT_TO_MON_EDGES_Y = 26+56.1;%MEASURED (jenky laser rig with calipers)
     M.MON_WIDTH_MM = 669;%MEASURED (yard sticks)
     M.MON_HEIGHT_MM = 378;%MEASURED (yard sticks)
     M.GLIT_WIDTH = 457.2;%computed as 18in to mm
@@ -13,7 +13,7 @@ function M = createMeasurementsStruct()
     M.CALIBRATION_BOARD_THICKNESS = 3.2;%MEASURED (calipers)
     %M.FIDUCIAL_MARKER_TO_EDGE = 10.3;%MEASURED (calipers)
     %M.FIDUCIAL_MARKER_SIZE = 15.3;%MEASURED (calipers)
-    M.FIDUCIAL_MARKER_TO_EDGE = 10.2305;%computed from 
+    M.FIDUCIAL_MARKER_TO_EDGE = 10.2305;%computed from addy
     M.FIDUCIAL_MARKER_SIZE = 15.1694;%computed from addy
     M.BOARD_LINE_WIDTH = 5.3003;%computed line width on glitter board (Addy)
 
@@ -32,4 +32,5 @@ function M = createMeasurementsStruct()
     
     % save struct to file
     save("data/measurements","M");
+    %save("/Users/oliverbroadrick/Desktop/glitter-stuff/sep12characterization1/measurements","M");
 end

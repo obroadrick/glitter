@@ -35,7 +35,7 @@ fiducialMarkerPoints = pin;
 
 %  characterized sheet of glitter: spec locations, normals
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
-M = matfile(P.measurements).M;
+%M = matfile(P.measurements).M;
 % note: in practice right now these P and M structs are just read in fresh
 % in each of the estimate T and RK scripts below... so the characterization
 % and relevant measurements are not set and passed in this script

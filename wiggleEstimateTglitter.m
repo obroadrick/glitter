@@ -92,7 +92,7 @@
     histogram(atan2(y, x));title('histogram of vector directions');
     xlabel('direction in radians');
     
-    %%
+    %% rerun
     allSpecNormals = matfile(P.specNormals).specNormals;
     specNormals = zeros(size(idx,1),K,3);
     for ix=1:size(idx,1)
@@ -366,39 +366,187 @@
     % HERE here new code 0000000000000
 
     % "wiggle" the light position and see how the results change (i.e. can
-    % we get a much better camera estimate for a light position that is
+    % we get a much better camera estimaGte for a light position that is
     % just a millimeter or two different from that which i measured with my
     % crayons?)
 
     % get a 3d grid of points to check around the measured light position
-    radius = 12;%mm
-    step = 4;%mm
-    [X,Y,Z] = ndgrid([-radius:step:radius], [-radius:step:radius], [0]);%for now just do change in y is 0 so we look a perturbations on a horizontal plane (parallel to table)
-    X = X + lightPos(1);
-    Y = Y + lightPos(2);
-    Z = Z + lightPos(3);
+    radius = 15;%mm
+    step = 3;%mm
+    %{
+    [X,Y,Z] = ndgrid([lightPos(1)-radius:step:lightPos(1)+radius], ...
+        [lightPos(2)-radius:step:lightPos(2)+radius], ...
+        [lightPos(3)-radius:step:lightPos(3)+radius]);
+    %}
+    [X,Y,Z] = ndgrid(-radius:step:radius, -radius:step:radius, -radius:step:radius);
 
     % visualize!
     figure;
-    scatter3(X,Y,Z);
+    scatter3(X(:),Y(:),Z(:));
 
-    % for each light position
+    % for each light positiond
     %     reflect light off all the sparkly specs
     %     find spec matches that reflect closest to true cam position
     %     record average distance of reflected ray to true cam position of
     %           top x rays
 
     % for each light position
+    nums = [];
+    estNumInliers = [];
+    allEstCamPos = [];
+    allAvgDistsTopN = [];
     for i=1:size(X,1)
         for j=1:size(X,2)
             for k=1:size(X,3)
-                curLightPos = [X(i,j,k) Y(i,j,k) Z(i,j,k)];
+                curLightPos = [X(i,j,k)+lightPos(1) Y(i,j,k)+lightPos(2) Z(i,j,k)+lightPos(3)];
                 %     reflect light off all the sparkly specs
-                re
+                R = reflect(specPos, specNormals, curLightPos);
+                %     find spec matches that reflect closest to true cam position
+                dists = [];
+                for kk=1:size(R,2)
+                    for ix=1:size(R,1)
+                        dists(ix,kk) = distPointToLine(knownCamPos, reshape(specPos(ix,kk,:),1,3), reshape(R(ix,kk,:),1,3));
+                    end
+                end
+                [minDists,kmin] = min(dists, [], 2);
+                within = 5;
+                inlierIdxs = find(minDists<=within);
+                num = size(inlierIdxs,1);
+                nums(i,j,k) = num;
+                if num > 0
+                    disp(num);
+                end
+
+                % we also want to actually estimate camera position for
+                % this light position so that we can compare the camera
+                % position estimate to that of other light position
+                % estimates
+                % so do ransac to get for this curLightPos the
+                % - estimated camera position
+                % - number of inliers
+                % - average distance of top n inliers (n=40 maybe)
+                [estCamPos, numInliers, avgDistsTopN, distLossByN] = estCamPosRansac(R,specPos,imageCentroids,maxBrightness);
+                estNumInliers(i,j,k) = numInliers;
+                allEstCamPos(i,j,k,:) = estCamPos;
+                allAvgDistsTopN(i,j,k,:) = avgDistsTopN;
+                loss(i,j,k) = distLossByN;
             end
         end
     end
+    text(X(:),Y(:),Z(:),string(nums(:))');
 
+    %% point cloud of lightpositions that resulted in "true" inliers was >= 40
+    figure;
+    hold on;
+    t = 40;
+    scatter3(X(nums>t),Y(nums>t),Z(nums>t), 10,nums(nums>t),'filled');
+    text(X(nums>t),Y(nums>t),Z(nums>t),string(nums(nums>t))');
+    hold on;
+    plot3(0,0,0,'rX','MarkerSize',50);
+    xlabel('x');
+    ylabel('y');
+    zlabel('z');
+    axis equal
+
+    %%
+    %{
+    % mesh showing number of reflected rays close to the true camera position
+    figure;hold on;
+    mesh(X,Y,nums);hold on;
+    %plot3(lightPos(1),lightPos(2),[0:.1:100],'r.','MarkerSize',15);
+    xlabel('X coordinate of light position');
+    ylabel('Y coordinate of light position');
+    title('number of reflected rays within a centimeter of the "true" camera position');
+    %}
+    
+    %% well, plot that shows the number of inliers fthroughout the lightpos point cloud... all high.... always high... 
+    figure;
+    hold on;
+    t = 40;
+    scatter3(X(estNumInliers>t),Y(estNumInliers>t),Z(estNumInliers>t),10,estNumInliers(estNumInliers>t),'filled');
+    colormap(jet);
+    colorbar;
+    text(X(estNumInliers>t),Y(estNumInliers>t),Z(estNumInliers>t),string(estNumInliers(estNumInliers>t))');
+    hold on;
+    plot3(0,0,0,'rX','MarkerSize',50);
+    xlabel('x');
+    ylabel('y');
+    zlabel('z');
+    axis equal
+    %estNumInliers(i,j,k) = ;
+    %allEstCamPos(i,j,k,:) = ;
+    %allAvgDistsTopN(i,j,k,:) = ;
+
+    %% point  cloud showing for each light pos the avg dist of the top-25 inliers
+    figure;
+    hold on;
+    n=100;%top-n average dist of inlier reflected rays to hypothesized camera position
+    avgDistsTopN = allAvgDistsTopN(:,:,:,n);
+    scatter3(X(:),Y(:),Z(:),10,avgDistsTopN(:),'filled');
+    colormap(jet);
+    colorbar;
+    %text(X(:),Y(:),Z(:),string(avgDistsTopN(:))');
+    hold on;
+    plot3(0,0,0,'rX','MarkerSize',50);
+    xlabel('x');
+    ylabel('y');
+    zlabel('z');
+    axis equal
+    %estNumInliers(i,j,k) = ;
+    %allEstCamPos(i,j,k,:) = ;
+    %allAvgDistsTopN(i,j,k,:) = ;
+
+    %% it is hard to interpret the color-coded point cloud, and so here are some slices of the space
+    figure;
+    n=50;%top-n average dist of inlier reflected rays to hypothesized camera position
+    avgDistsTopN = allAvgDistsTopN(:,:,:,n);
+    z = floor(size(avgDistsTopN,3)/2);
+    mesh(X(:,:,z),Y(:,:,z),avgDistsTopN(:,:,z));
+    title('average distance of top 50');
+    colormap(jet);
+    colorbar;
+    % some more slices but now by the new loss metric/function that is hopefully smoother
+    figure;
+    %n=100;%top-n average dist of inlier reflected rays to hypothesized camera position
+    %avgDistsTopN = allAvgDistsTopN(:,:,:,n);
+    z = ceil(size(avgDistsTopN,3)/2);
+    mesh(X(:,:,z),Y(:,:,z),loss(:,:,z));
+    title('average distance of top 50 smoothed');
+    colormap(jet);
+    colorbar;
+    %% now let's actually see how these goodness proxies compare with the 
+    % actual goodness: how close the estimated camera position is to the 
+    % known true camera position
+
+    % first compute distance of each estimated camera position to the true
+    % camera position
+    camPosErrs = [];
+    for i=1:size(allEstCamPos,1)
+        for j=1:size(allEstCamPos,2)
+            for k=1:size(allEstCamPos,3)
+                curEstCamPos = reshape(allEstCamPos(i,j,k,:),1,3);
+                camPosErrs(i,j,k) = sqrt(sum((curEstCamPos - knownCamPos).^2));
+            end
+        end
+    end
+    %% show the results (for several values of n)
+    figure;
+    tiledlayout(5,5,'TileSpacing','tight','Padding','tight');
+    for n=5:5:5+5*20-1
+        nexttile;
+        avgDistsTopN = allAvgDistsTopN(:,:,:,n);
+        scatter(avgDistsTopN(:), camPosErrs(:));
+        title(n);
+        xlabel('avg dist top n');
+        ylabel('cam pos error (mm)');
+        %ylim([0 20]);
+        xlim([0 10]);
+    end
+    %{
+    ylabel('error in camera position estimate');
+    xlabel('average distance of top n inlier rays');
+    title('how useful is this proxy for the goodness of the camera position estimation?');
+    %}
 
     %%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -640,11 +788,184 @@ function d = distPointToLine(point, pointOnLine, direction)
     d = norm((p-a)-(dot((p-a),n,1)*n));
 end
 
-function reflectedRays = reflect(specNormals, specPositions, lightPosition)
-    for ix=1:size(specPositions)
-        L = (lightPosition - specPositions(ix,:)) ./ vecnorm(lightPosition - specPositions(ix,:),2, 2);
-        reflectedRays(ix,:) = L - 2 * dot(L, specNormals(ix,:), 2) .* specNormals(ix,:);
-        reflectedRays(ix,:) = -1.*reflectedRays(ix,:);
+function R = reflect(specPos, specNormals, lightPos)
+    % computes the position of light reflected off the passed spec
+    % positions with specNormals from lightPos assuming that specPos is of
+    % the shape nxkx3 where n is number of specs, k is number of
+    % hypothesized positions for that spec, and 3 is number of dimensions
+    % (x,y,z)
+    R=[];
+    for ix=1:size(specPos,2)
+        % compute reflected rays: Ri = Li − 2(Li dot Ni)Ni
+        % where Li is normalized vector from spec to light
+        %       Ni is normalized normal vector
+        %       Ri is normalized reflected vector
+        L = (lightPos - reshape(specPos(:,ix,:),size(specPos,1),...
+            size(specPos,3))) ./ vecnorm(lightPos - reshape(specPos(:,ix,:),size(specPos,1),size(specPos,3)), 2, 2);
+        R(:,ix,:) = L - 2 * dot(L, reshape(specNormals(:,ix,:),...
+            size(specNormals,1),size(specNormals,3)), 2) .* reshape(specNormals(:,ix,:),...
+            size(specNormals,1),size(specNormals,3));
+        R(:,ix,:) = -1.*R(:,ix,:);
     end
 end
 
+function [camPosEst, numInliers, avgDistNBestInliers, distLossByN] = estCamPosRansac(R,specPos,imageCentroids,maxBrightness)
+    % R is the array of reflected rays of size nxkx3 (k is from knn
+    %                                                            matching)
+    % 
+    %
+    %
+    %
+    %
+    %
+    inlierThreshold = 15;%constant (set earlier in this program but now here for this function)
+    numInliers = [];
+    %camroll(-80);
+    mostInliersSpecPos = [];
+    mostInliersR = [];
+    for counter=1:400 %this is constant right now but could (should) be more dynamic/reactive than that
+        
+        % hypothesize a possible pair of inliers
+        idxsRandomTwo = randi(size(R,1),1,2);
+        %k = 1; %when hypothesizing, just take the neareast neighbor specs
+        if nearestDistLines(specPos(idxsRandomTwo,1,:), R(idxsRandomTwo,1,:)) > 2 * inlierThreshold
+            continue
+        end
+        % find the corresponding candidate camera position
+        points = specPos(idxsRandomTwo,1,:);
+        directions = R(idxsRandomTwo,1,:);
+        candidate = pointBetweenLines(points, directions);
+        % sometimes the lines cross near each other behind the glitter plane...
+        % but also a position within a few cm in front of the plane is not
+        % cool... call it 150 = 15cm
+        if candidate(3) < 150
+            continue
+        end
+        % show camera estimated position as a dot: (dots=cameras)
+        cam=candidate;
+        % check how many of the other rays are inliers for this hypothesized
+        % camera position
+        % compute dist from hypothesized cam pos to rays
+        dists = [];
+        for k=1:size(R,2)%(size(R,2)=K)
+            for ix=1:size(R,1)
+                dists(ix,k) = distPointToLine(candidate, reshape(specPos(ix,k,:),1,3), reshape(R(ix,k,:),1,3));
+            end
+        end
+        % a single spec doesn't get multiple reflected rays, so we just
+        % consider the best reflected ray, assuming that that one is the
+        % correct one for this model probably
+        [minDists,kmin] = min(dists, [], 2);
+        inlierIdxs = find(minDists<=inlierThreshold);
+        numInliers(counter) = size(inlierIdxs,1);
+        kmin = kmin(minDists<=inlierThreshold);
+        overallInlierIdxs = [inlierIdxs kmin];
+        inliersSpecPos = [];
+        inliersImageSpecPos = [];
+        inliersR = [];
+        inliersMaxBrightness = [];
+        for ix=1:size(inlierIdxs)
+            inliersImageSpecPos(ix,:) = imageCentroids(inlierIdxs(ix),:);
+            inliersSpecPos(ix,:) = specPos(inlierIdxs(ix),kmin(ix),:);
+            inliersR(ix,:) = R(inlierIdxs(ix),kmin(ix),:);
+            inliersMaxBrightness(ix) = maxBrightness(inlierIdxs(ix),kmin(ix));
+        end
+        if size(inliersR,1) > size(mostInliersR,1)
+            mostInliersImageSpecPos = inliersImageSpecPos;
+            mostInliersR = inliersR;
+            mostInliersSpecPos = inliersSpecPos;
+            mostInliersIdxs = inlierIdxs;
+            mostInliersKmin = kmin;
+            mostInliersMinDists = minDists;
+            mostInliersMaxBrightness = inliersMaxBrightness;
+        end
+        %{
+        % now show the two lines
+        for i=1:size(idxsRandomTwo,2)
+            ix = idxsRandomTwo(i);
+            % draw reflected rays
+            x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
+            y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
+            z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
+            color = [0 0 1];
+            line(x,y,z,'Color',color);
+        end
+        % and their inliers as well
+        inliersR = inliersR * 1000;
+        for ix=1:size(inliersR,1)
+            % draw reflected rays
+            x = [inliersSpecPos(ix,1) inliersSpecPos(ix,1)+inliersR(ix,1)]';
+            y = [inliersSpecPos(ix,2) inliersSpecPos(ix,2)+inliersR(ix,2)]';
+            z = [inliersSpecPos(ix,3) inliersSpecPos(ix,3)+inliersR(ix,3)]';
+            color = [0 1 0];
+            line(x,y,z,'Color',color);
+        end
+        view([-110 -30]);
+        %camroll(-80);
+        daspect([1 1 1]);
+        5[
+        %}
+        %curNumInliers = numInliers(size(numInliers,2));
+        %{
+        title(['Number of inliers: ' num2str(curNumInliers) ' (max so far: ' num2str(max(numInliers)) ')']);
+        %pause(.5);%
+        red = [1 0 0];
+        % now go back over and draw them all back to red
+        for i=1:size(idxsRandomTwo,1)
+            ix = idxsRandomTwo(i);
+            % draw reflected rays
+            x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
+            y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
+            z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
+            line(x,y,z,'Color',red);
+        end
+        % and their inliers as well
+        for ix=1:size(inliersR,1)
+            % draw reflected rays
+            x = [inliersSpecPos(ix,1) inliersSpecPos(ix,1)+inliersR(ix,1)]';
+            y = [inliersSpecPos(ix,2) inliersSpecPos(ix,2)+inliersR(ix,2)]';
+            z = [inliersSpecPos(ix,3) inliersSpecPos(ix,3)+inliersR(ix,3)]';
+            line(x,y,z,'Color',red);
+        end
+        %}
+    end
+    %{
+    legend(legendItems);
+    figure;
+    histogram(numInliers);
+    %}
+    %% now just for the model with the most inliers, we build up a 
+    % camera position estimate
+    % estimate camera position by minimizing some error function
+    %errFun = @(c) errT(c, mostInliersSpecPos, mostInliersR);
+    %x0 = [M.GLIT_SIDE/2;M.GLIT_SIDE/2;M.GLIT_SIDE];
+    %x0 = [0;0;0];
+    %x0 = [M.GLIT_SIDE;M.GLIT_SIDE;2*M.GLIT_SIDE];
+    %options = optimset('PlotFcns',@optimplotfval);
+    %camPosEst = fminsearch(errFun,x0,options)';
+    %disp(camPosEst);
+    camPosEst = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR);
+    inlierDists = sort(mostInliersMinDists);
+    avgDistNBestInliers = [];
+    for ix=1:size(inlierDists)
+        avgDistNBestInliers(ix) = sum(inlierDists(1:ix))/ix;
+    end
+    avgDistNBestInliers = avgDistNBestInliers';
+    numInliers = size(mostInliersR,1);
+    % instead of just average dist of top n inliers, compute a smoother
+    % version of this metric 
+    distLossByN = computeDistLossByN(inlierDists);
+
+end
+function distLossByN = computeDistLossByN(inlierDists)
+    % first let's just compute with a logistic curve at fixed n, say 50
+    n = 50;
+    w = inline('1 - 1 / (1 + exp(-k*(x-n)))', 'k', 'n', 'x');
+    k = .1; % makes for a pretty gradual transition from high weight to low weight (increase for less gradual)
+    loss = 0;
+    for ix=1:size(inlierDists,1)
+        loss = loss + inlierDists(ix)*w(k,n,ix);
+    end
+    disp(size(inlierDists));
+    distLossByN = loss;
+end

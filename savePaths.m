@@ -1,13 +1,13 @@
 function P = savePaths()
     % raw images/inputs to the current characterization
-    P.characterizationDirectory = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization/';
+    P.characterizationDirectory = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization/';
     P.leftRightSweep = [P.characterizationDirectory 'verBarSweep/'];
     P.upDownSweep = [P.characterizationDirectory 'horBarSweep/'];
     P.checkerboardIms = [P.characterizationDirectory 'checkerboards/'];
     P.onGlitterPlane = [P.checkerboardIms 'onGlitterPlane.JPG'];
     P.homographyImages = [P.characterizationDirectory 'homography/'];
     P.pointLightImages = [P.characterizationDirectory 'pointLightImages/'];
-    P.characterizationPoints = [P.characterizationDirectory 'homographyPoints/16ptsJuly19-1.mat'];
+    P.characterizationPoints = [P.characterizationDirectory '16pts.mat'];
     P.maxBrightness = [P.characterizationDirectory 'maxBrightness.mat'];
     P.maxImage = [P.characterizationDirectory 'maxImageLeftRight.jpg'];
     P.imageCentroids = [P.characterizationDirectory 'image_centroids.mat'];
@@ -18,6 +18,7 @@ function P = savePaths()
     P.camParamsErrors = [P.characterizationDirectory 'camParamsErrors'];
     P.camPos = [P.characterizationDirectory 'camPos.mat'];
     P.camRot = [P.characterizationDirectory 'camRot.mat'];
+    P.measurements = [P.characterizationDirectory 'measurements.mat'];
 
     % specific image paths for testing and such
     %P.extraOnGlitterPlane = '/Users/oliverbroadrick/Desktop/slant1.JPG';
@@ -26,7 +27,6 @@ function P = savePaths()
     % data created by processing the images (surface normals, peak lighting
     % positions, camera parameters, etc)
     P.data = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
-    P.measurements = [P.data 'measurements.mat'];
     
     P.tform = [P.data 'transform.mat'];
 

@@ -6,6 +6,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
 
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     M = matfile(P.measurements).M;
+
     
     % read in image
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
@@ -65,10 +66,10 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     
     %% match canonical centroids to those in the characterization
     knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-    K = 4;
+    K = 3;
     [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                                  'K', K, 'Distance', 'euclidean');
-    % only consider specs whose match is within .xx millimeters
+    % only consider specs whose mwhatch is within .xx millimeters
     %closeEnough = .3;
     %specIdxs = idx(dist<closeEnough);
     %specPos = knownCanonicalCentroids(idx,:);
@@ -86,7 +87,8 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     x = knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1);
     y = knownCanonicalCentroids(idx(:,1),2)-canonicalCentroids(:,2);
     figure;
-    histogram(atan2(y, x));title('histogram of vector directions');
+    histogram(atan2(y, x));
+    title('histogram of vector directions');
     xlabel('direction in radians');
     
     %%
@@ -114,7 +116,9 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
         allR(ix,:) = -1.*allR(ix,:);
     end
     %compute distances to pinhole for these allR reflected rays
-    knownCamPos = matfile(P.camPos).camPos;
+    %knownCamPos = matfile(P.camPos).camPos;% TODO SHOULD HAVE BEEN BASED
+    %ON EXPERIMENT DIRECTORY
+    knownCamPos = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/camPos.mat').camPos;
     %knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
     %knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
     allTrueDists = [];
@@ -234,7 +238,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     camroll(-80);
     mostInliersSpecPos = [];
     mostInliersR = [];
-    for counter=1:150 %this is constant right now but could (should) be more dynamic/reactive than that
+    for counter=1:500 %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
         idxsRandomTwo = randi(size(R,1),1,2);
@@ -254,7 +258,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
         end
         % show camera estimated position as a dot: (dots=cameras)
         cam=candidate;
-        legendItems(legPos) = scatter3(cam(1),cam(2),cam(3),25,'red','o','filled','DisplayName','Hypothesized Camera');
+        %legendItems(legPos) = scatter3(cam(1),cam(2),cam(3),25,'red','o','filled','DisplayName','Hypothesized Camera');
         % check how many of the other rays are inliers for this hypothesized
         % camera position
         % compute dist from hypothesized cam pos to rays
