@@ -33,27 +33,27 @@ end
 %% 
 % for each spec in char 1, find the index of the spec in char 2 which is
 % nearest in surface normal degree difference among the K found
-[minDs, kmins] = min(Ndiffs,[],2);
+[minDegs, kmins] = min(Ndiffs,[],2);
 for ix=1:size(I,1)
     minIs(ix) = I(kmins(ix));
 end
 
 %%
 % plot histogram of the differences in degrees
-histogram(minDs(minDs < 2), 100);
+histogram(minDegs(minDegs < 2), 100);
+hold on;
+xlabel('surface normal difference in degrees');
 
-%% 
-% now compare the surface normals of the C1 specs to the most similar among
-% the K nearest specs of C2
-
-%% now we can also think about whether matching going the other way gives similar results
-% for each spec in char 2, find the K nearest specs in char 1
-K = 4;
-[Ip, Dp] = knnsearch(C1, C2, 'K', K);
-
-% for each spec
-
-
+%%
+% we can also look at how far off the spec positions are for these spec
+% matches
+for ix=1:size(I,1)
+    minDists(ix) = D(ix,kmins(ix));
+end
+%%
+figure;
+histogram(minDists(minDists < 2),100);
+xlabel('spec position difference in degrees');
 
 %%
 function degs = compareNs(N1,N2)
