@@ -8,12 +8,16 @@
 % that there is some characterization inconsistency to address
 
 % get the characterizations
-dir1 = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization/';
-C1 = matfile([dir1 'canonical_centroids.mat']).canonicalCentroids;
-N1 = matfile([dir1 'spec_normals.mat']).specNormals;
-dir2 = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization/';
+%dir1 = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization(old-and-thick)/';
+%C1 = matfile([dir1 'canonical_centroids.mat']).canonicalCentroids;
+%N1 = matfile([dir1 'spec_normals.mat']).specNormals;
+dir2 = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(new-1)/';
 C2 = matfile([dir2 'canonical_centroids.mat']).canonicalCentroids;
 N2 = matfile([dir2 'spec_normals.mat']).specNormals;
+% get the characterizations
+dir1 = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct17characterization/';
+C1 = matfile([dir1 'canonical_centroids.mat']).canonicalCentroids;
+N1 = matfile([dir1 'spec_normals.mat']).specNormals;
 
 %%
 % for each spec in char 1, find the K nearest specs in char 2
@@ -40,6 +44,7 @@ end
 
 %%
 % plot histogram of the differences in degrees
+figure;
 histogram(minDegs(minDegs < 2), 100);
 hold on;
 xlabel('surface normal difference in degrees');
@@ -53,7 +58,7 @@ end
 %%
 figure;
 histogram(minDists(minDists < 2),100);
-xlabel('spec position difference in degrees');
+xlabel('spec position difference in millimeters');
 
 %%
 function degs = compareNs(N1,N2)

@@ -7,7 +7,7 @@
 % rotation and translation from checkerboard coordinates to camera 
 % coordinates (Rc, tc)
 
-function [t, R] = findCamPos(P, camParams, imPath, pin)
+%function [t, R] = findCamPos(P, camParams, imPath, pin)
     % P is paths struct
     % cameraParams is the matlab camera parameters object
     % imPath is the path to the image with checkerboard on 
@@ -265,18 +265,18 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
 
     % now rotate the basis vectors all the way to the camera position and
     % show the new axes
-    rotation_g2c = R';% equivalently: rotation_g2c = (Rc * Rg)';
     cam_from_k_but_in_g = (Rg' * tcam')';
     lxc = lxk + cam_from_k_but_in_g(1);
     lyc = lyk + cam_from_k_but_in_g(2);
     lzc = lzk + cam_from_k_but_in_g(3);
+    rotation_g2c = (Rc * Rg)';%Rc * Rg;%R';% equivalently: rotation_g2c = (Rc * Rg)';
     exc = (rotation_g2c * ex')';
     eyc = (rotation_g2c * ey')';
     ezc = (rotation_g2c * ez')';
     quiver3(lxc,lyc,lzc,[exc(1) eyc(1) ezc(1)],[exc(2) eyc(2) ezc(2)],[exc(3) eyc(3) ezc(3)], 'Color', 'red','LineWidth',3);
     %disp(size(lxk));
     %disp(size(exk));
-    text(lxc+exc,lyc+eyc,lzc+ezc,["xc","yc","zc"],"FontSize",14,"Color",'c');
+    text(lxc+[exc(1) eyc(1) ezc(1)],lyc+[exc(2) eyc(2) ezc(2)],lzc+[exc(3) eyc(3) ezc(3)],["xc","yc","zc"],"FontSize",14,"Color",'c');
 
     % finish up the figure
     axis equal;
@@ -285,4 +285,4 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-end
+%end

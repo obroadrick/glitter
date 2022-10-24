@@ -32,6 +32,8 @@ function [imageCentroidsPath, canonicalCentroidsPath] = detectSpecs(P, chardir)
         end
         if length(files) > 1
             disp(['more than one file at:' path]);
+            disp(files(1).name);
+            disp(files(2).name);
         end
         %disp([files(1).folder '/' files(1).name]);
         %disp(ix);

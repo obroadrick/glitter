@@ -3,7 +3,9 @@
 % That is, it estimates the position of specs of glitter and their
 % surface normals.
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
-chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization/';
+%chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/';
+chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct17characterization/';
+P.chardir = chardir;
 
 %% Fiducial marker points:  
 % open and interprety addy's homography points file then pass 
