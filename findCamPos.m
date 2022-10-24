@@ -7,7 +7,7 @@
 % rotation and translation from checkerboard coordinates to camera 
 % coordinates (Rc, tc)
 
-%function [t, R] = findCamPos(P, camParams, imPath, pin)
+function [t, R] = findCamPos(P, camParams, imPath, pin)
     % P is paths struct
     % cameraParams is the matlab camera parameters object
     % imPath is the path to the image with checkerboard on 
@@ -269,7 +269,7 @@
     lxc = lxk + cam_from_k_but_in_g(1);
     lyc = lyk + cam_from_k_but_in_g(2);
     lzc = lzk + cam_from_k_but_in_g(3);
-    rotation_g2c = (Rc * Rg)';%Rc * Rg;%R';% equivalently: rotation_g2c = (Rc * Rg)';
+    rotation_g2c = R';%equivalently: rotation_g2c = (Rc * Rg)';
     exc = (rotation_g2c * ex')';
     eyc = (rotation_g2c * ey')';
     ezc = (rotation_g2c * ez')';
@@ -285,4 +285,4 @@
     legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%end
+end
