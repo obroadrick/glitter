@@ -1,11 +1,11 @@
 % single image camera calibration with glitter
 
-%% input: 
+% % input: 
 %  path to the single image
 %  path to matfile with fiducial marker points
 %  known point light source position
 %  characterized sheet of glitter: spec locations, normals
-%% output:
+% % output:
 %  saves as matfile all the parameters estimated:
 % intrinsic matrix, 
 % rotation matrix, 
@@ -16,7 +16,9 @@
 % distortion paramters k1 and k2
 
 
-%% set inputs
+% % set inputs
+
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
 
 %  path to the single image
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
@@ -55,7 +57,7 @@ lightPos = [0 129-72.9 527];%aug18nikonz7
 
 %% estimate translation
 disp('Estimating camera position with sparkles...');
-[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin);
+[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir);
 disp('Position estimate complete!');
 
 %% first retrieve the checkerboard calibration information for comparison along the way

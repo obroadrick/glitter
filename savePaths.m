@@ -28,8 +28,6 @@ function P = savePaths()
     % positions, camera parameters, etc)
     P.data = '/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/';
     
-    P.tform = [P.data 'transform.mat'];
-
     %{
     P.camParams = [P.data 'camParams_08_18_2022'];
     P.camParamsErrors = [P.data 'camParamsErrors_08_18_2022'];

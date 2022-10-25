@@ -2,12 +2,11 @@
 % source, a picture of sparkling glitter, and a known glitter
 % characterization
 
-function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin)
+function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir)
 
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     M = matfile(P.measurements).M;
 
-    
     % read in image
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july_characterization/pointLightSource2.JPG';
@@ -25,8 +24,8 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     %y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
     %lightPos = [x y M.GLIT_TO_MON_PLANES];
     %lightPos = [0 (130.1-84.05) 440];
-    %lightPos = [0 133.1-72.9 465];%TODO
-    %lightPos = [0 132.1-72.7 461];%TODO
+    %lightPos = [0 133.1-72.9 465];
+    %lightPos = [0 132.1-72.7 461];
     %lightPos = [0 131.1-72.9 462];
     
     %% find spec centroids in image
@@ -66,7 +65,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     
     %% match canonical centroids to those in the characterization
     knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-    K = 3;
+    K = 50;
     [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                                  'K', K, 'Distance', 'euclidean');
     % only consider specs whose mwhatch is within .xx millimeters
@@ -111,14 +110,32 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     % reflect light off all the specs
     allSpecPos = knownCanonicalCentroids;
     for ix=1:size(allSpecPos)
-        L = (lightPos - allSpecPos(ix,:)) ./ vecnorm(lightPos - allSpecPos(ix,:),2, 2);
-        allR(ix,:) = L - 2 * dot(L, allSpecNormals(ix,:), 2) .* allSpecNormals(ix,:);
-        allR(ix,:) = -1.*allR(ix,:);
+        L = -((lightPos - allSpecPos(ix,:)) ./ vecnorm(lightPos - allSpecPos(ix,:),2, 2));
+        %disp(norm(L));
+        %disp(norm(allSpecNormals(ix,:)));
+        allR(ix,:) = L - (2 * dot(L, allSpecNormals(ix,:), 2)) * allSpecNormals(ix,:);
+        %allR(ix,:) = allR(ix,:);
     end
+    
+    %{
+    % as a major sanity check:
+    % draw a single incoming ray, surface normal, and computer reflected
+    % ray
+    % normal for it
+    figure;
+    ix = [1];
+    L = ((lightPos - allSpecPos(ix,:)) ./ vecnorm(lightPos - allSpecPos(ix,:),2, 2));
+    plot3([allSpecPos(ix,1) allSpecPos(ix,1)+L(ix,1)], [allSpecPos(ix,2) allSpecPos(ix,2)+L(ix,2)], [allSpecPos(ix,3) allSpecPos(ix,3)+L(ix,3)]);
+    hold on;
+    plot3([allSpecPos(ix,1) allSpecPos(ix,1)+allSpecNormals(ix,1)], [allSpecPos(ix,2) allSpecPos(ix,2)+allSpecNormals(ix,2)], [allSpecPos(ix,3) allSpecPos(ix,3)+allSpecNormals(ix,3)],'color','green');
+    
+    plot3([allSpecPos(ix,1) allSpecPos(ix,1)+allR(ix,1)], [allSpecPos(ix,2) allSpecPos(ix,2)+allR(ix,2)], [allSpecPos(ix,3) allSpecPos(ix,3)+allR(ix,3)],'color','red');
+    %}
+    %%
     %compute distances to pinhole for these allR reflected rays
-    %knownCamPos = matfile(P.camPos).camPos;% TODO SHOULD HAVE BEEN BASED
-    %ON EXPERIMENT DIRECTORY
-    knownCamPos = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/camPos.mat').camPos;
+    %knownCamPos = matfile(P.camPos).camPos;%
+    knownCamPos = matfile([expdir 'camPos.mat']).camPos; 
+    %knownCamPos = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/camPos.mat').camPos;
     %knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
     %knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
     allTrueDists = [];
@@ -238,7 +255,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     camroll(-80);
     mostInliersSpecPos = [];
     mostInliersR = [];
-    for counter=1:500 %this is constant right now but could (should) be more dynamic/reactive than that
+    for counter=1:50000 %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
         idxsRandomTwo = randi(size(R,1),1,2);

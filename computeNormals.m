@@ -1,7 +1,7 @@
 % computes the glitter specs' surface normals given already found
 % spec locations and brightness distribution gaussian means
 % inputs: P, matlab struct with paths to the data (means, spec locs)
-function specNormalsPath = computeNormals(P, chardir)
+%function specNormalsPath = computeNormals(P, chardir)
     means = matfile(P.means).means;
     C = matfile(P.imageCentroids).imageCentroids;
     %M = matfile(P.measurements).M;
@@ -40,11 +40,17 @@ function specNormalsPath = computeNormals(P, chardir)
     specNormalsPath = [chardir 'spec_normals.mat'];
     save(specNormalsPath, "specNormals");
     
-    %% pretty picture of it all
-    % draw the glitter rig with these lines showing
-    %number_to_draw = 10;
-    %draw_idxs = randi(size(C,1),number_to_draw,1);
-    %drawRig(M, lightPos(draw_idxs,:), specPos(draw_idxs,:), cam);
+    %{
+    % as a major sanity check:
+    % draw a single incoming ray and reflect ray and the computed surface
+    % normal for it
+    figure;
+    ix = [1];
+    plot3([specPos(ix,1) specPos(ix,1)+spec2light(ix,1)], [specPos(ix,2) specPos(ix,2)+spec2light(ix,2)], [specPos(ix,3) specPos(ix,3)+spec2light(ix,3)]);
+    hold on;
+    plot3([specPos(ix,1) specPos(ix,1)+spec2cam(ix,1)], [specPos(ix,2) specPos(ix,2)+spec2cam(ix,2)], [specPos(ix,3) specPos(ix,3)+spec2cam(ix,3)],'color','red');
+    plot3([specPos(ix,1) specPos(ix,1)+specNormals(ix,1)], [specPos(ix,2) specPos(ix,2)+specNormals(ix,2)], [specPos(ix,3) specPos(ix,3)+specNormals(ix,3)],'color','green');
+    %}
 
     %% return the spec normals path... already set
-end
+%end

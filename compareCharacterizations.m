@@ -21,7 +21,7 @@ N1 = matfile([dir1 'spec_normals.mat']).specNormals;
 
 %%
 % for each spec in char 1, find the K nearest specs in char 2
-K = 4;
+K = 15;
 [I, D] = knnsearch(C2, C1, 'K', K);
 
 %% 
@@ -46,6 +46,7 @@ end
 % plot histogram of the differences in degrees
 figure;
 histogram(minDegs(minDegs < 2), 100);
+%histogram(minDegs, 100);
 hold on;
 xlabel('surface normal difference in degrees');
 
