@@ -16,6 +16,7 @@
 % distortion paramters k1 and k2
 
 
+%%
 % % set inputs
 
 expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';

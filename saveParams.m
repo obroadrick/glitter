@@ -16,6 +16,7 @@ save([P.data 'camParamsErrors_' datestr(now, 'mm_dd_yyyy')], "camParamsErrors");
 % save in the experiment/characterization directory
 %chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug31characterization/';
 %chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/';
-chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct17characterization/';
+%chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct17characterization/';
+chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
 save([chardir 'camParams'], "camParams");
 save([chardir 'camParamsErrors'], "camParamsErrors");

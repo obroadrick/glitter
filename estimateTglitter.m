@@ -2,7 +2,7 @@
 % source, a picture of sparkling glitter, and a known glitter
 % characterization
 
-function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir)
+function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage)
 
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     M = matfile(P.measurements).M;
@@ -15,7 +15,11 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
     %impath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/hilight.JPG';
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
-    im = rgb2gray(imread(impath));
+    if ~exist('ambientImage','var')
+        im = rgb2gray(imread(impath));
+    else
+        im = max(rgb2gray(imread(impath)) - ambientImage, 0);
+    end
     
     % get lighting position in canonical coords form lighting position in
     % monitor pixel coords
@@ -58,7 +62,9 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
     plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
     tform = getTransform(P, pin);
-    [imageCentroids,~] = singleImageFindSpecs(im);
+    %[imageCentroids,~] = singleImageFindSpecs(im); %normal use
+    [imageCentroids,~] = singleImageFindSpecsNoFilter(im); % special use
+    disp(size(imageCentroids));
     plot(imageCentroids(:,1),imageCentroids(:,2),'b+');
     out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
     canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
@@ -255,7 +261,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     camroll(-80);
     mostInliersSpecPos = [];
     mostInliersR = [];
-    for counter=1:50000 %this is constant right now but could (should) be more dynamic/reactive than that
+    for counter=1:10000 %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
         idxsRandomTwo = randi(size(R,1),1,2);

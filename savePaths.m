@@ -1,6 +1,8 @@
 function P = savePaths()
     % raw images/inputs to the current characterization
     P.characterizationDirectory = ['/Users/oliverbroadrick/Desktop/glitter-stuff/oct17characterization/'];
+    %P.characterizationDirectory = ['/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/'];
+    %P.characterizationDirectory = ['/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(new-1)/'];
     P.leftRightSweep = [P.characterizationDirectory 'verBarSweep/'];
     P.upDownSweep = [P.characterizationDirectory 'horBarSweep/'];
     P.checkerboardIms = [P.characterizationDirectory 'checkerboards/'];
