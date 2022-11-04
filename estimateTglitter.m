@@ -2,10 +2,11 @@
 % source, a picture of sparkling glitter, and a known glitter
 % characterization
 
-function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage)
+function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage)
 
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
-    M = matfile(P.measurements).M;
+    %M = matfile(P.measurements).M; %old way
+    M = matfile([expdir 'measurements.mat']).M;
 
     % read in image
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
@@ -64,14 +65,15 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     tform = getTransform(P, pin);
     %[imageCentroids,~] = singleImageFindSpecs(im); %normal use
     [imageCentroids,~] = singleImageFindSpecsNoFilter(im); % special use
-    disp(size(imageCentroids));
+    disp([int2str(size(imageCentroids,1)) ' specs detected...']);
+    %disp(size(imageCentroids));
     plot(imageCentroids(:,1),imageCentroids(:,2),'b+');
     out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
     canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
     
     %% match canonical centroids to those in the characterization
     knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-    K = 50;
+    K = 5;
     [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                                  'K', K, 'Distance', 'euclidean');
     % only consider specs whose mwhatch is within .xx millimeters
@@ -174,7 +176,9 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     %    plot(characterizedCentroidsOnThisImage(ix,1),characterizedCentroidsOnThisImage(ix,2),'+','Color',colors(ix,:));
     %end
     %%
-    disp('now plotting');
+    %disp('now plotting');
+    %{
+    % the big/dense 2-tile plot
     figure;
     tiledlayout(1,2);colormap(gray);
     ax3 = nexttile;
@@ -188,23 +192,31 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     imagesc(maxImage); hold on;
     plot(knownImageCentroids(:,1),knownImageCentroids(:,2),'r+');
     linkaxes([ax3 ax4]);
+    %}
     
     %% reflect rays from light off specs
     %reflect the ten nearest specs for each spec found
     R = zeros(size(specPos));
+    L = zeros(size(specPos));
     for ix=1:K
         % compute reflected rays: Ri = Li − 2(Li dot Ni)Ni
         % where Li is normalized vector from spec to light
         %       Ni is normalized normal vector
         %       Ri is normalized reflected vector
-        L = (lightPos - reshape(specPos(:,ix,:),size(specPos,1),...
+        Lcur = (lightPos - reshape(specPos(:,ix,:),size(specPos,1),...
             size(specPos,3))) ./ vecnorm(lightPos - reshape(specPos(:,ix,:),size(specPos,1),size(specPos,3)), 2, 2);
-        R(:,ix,:) = L - 2 * dot(L, reshape(specNormals(:,ix,:),...
+        L(:,ix,:) = Lcur;
+        R(:,ix,:) = Lcur - 2 * dot(Lcur, reshape(specNormals(:,ix,:),...
             size(specNormals,1),size(specNormals,3)), 2) .* reshape(specNormals(:,ix,:),...
             size(specNormals,1),size(specNormals,3));
         R(:,ix,:) = -1.*R(:,ix,:);
     end
-    
+
+    %DOING: need to save/return/globalize these light2spec (L) rays for use
+    %in re-reflecting in the optimizeMEasurements script I'm writing. will
+    %need to just save the mostInliersL version (by adding that down below
+    %as a stored part during RANSAC)
+
     % estimate camera position by minimizing some error function
     %errFun = @(c) errT(c, specPos, R);
     %x0 = [M.GLIT_SIDE/2;M.GLIT_SIDE/2;M.GLIT_SIDE];
@@ -261,7 +273,8 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     camroll(-80);
     mostInliersSpecPos = [];
     mostInliersR = [];
-    for counter=1:10000 %this is constant right now but could (should) be more dynamic/reactive than that
+    mostInliersL = [];
+    for counter=1:1500 %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
         idxsRandomTwo = randi(size(R,1),1,2);
@@ -279,6 +292,19 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
         if candidate(3) < 150
             continue
         end
+        % first just check whether this hypothesized camera position even
+        % keeps the two rays which hypothesized it as inliers (AKA are the
+        % two rays we randomly chose even close together?) and if they are
+        % not, move on to the next pair
+        %TODO: 
+        if distPointToLine(candidate, reshape(specPos(idxsRandomTwo(1),1,:),1,3), reshape(R(idxsRandomTwo(1),1,:),1,3)) > inlierThreshold
+            %disp('here')%based on little testing, this doesn't affect
+            %accuracy of method (aka we weren't badly relying on far apart
+            %rays to give the right middle spot (even tho they might do so
+            %on average ish))
+            continue
+        end
+
         % show camera estimated position as a dot: (dots=cameras)
         cam=candidate;
         %legendItems(legPos) = scatter3(cam(1),cam(2),cam(3),25,'red','o','filled','DisplayName','Hypothesized Camera');
@@ -302,22 +328,26 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
         inliersSpecPos = [];
         inliersImageSpecPos = [];
         inliersR = [];
+        inliersL = [];
         inliersMaxBrightness = [];
         for ix=1:size(inlierIdxs)
             inliersImageSpecPos(ix,:) = imageCentroids(inlierIdxs(ix),:);
             inliersSpecPos(ix,:) = specPos(inlierIdxs(ix),kmin(ix),:);
             inliersR(ix,:) = R(inlierIdxs(ix),kmin(ix),:);
+            inliersL(ix,:) = L(inlierIdxs(ix),kmin(ix),:);
             inliersMaxBrightness(ix) = maxBrightness(inlierIdxs(ix),kmin(ix));
         end
         if size(inliersR,1) > size(mostInliersR,1)
             mostInliersImageSpecPos = inliersImageSpecPos;
             mostInliersR = inliersR;
+            mostInliersL = inliersL;
             mostInliersSpecPos = inliersSpecPos;
             mostInliersIdxs = inlierIdxs;
             mostInliersKmin = kmin;
             mostInliersMinDists = minDists;
             mostInliersMaxBrightness = inliersMaxBrightness;
         end
+        %{ one of the big plots
         % now show the two lines
         for i=1:size(idxsRandomTwo,2)
             ix = idxsRandomTwo(i);
@@ -362,10 +392,14 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
             z = [inliersSpecPos(ix,3) inliersSpecPos(ix,3)+inliersR(ix,3)]';
             line(x,y,z,'Color',red);
         end
+        %}
     end
-    legend(legendItems);
+    %legend(legendItems);
     figure;
     histogram(numInliers);
+    
+    disp(['found ' num2str(max(numInliers)) ' consistent inliers among ' int2str(size(imageCentroids,1)) ' detected sparkles...']);
+
     
     %% now just for the model with the most inliers, we build up a 
     % camera position estimate
@@ -433,7 +467,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     % show camera estimated position as a dot: (dots=cameras)
     cam=camPosEst;
     legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
-    disp(cam);
+    %disp(cam);
     % draw rig
     figure;
     % glitter square:
@@ -461,6 +495,9 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     %disp(cam);
     % shown known ground truth camera position
     %knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
+    disp('camPosEstimate');
+    disp(camPosEst);
+    disp('knownCamPos')
     disp(knownCamPos);
     disp('difference (error):');
     disp(norm(cam - knownCamPos));
@@ -564,6 +601,13 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTgli
     mostInliersSpecPos = mostInliersSpecPos;
     mostInliersImageSpecPos = mostInliersImageSpecPos;
     
+    other.mostInliersL = mostInliersL;
+    other.mostInliersSpecPos = mostInliersSpecPos;
+    other.mostInliersIdxs = mostInliersIdxs;
+    other.lightPos = lightPos;
+    other.mostInliersR = mostInliersR;
+    other.overallIdx = idx;
+    other.mostInliersKmin = mostInliersKmin;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

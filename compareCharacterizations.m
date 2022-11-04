@@ -8,16 +8,18 @@
 % that there is some characterization inconsistency to address
 
 % get the characterizations
-%dir1 = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization(old-and-thick)/';
-%C1 = matfile([dir1 'canonical_centroids.mat']).canonicalCentroids;
-%N1 = matfile([dir1 'spec_normals.mat']).specNormals;
+dir1 = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/';
+C1 = matfile([dir1 'canonical_centroids.mat']).canonicalCentroids;
+N1 = matfile([dir1 'spec_normals.mat']).specNormals;
 dir2 = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(new-1)/';
 C2 = matfile([dir2 'canonical_centroids.mat']).canonicalCentroids;
 N2 = matfile([dir2 'spec_normals.mat']).specNormals;
+%{
 % get the characterizations
 dir1 = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct17characterization/';
 C1 = matfile([dir1 'canonical_centroids.mat']).canonicalCentroids;
 N1 = matfile([dir1 'spec_normals.mat']).specNormals;
+%}
 
 %%
 % for each spec in char 1, find the K nearest specs in char 2

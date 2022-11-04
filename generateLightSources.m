@@ -32,6 +32,8 @@ for n=1:size(positions,1)
     for jx=1:r
         for kx=1:r
             Anew(x+jx,y+kx) = 255;% set to white
+            disp(x+jx)
+            disp(y+kx)
         end
     end
     Amax = max(Amax, Anew);

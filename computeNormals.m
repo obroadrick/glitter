@@ -1,11 +1,12 @@
 % computes the glitter specs' surface normals given already found
 % spec locations and brightness distribution gaussian means
 % inputs: P, matlab struct with paths to the data (means, spec locs)
-%function specNormalsPath = computeNormals(P, chardir)
+function specNormalsPath = computeNormals(P, chardir, charM)
     means = matfile(P.means).means;
     C = matfile(P.imageCentroids).imageCentroids;
     %M = matfile(P.measurements).M;
-    M = matfile([chardir '/measurements.mat']).M;
+    %M = matfile([chardir 'measurements.mat']).M;
+    M = charM;% now an argument so that re-characterizing according to new measurement sets is easy
     cam = matfile([chardir 'camPos.mat']).camPos;
 
     %% spec to lightsource vectors in glitter coords
@@ -31,15 +32,31 @@
     
     % normalize
     spec2cam = spec2cam ./ vecnorm(spec2cam, 2, 2);
-    
+
     % spec surface normals 
+    specNormals = spec2light + spec2cam; %just add since they are normalized
+    specNormals = specNormals ./ vecnorm(specNormals, 2, 2);
+
+    % save results
+    if ~exist('savedir','var')
+        specNormalsPath = [P.data 'spec_normals_' datestr(now, 'mm_dd_yyyy')];
+        save(specNormalsPath, "specNormals");
+        specNormalsPath = [chardir 'spec_normals.mat'];
+        save(specNormalsPath, "specNormals");
+    else
+        specNormalsPath = [savedir 'spec_normals.mat'];
+        save(specNormalsPath, "specNormals");
+    end
+    
+    %{
     specNormals = spec2light + spec2cam; %just add since they are normalized
     specNormals = specNormals ./ vecnorm(specNormals, 2, 2);
     specNormalsPath = [P.data 'spec_normals_' datestr(now, 'mm_dd_yyyy')];
     save(specNormalsPath, "specNormals");
     specNormalsPath = [chardir 'spec_normals.mat'];
     save(specNormalsPath, "specNormals");
-    
+    %}
+
     %{
     % as a major sanity check:
     % draw a single incoming ray and reflect ray and the computed surface
@@ -53,4 +70,4 @@
     %}
 
     %% return the spec normals path... already set
-%end
+end

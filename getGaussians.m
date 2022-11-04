@@ -81,7 +81,7 @@ function [meansPath,  imageCentroidsPath, canonicalCentroidsPath] = getGaussians
         parfor ix=1:size(C,1)
             dist = reshape(dists(ix,direction,1:numFrames(direction)), numFrames(direction), 1);
             [~, peakidx] = max(dist);
-            range_for_dist = 30;
+            range_for_dist = 30;% bad but a literal
             l = int32(peakidx-range_for_dist);
             r = int32(peakidx+range_for_dist);
             if l < 1 || r > size(dist,1)

@@ -3,10 +3,10 @@
 function M = createMeasurementsStruct()
     % directly measured distances (by Oliver, poorly, with named tool)
     M.GLIT_TO_MON_PLANES = 628;%MEASURED (laser)
-    M.GLIT_TO_MON_EDGES_X = 130.8;%MEASURED (jenky laser rig with calipers)
-    M.GLIT_TO_MON_EDGES_Y = 26+56.1;%MEASURED (jenky laser rig with calipers)
+    M.GLIT_TO_MON_EDGES_X = 126;%MEASURED (jenky laser rig with calipers)
+    M.GLIT_TO_MON_EDGES_Y = 83;%MEASURED (jenky laser rig with calipers)
     M.MON_WIDTH_MM = 669;%MEASURED (yard sticks)
-    M.MON_HEIGHT_MM = 378;%MEASURED (yard sticks)
+    M.MON_HEIGHT_MM = 377;%MEASURED (yard sticks)
     M.GLIT_WIDTH = 457.2;%computed as 18in to mm
     M.GLIT_HEIGHT = 304.8;%computed as 12in to mm
     M.CALIBRATION_SQUARE_SIZE = 147.1 / 6;%MEASURED six of them (calipers) = 24.5166666667
@@ -32,5 +32,5 @@ function M = createMeasurementsStruct()
     
     % save struct to file
     save("data/measurements","M");
-    %save("/Users/oliverbroadrick/Desktop/glitter-stuff/sep12characterization1/measurements","M");
+    save("/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(new-1)/measurements.mat","M");
 end
