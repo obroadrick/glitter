@@ -2,7 +2,7 @@
 % surface normals for a given characterization and performs a glitter
 % camera calibration for the new surface normals
 
-%% INPUTS
+% INPUTS
 % the input characterization
 chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(new-1)/';
 %charDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/';
@@ -10,8 +10,6 @@ setPaths(chardir);
 % the input camera calibration test case to use to test new surface normals
 expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
 
-
-%% FUNCTIONALITY
 
 %now suppose that at this point we have been given a new set of
 %measurements, charM, and we want to see how re-characterizing the glitter
@@ -37,12 +35,13 @@ positions = [xoff yoff; w-xoff h-yoff; xoff h-yoff; w-xoff yoff];
 for ix=1:size(positions,1)
     positions(ix,:) = positions(ix,:) + r/2;
 end
-lightPos = screenPosToWorldPos(positions(pointLightImageIndex,:), matfile([expdir 'measurements.mat']).M);
+lightPos = screenPosToWorldPos(positions(pointLightImageIndex,:), matfile([expdir 'measurementsNew.mat']).M);
 
 % estimate translation
-warning('off','MATLAB:singularMatrix'); set(0,'DefaultFigureVisible','off');
+warning('off','MATLAB:singularMatrix'); 
+set(0,'DefaultFigureVisible','off');
 [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage);
-%%
+
 mostInliersL = other.mostInliersL; % this extra return of the estimateTglitter function gives us the rays from light position to spec locations
 mostInliersSpecPos = other.mostInliersSpecPos;
 mostInliersIdxs = other.mostInliersIdxs;
@@ -50,63 +49,131 @@ lightPos = other.lightPos;
 mostInliersRoriginal = other.mostInliersR;
 overallIdx = other.overallIdx;
 mostInliersKmin = other.mostInliersKmin;
-
-%temporary debugging code: I know there is an error since this should give
-% the same result twice and so i am going to debug by visualizing where the
-% returned values from esetimateTglitter fall and then if they are right
-% hopefully i will visualize where the reflected rays i compute down in (a)
-% fall and then finally make sure that nearestPointManyLines isn't the
-% issue if we make it htat far...
-%first: visualize outputs of estimateTglitter
-%{
-figure;
-hold on;
-for ix=1:size(mostInliersSpecPos,1)
-    line([mostInliersSpecPos(ix,1) mostInliersSpecPos(ix,1)+mostInliersL(ix,1)],...
-        [mostInliersSpecPos(ix,2) mostInliersSpecPos(ix,2)+mostInliersL(ix,2)],...
-        [mostInliersSpecPos(ix,3) mostInliersSpecPos(ix,3)+mostInliersL(ix,3)],...
-        'color', 'yellow');
-end
-%}
-figure;
-hold on;
-for ix=1:size(mostInliersSpecPos,1)
-    line([mostInliersSpecPos(ix,1) lightPos(1)],...
-        [mostInliersSpecPos(ix,2) lightPos(2)],...
-        [mostInliersSpecPos(ix,3) lightPos(3)],...
-        'color', 'yellow');
-end
-
-% now to compute the error, we just have to (a) reflect the light rays
-% given in mostInliersL off the specs according to the new surface normals
-% and then (b) compute the new camera position estimate according to these
-% rays
-% (Note that if we actually did the whole ransac again we may get different
-% results but i want to make this optimization feasible in terms of speed
-% and so we just use these rays instead.)
 %
-% (a) reflect the light rays
-% given in mostInliersL off the specs according to the new surface normals
-%R = reflect(mostInliersL, newNormals(mostInliersIdxs,:));%first try where
+% also get for re-computing normals:
+%1. camera position
+camPos = matfile([chardir 'camPos.mat']).camPos;
+%2. lighting means
+lightingMeans = matfile([chardir 'lightingmeans.mat']).means;
 mostInliersOverallIdxs = [];
 for ix=1:size(mostInliersSpecPos,1)
     mostInliersOverallIdxs(ix) = overallIdx(mostInliersIdxs(ix), mostInliersKmin(ix));
 end
-mostInliersNewNormals = newNormals(mostInliersOverallIdxs,:);
-R = reflect(mostInliersSpecPos, mostInliersNewNormals, lightPos);
-R = reshape(R,size(R,1),size(R,3));
+mostInliersLightingMeans = lightingMeans(:,mostInliersOverallIdxs);
+%
+% now the optimization begins here: for an input M of measurements we use
+% these light2spec rays, re-compute the surface normals, re-reflect, and
+% then use error in the camera position estimate that results as the error
+% function
 
-% (b) compute the new camera position estimate according to these
-% rays
-camPosEst = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+R);
-knownCamPos = matfile([expdir 'camPos.mat']).camPos; 
-disp('camPosEstimate');
-disp(camPosEst);
-disp('knownCamPos');
-disp(knownCamPos);
-disp('difference (error):');
-disp(norm(camPosEst - knownCamPos));
+%now suppose that at this point we have been given a new set of
+%measurements, charM, and we want to see how re-characterizing the glitter
+%sheet with this set of measurements M affects the camera position estimate
+%error. so we need to (1) re-compute the spec normals and then (2)
+%re-calibrate according to those normals.
+% as an initial measurement set charM we take whatever is already there:
+charM = matfile([chardir 'measurements.mat']).M;
 
+%disp('error using similar measurements should be same:');
+%disp(computeError(628, 126, 83, 669, 377, chardir, expdir, other));
+
+%% now do the optimization over the measurements
+
+% which measurements we are optimizing over:
+set(0,'DefaultFigureVisible','on');
+errFun = @(x) computeError(x(1), x(2), x(3), 664.32, 373.68,...
+                        chardir, expdir, mostInliersLightingMeans, ...
+                        mostInliersSpecPos, camPos, lightPos);
+x0 = [628, 126, 83];
+options = optimset('PlotFcns',@optimplotfval);
+xf = fminsearch(errFun, x0, options);
+
+function error = computeError(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,...
+                              GLIT_TO_MON_EDGES_Y,MON_WIDTH_MM,...
+                              MON_HEIGHT_MM, chardir, expdir, ...
+                              mostInliersLightingMeans, ...
+                              mostInliersSpecPos, camPos, lightPos)
+    charM = setMeasurements(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,...
+                              GLIT_TO_MON_EDGES_Y);
+    x = [GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,GLIT_TO_MON_EDGES_Y,MON_WIDTH_MM,MON_HEIGHT_MM];
+    disp(x);
+    % 1. recompute the normals based on the given measurements
+    %P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
+    %newNormalsPath = computeNormals(P, chardir, charM);
+    %newNormals = matfile(newNormalsPath).specNormals;
+    % recompute normals only of the specs we care about
+    mostInliersNewNormals = computeSomeNormals(mostInliersLightingMeans, mostInliersSpecPos, camPos, charM);
+
+    %
+    % get the "other" outputs from the original estimateTglitter call which
+    % tells use the inliers to consider during this error computation
+    %{
+    mostInliersL = other.mostInliersL; % this extra return of the estimateTglitter function gives us the rays from light position to spec locations
+    mostInliersSpecPos = other.mostInliersSpecPos;
+    mostInliersIdxs = other.mostInliersIdxs;
+    lightPos = other.lightPos;
+    mostInliersRoriginal = other.mostInliersR;
+    overallIdx = other.overallIdx;
+    mostInliersKmin = other.mostInliersKmin;
+    %}
+    
+    %temporary debugging code: I know there is an error since this should give
+    % the same result twice and so i am going to debug by visualizing where the
+    % returned values from esetimateTglitter fall and then if they are right
+    % hopefully i will visualize where the reflected rays i compute down in (a)
+    % fall and then finally make sure that nearestPointManyLines isn't the
+    % issue if we make it htat far...
+    %first: visualize outputs of estimateTglitter
+    %{
+    figure;
+    hold on;
+    for ix=1:size(mostInliersSpecPos,1)
+        line([mostInliersSpecPos(ix,1) lightPos(1)],...
+            [mostInliersSpecPos(ix,2) lightPos(2)],...
+            [mostInliersSpecPos(ix,3) lightPos(3)],...
+            'color', 'yellow');
+    end
+    %}
+    
+    % now to compute the error, we just have to (a) reflect the light rays
+    % given in mostInliersL off the specs according to the new surface normals
+    % and then (b) compute the new camera position estimate according to these
+    % rays
+    % (Note that if we actually did the whole ransac again we may get different
+    % results but i want to make this optimization feasible in terms of speed
+    % and so we just use these rays instead.)
+    %
+    % (a) reflect the light rays
+    % given in mostInliersL off the specs according to the new surface normals
+    %R = reflect(mostInliersL, newNormals(mostInliersIdxs,:));%first try where
+    %{
+    mostInliersOverallIdxs = [];
+    for ix=1:size(mostInliersSpecPos,1)
+        mostInliersOverallIdxs(ix) = overallIdx(mostInliersIdxs(ix), mostInliersKmin(ix));
+    end
+    mostInliersNewNormals = newNormals(mostInliersOverallIdxs,:);
+    %}
+    R = reflect(mostInliersSpecPos, mostInliersNewNormals, lightPos);
+    R = reshape(R,size(R,1),size(R,3));
+    
+    % (b) compute the new camera position estimate according to these
+    % rays
+    camPosEst = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+R);
+    knownCamPos = matfile([expdir 'camPos.mat']).camPos; 
+    %{
+    disp('camPosEstimate');
+    disp(camPosEst);
+    disp('knownCamPos');
+    disp(knownCamPos);
+    disp('difference (error):');
+    %}
+    e = norm(camPosEst - knownCamPos);
+    %{
+    disp(e);
+    %}
+
+    error = e;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% functions
 function d = nearestDistLines(points, directions)

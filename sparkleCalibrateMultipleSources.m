@@ -79,7 +79,7 @@ for pointLightImageIndex=1:4
     end
     
     %lightPos = screenPosToWorldPos(positions(1,:), M);
-    M = matfile([expdir 'measurements.mat']).M;
+    M = matfile([expdir 'measurementsNew.mat']).M;
     %M = matfile([charDir 'measurements.mat']).M;
     lightPos = screenPosToWorldPos(positions(pointLightImageIndex,:), M);
     % estimate translation and distortion
