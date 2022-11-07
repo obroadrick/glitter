@@ -155,5 +155,7 @@ if  len(bboxs)!=0:
 
     import scipy.io
     scipy.io.savemat('16ptsJUSTCREATED.mat', mdict={'arr': mat_arr})
+
+    print('Success!')
     
     exit()

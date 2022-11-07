@@ -273,6 +273,10 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     exc = (rotation_g2c * ex')';
     eyc = (rotation_g2c * ey')';
     ezc = (rotation_g2c * ez')';
+    disp(lxc);
+    disp(lyc);
+    disp(lzc);
+    disp(t)
     quiver3(lxc,lyc,lzc,[exc(1) eyc(1) ezc(1)],[exc(2) eyc(2) ezc(2)],[exc(3) eyc(3) ezc(3)], 'Color', 'red','LineWidth',3);
     %disp(size(lxk));
     %disp(size(exk));

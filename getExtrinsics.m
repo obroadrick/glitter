@@ -9,7 +9,8 @@
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct17characterization/';
-expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
+%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
+expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_far/';
 % get P
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 % get camParams
