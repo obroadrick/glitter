@@ -22,13 +22,14 @@
 %%
 % % set inputs
 
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
 charDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(new-1)/';
 %charDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/';
 setPaths(charDir);
 
 %pointLightImageIndex = 1;
-for pointLightImageIndex=1:4
+for pointLightImageIndex=1:1
     % path to the single image
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
@@ -79,7 +80,7 @@ for pointLightImageIndex=1:4
     end
     
     %lightPos = screenPosToWorldPos(positions(1,:), M);
-    M = matfile([expdir 'measurementsNew.mat']).M;
+    M = matfile([expdir 'measurements.mat']).M;
     %M = matfile([charDir 'measurements.mat']).M;
     lightPos = screenPosToWorldPos(positions(pointLightImageIndex,:), M);
     % estimate translation and distortion

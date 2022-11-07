@@ -1,7 +1,9 @@
 % is single-image camera calibration with glitter more feasible when using
 % multiple point light sources (rather than one)?
 
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_far/';
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
 num = 4;
 
 figure; tiledlayout(3,3,'Padding','tight','TileSpacing','tight'); colormap('gray');
@@ -22,9 +24,10 @@ for ix=1:num
     end
 end
 
-
+%{
 name = 'blank2';
 im = imread([expdir name '.JPG']);
 axes(num*2+2) = nexttile; imagesc(im); title(name);
+%}
 
 linkaxes(axes);

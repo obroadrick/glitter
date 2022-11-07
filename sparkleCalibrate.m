@@ -20,17 +20,20 @@
 % % set inputs
 
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/';
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_far/';
 
 %  path to the single image
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
-impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
+%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/singleImageAug18.JPG';
+impath = [expdir 'chem.JPG'];
 
 % path to single image fiducial marker points
 % get by running Addy's Python script on the single image:
-allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/16ptsJuly25.mat']).arr;
+%allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/16ptsJuly25.mat']).arr;
 %allPts = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/16ptsAug18.mat').arr;
+allPts = matfile([expdir '16pts.mat']).arr;
 pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
@@ -51,8 +54,9 @@ x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1);
 y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
 lightPos = [x y M.GLIT_TO_MON_PLANES];
 %}
-lightPos = [0 125-73 535];%july25nikonz7 %TODO store in exp dir
+%lightPos = [0 125-73 535];%july25nikonz7 %TODO store in exp dir
 %lightPos = [0 129-72.9 527];%aug18nikonz7
+lightPos = matfile([expir 'chemLightPos']).lightPos;
 
 % estimate translation and distortion
 % todo/future version

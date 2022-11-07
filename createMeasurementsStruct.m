@@ -5,8 +5,12 @@ function M = createMeasurementsStruct()
     M.GLIT_TO_MON_PLANES = 628;%MEASURED (laser)
     M.GLIT_TO_MON_EDGES_X = 126;%MEASURED (jenky laser rig with calipers)
     M.GLIT_TO_MON_EDGES_Y = 83;%MEASURED (jenky laser rig with calipers)
-    M.MON_WIDTH_MM = 669;%MEASURED (yard sticks)
-    M.MON_HEIGHT_MM = 377;%MEASURED (yard sticks)
+
+
+
+    M.MON_WIDTH_MM = 664.32;%computed (confirmed with measure)
+    M.MON_HEIGHT_MM = 373.68;%computed (confirmed with measure)
+
     M.GLIT_WIDTH = 457.2;%computed as 18in to mm (and measured to confirm)
     M.GLIT_HEIGHT = 304.8;%computed as 12in to mm (and measured to confirm)
     M.CALIBRATION_SQUARE_SIZE = 147.1 / 6;%MEASURED six of them (calipers) = 24.5166666667
@@ -32,6 +36,7 @@ function M = createMeasurementsStruct()
     
     % save struct to file
     save("data/measurements","M");
-    save("/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(new-1)/measurements.mat","M");
+    save("/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/measurements.mat","M");
+    %save("/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/measurements.mat","M");
 
 end
