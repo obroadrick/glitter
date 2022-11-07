@@ -56,7 +56,7 @@ lightPos = [x y M.GLIT_TO_MON_PLANES];
 %}
 %lightPos = [0 125-73 535];%july25nikonz7 %TODO store in exp dir
 %lightPos = [0 129-72.9 527];%aug18nikonz7
-lightPos = matfile([expir 'chemLightPos']).lightPos;
+lightPos = matfile([expdir 'chemLightPos']).lightPos;
 
 % estimate translation and distortion
 % todo/future version
@@ -65,6 +65,8 @@ lightPos = matfile([expir 'chemLightPos']).lightPos;
 disp('Estimating camera position with sparkles...');
 [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir);
 disp('Position estimate complete!');
+
+return
 
 %% first retrieve the checkerboard calibration information for comparison along the way
 format shortG;%display numbers in more reasonable way

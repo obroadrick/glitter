@@ -25,7 +25,7 @@ function M = createMeasurementsStruct()
     M.MON_WIDTH_PXS = 3840;
     M.MON_HEIGHT_PXS = 2160;
     M.PX2MM_X = M.MON_WIDTH_MM / M.MON_WIDTH_PXS; 
-    M.PX2MM_Y = M.MON_HEIGHT_MM / M.MON_HEIGHT_PXS; 
+    M.PX2MM_Y = M.MON_HEIGHT_MM / M.MON_HEIGHT_PXS;
     M.INDEX_TO_PX = 5; % from Addy (reconfirmed) 
     M.FIRST_INDEX_PX_X = 20; % from Addy (reconfirmed)
     M.FIRST_INDEX_X = M.FIRST_INDEX_PX_X * M.PX2MM_X;
@@ -38,5 +38,6 @@ function M = createMeasurementsStruct()
     save("data/measurements","M");
     save("/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/measurements.mat","M");
     %save("/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/measurements.mat","M");
+    save("/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/measurements.mat","M");
 
 end
