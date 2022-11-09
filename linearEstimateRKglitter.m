@@ -185,7 +185,7 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     R = Icorrection * R;
 
     % and then just make it negative. because.
-    R = -R;
+    %R = -R;
 
     %{
     if det(R) < 0

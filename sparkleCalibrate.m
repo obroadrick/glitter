@@ -139,7 +139,7 @@ disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics2);
 disp('percent error (%)');
 disp((rotAndIntrinsicsCheckerboards - rotAndIntrinsics2) ./ rotAndIntrinsicsCheckerboards .* 100);
 R2 = rod2mat(rotAndIntrinsics2(1),rotAndIntrinsics2(2),rotAndIntrinsics2(3));
-Rerr = (180 / pi) * acos((trace(R2 * camRot') - 1) / 2);% angle of rotation difference
+Rerr = rotDiff(R2, camRot);
 disp('difference in rotation (degrees):');
 disp(Rerr);
 

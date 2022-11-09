@@ -30,7 +30,7 @@ charDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(ne
 setPaths(charDir);
 
 %pointLightImageIndex = 1;
-for pointLightImageIndex=1:4
+for pointLightImageIndex=1:1
     % path to the single image
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
