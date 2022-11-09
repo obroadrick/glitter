@@ -27,8 +27,8 @@ expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/singleImageAug18.JPG';
-%impath = [expdir 'chem.JPG'];
-impath = [expdir 'cubesat.JPG'];
+impath = [expdir 'chem.JPG'];
+%impath = [expdir 'cubesat.JPG'];
 
 
 % path to single image fiducial marker points
@@ -58,8 +58,8 @@ lightPos = [x y M.GLIT_TO_MON_PLANES];
 %}
 %lightPos = [0 125-73 535];%july25nikonz7 %TODO store in exp dir
 %lightPos = [0 129-72.9 527];%aug18nikonz7
-%lightPos = matfile([expdir 'chemLightPos']).lightPos;
-lightPos = matfile([expdir 'cubesatLightPos']).lightPos;
+lightPos = matfile([expdir 'chemLightPos']).lightPos;
+%lightPos = matfile([expdir 'cubesatLightPos']).lightPos;
 
 % estimate translation and distortion
 % todo/future version

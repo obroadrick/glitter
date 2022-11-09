@@ -33,6 +33,7 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     [orientation, location] = extrinsicsToCameraPose(Rc, translationVector);
     Rc = Rc;
     tcam = translationVector;
+    %%
 
     % get homography from image coordinates to glitter coordinates
     tform = getTransform(P,pin);
@@ -224,8 +225,8 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     text(lxk+exk,lyk+eyk,lzk+ezk,["xk","yk","zk"],"FontSize",14,"Color",'c');
     % now rotate the basis vectors all the way to the camera position and
     % show the new axes
-    cam_from_k_but_in_g = (Rg' * tcam')';
-    lxc = lxk + cam_from_k_but_in_g(1);
+    cam_from_k_but_in_g = (Rg * location')';
+    lxc = lxk + cam_from_k_but_in_g(1); 
     lyc = lyk + cam_from_k_but_in_g(2);
     lzc = lzk + cam_from_k_but_in_g(3);
     rotation_g2c = R';%equivalently: rotation_g2c = (Rc * Rg)';

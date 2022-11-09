@@ -229,7 +229,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     % find a good translation estimate using a RANSAC approach
     rng(314159);
-    inlierThreshold = 30; % (mm) a reflected ray is an inlier
+    inlierThreshold = 15; % (mm) a reflected ray is an inlier
                           % with respect to a hypothesized camera position
                           % if it pases within 10 millimeters of that 
                           % camera position

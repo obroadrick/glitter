@@ -87,7 +87,7 @@ for pointLightImageIndex=1:4
     % estimate translation and distortion
     % todo/future version
     warning('off','MATLAB:singularMatrix'); 
-    set(0,'DefaultFigureVisible','off');
+    %set(0,'DefaultFigureVisible','off');
     %% estimate translation
     disp('Estimating camera position with sparkles...');
     [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage);
