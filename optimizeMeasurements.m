@@ -8,7 +8,8 @@ chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(ne
 %charDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/';
 setPaths(chardir);
 % the input camera calibration test case to use to test new surface normals
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
 
 
 %now suppose that at this point we have been given a new set of
@@ -27,7 +28,8 @@ newNormals = matfile(newNormalsPath).specNormals;
 % 2. do a sparkle calibration using these normals
 % get inputs (image, fiducial marker points, ambient image, light position)
 pointLightImageIndex = 1;
-impath = [expdir int2str(pointLightImageIndex) 'single.JPG'];
+%impath = [expdir int2str(pointLightImageIndex) 'single.JPG'];
+impath = [expdir 'chem.JPG'];
 ambientImage = rgb2gray(imread([expdir 'blank1.JPG']));
 pin = getPoints(expdir);
 w = 3840;h = 2160;xoff = 500;yoff = 300;r = 9;
@@ -35,12 +37,14 @@ positions = [xoff yoff; w-xoff h-yoff; xoff h-yoff; w-xoff yoff];
 for ix=1:size(positions,1)
     positions(ix,:) = positions(ix,:) + r/2;
 end
-lightPos = screenPosToWorldPos(positions(pointLightImageIndex,:), matfile([expdir 'measurementsNew.mat']).M);
+lightPos = screenPosToWorldPos(positions(pointLightImageIndex,:), matfile([expdir 'measurements.mat']).M);
+lightPos = matfile([expdir 'chemLightPos.mat']).lightPos;
 
 % estimate translation
-warning('off','MATLAB:singularMatrix'); 
-set(0,'DefaultFigureVisible','off');
-[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage);
+warning('off','MATLAB:singularMatrix');
+set(0,'DefaultFigureVisible','on');
+[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir);%, ambientImage);
+%[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage);
 
 mostInliersL = other.mostInliersL; % this extra return of the estimateTglitter function gives us the rays from light position to spec locations
 mostInliersSpecPos = other.mostInliersSpecPos;
@@ -78,7 +82,7 @@ charM = matfile([chardir 'measurements.mat']).M;
 %disp(computeError(628, 126, 83, 669, 377, chardir, expdir, other));
 
 %% now do the optimization over the measurements
-
+disp('here');
 % which measurements we are optimizing over:
 set(0,'DefaultFigureVisible','on');
 errFun = @(x) computeError(x(1), x(2), x(3), 664.32, 373.68,...
@@ -95,7 +99,7 @@ function error = computeError(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,...
                               mostInliersSpecPos, camPos, lightPos)
     charM = setMeasurements(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,...
                               GLIT_TO_MON_EDGES_Y);
-    x = [GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,GLIT_TO_MON_EDGES_Y,MON_WIDTH_MM,MON_HEIGHT_MM];
+    x = [GLIT_TO_MON_EDGES_X,GLIT_TO_MON_EDGES_Y,GLIT_TO_MON_PLANES];
     disp(x);
     % 1. recompute the normals based on the given measurements
     %P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;

@@ -5,7 +5,6 @@
 function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage)
 
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
-    %M = matfile(P.measurements).M; %old way
     M = matfile([expdir 'measurements.mat']).M;
 
     % read in image
@@ -63,8 +62,8 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
     plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
     tform = getTransform(P, pin);
-    %[imageCentroids,~] = singleImageFindSpecs(im); %normal use
-    [imageCentroids,~] = singleImageFindSpecsNoFilter(im); % special use
+    [imageCentroids,~] = singleImageFindSpecs(im); %normal use
+    %[imageCentroids,~] = singleImageFindSpecsNoFilter(im); % special use
     disp([int2str(size(imageCentroids,1)) ' specs detected...']);
     %disp(size(imageCentroids));
     plot(imageCentroids(:,1),imageCentroids(:,2),'b+');
@@ -91,6 +90,8 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1),...
         knownCanonicalCentroids(idx(:,1),2)-canonicalCentroids(:,2),...
         'LineWidth',2);
+
+
     x = knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1);
     y = knownCanonicalCentroids(idx(:,1),2)-canonicalCentroids(:,2);
     figure;
@@ -228,7 +229,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     % find a good translation estimate using a RANSAC approach
     rng(314159);
-    inlierThreshold = 15; % (mm) a reflected ray is an inlier
+    inlierThreshold = 30; % (mm) a reflected ray is an inlier
                           % with respect to a hypothesized camera position
                           % if it pases within 10 millimeters of that 
                           % camera position
@@ -274,7 +275,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     mostInliersSpecPos = [];
     mostInliersR = [];
     mostInliersL = [];
-    for counter=1:1500 %this is constant right now but could (should) be more dynamic/reactive than that
+    for counter=1:1000 %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
         idxsRandomTwo = randi(size(R,1),1,2);
@@ -399,8 +400,11 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     histogram(numInliers);
     
     disp(['found ' num2str(max(numInliers)) ' consistent inliers among ' int2str(size(imageCentroids,1)) ' detected sparkles...']);
-
     
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % now after ransac we can compute for all bright specs the 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     %% now just for the model with the most inliers, we build up a 
     % camera position estimate
     % estimate camera position by minimizing some error function
@@ -463,11 +467,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    figure;
-    % show camera estimated position as a dot: (dots=cameras)
-    cam=camPosEst;
-    legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
-    %disp(cam);
+    
     % draw rig
     figure;
     % glitter square:

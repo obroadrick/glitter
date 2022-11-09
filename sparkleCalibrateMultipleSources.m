@@ -86,14 +86,15 @@ for pointLightImageIndex=1:4
     lightPos = screenPosToWorldPos(positions(pointLightImageIndex,:), M);
     % estimate translation and distortion
     % todo/future version
-    
+    warning('off','MATLAB:singularMatrix'); 
+    set(0,'DefaultFigureVisible','off');
     %% estimate translation
     disp('Estimating camera position with sparkles...');
     [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage);
     disp('Position estimate complete!');
 
     % for now just look at camera position estimates
-    continue
+    %continue
     
     %%
     %{ 
@@ -157,6 +158,7 @@ for pointLightImageIndex=1:4
     %} 
     
     %%
+    
     % solve the linear system and do RQ decomposition to get K and R
     disp('SparkleCalibrate - linear solution');%(but cheating and giving the checkerboard translation estimate)');
     rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
@@ -194,7 +196,7 @@ for pointLightImageIndex=1:4
     %}
     
     %%
-    %{ 
+    %{
     disp('SparkleCalibrate - linear solution as first guess in fminsearch (skew=0)');
     rotAndIntrinsics5 = startPointEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
     disp(rotAndIntrinsics5);
@@ -206,8 +208,7 @@ for pointLightImageIndex=1:4
     Rerr = (180 / pi) * acos((trace(R5 * camRot') - 1) / 2);% angle of rotation difference
     disp('difference in rotation (degrees):');
     disp(Rerr);
-    %} 
-    
+    %}
     %% save outputs
     %TODO
 end

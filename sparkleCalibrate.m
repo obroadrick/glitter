@@ -21,13 +21,15 @@
 
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/';
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_far/';
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
 
 %  path to the single image
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/singleImageAug18.JPG';
-impath = [expdir 'chem.JPG'];
+%impath = [expdir 'chem.JPG'];
+impath = [expdir 'cubesat.JPG'];
+
 
 % path to single image fiducial marker points
 % get by running Addy's Python script on the single image:
@@ -56,7 +58,8 @@ lightPos = [x y M.GLIT_TO_MON_PLANES];
 %}
 %lightPos = [0 125-73 535];%july25nikonz7 %TODO store in exp dir
 %lightPos = [0 129-72.9 527];%aug18nikonz7
-lightPos = matfile([expdir 'chemLightPos']).lightPos;
+%lightPos = matfile([expdir 'chemLightPos']).lightPos;
+lightPos = matfile([expdir 'cubesatLightPos']).lightPos;
 
 % estimate translation and distortion
 % todo/future version
@@ -66,22 +69,24 @@ disp('Estimating camera position with sparkles...');
 [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir);
 disp('Position estimate complete!');
 
-return
+%return
 
 %% first retrieve the checkerboard calibration information for comparison along the way
+%{
 format shortG;%display numbers in more reasonable way
 camParams = matfile(P.camParams).camParams;
 camParamsErrors = matfile(P.camParamsErrors).camParamsErrors;
 camPos = matfile(P.camPos).camPos;
 camRot = matfile(P.camRot).camRot;
 %%%%%%%%%%%
+%}
 %% manually set path literals to control the checkerboard outputs being used
 format shortG;%display numbers in more reasonable way
-expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
-camParams = matfile([expir 'camParams']).camParams;
-camParamsErrors = matfile([expir 'camParamsErrors']).camParamsErrors;
-camPos = matfile([expir 'camPos']).camPos;
-camRot = matfile([expir 'camRot']).camRot;
+camParams = matfile([expdir 'camParams']).camParams;
+camParamsErrors = matfile([expdir 'camParamsErrors']).camParamsErrors;
+camPos = matfile([expdir 'camPos']).camPos;
+camRot = matfile([expdir 'camRot']).camRot;
+%{
 %% manually set path literals to control the checkerboard outputs being used
 format shortG;%display numbers in more reasonable way
 expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
@@ -89,6 +94,7 @@ camParams = matfile([expir 'camParamsSkew']).camParams;
 camParamsErrors = matfile([expir 'camParamsErrorsSkew']).camParamsErrors;
 camPos = matfile([expir 'camPosSkew']).camPos;
 camRot = matfile([expir 'camRotSkew']).camRot;
+%}
 %%
 %%%%%%%%%%%
 % rotAndIntrinsics = [omega1 omega2 omega3 fx fy cx cy s]
@@ -125,8 +131,8 @@ disp(rotAndIntrinsics1);
 
 %%
 % solve the linear system and do RQ decomposition to get K and R
-disp('SparkleCalibrate - linear solution (but cheating and giving the checkerboard translation estimate)');
-rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPos, pin, mostInliersSpecPos, mostInliersImageSpecPos);
+disp('SparkleCalibrate - linear solution');
+rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
 disp(rotAndIntrinsics2);
 disp('difference with checkerboards');
 disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics2);
@@ -136,6 +142,8 @@ R2 = rod2mat(rotAndIntrinsics2(1),rotAndIntrinsics2(2),rotAndIntrinsics2(3));
 Rerr = (180 / pi) * acos((trace(R2 * camRot') - 1) / 2);% angle of rotation difference
 disp('difference in rotation (degrees):');
 disp(Rerr);
+
+return
 
 %%
 % solve linear system but with positions in coordinate system with origin
