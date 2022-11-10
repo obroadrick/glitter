@@ -72,7 +72,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     %% match canonical centroids to those in the characterization
     knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-    K = 5;
+    K = 15;
     [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                                  'K', K, 'Distance', 'euclidean');
     % only consider specs whose mwhatch is within .xx millimeters
@@ -275,29 +275,44 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     mostInliersSpecPos = [];
     mostInliersR = [];
     mostInliersL = [];
-    for counter=1:1000 %this is constant right now but could (should) be more dynamic/reactive than that
+    for counter=1:10000 %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
         idxsRandomTwo = randi(size(R,1),1,2);
-        %k = 1; %when hypothesizing, just take the neareast neighbor specs
+        %k = 1; 
+        %when hypothesizing, just take the neareast neighbor specs
+        %{
         if nearestDistLines(specPos(idxsRandomTwo,1,:), R(idxsRandomTwo,1,:)) > 2 * inlierThreshold
             continue
         end
+        %}
+        inlierPairFound = false;
+        inlierPairK = -1;
+        for k=1:size(specPos,2)
+            if nearestDistLines(specPos(idxsRandomTwo,k,:), R(idxsRandomTwo,k,:)) < 2 * inlierThreshold
+                inlierPairFound = true;
+                inlierPairK = k;
+                break;
+            end
+        end
+        if ~inlierPairFound
+            continue
+        end
+        % TODO try k=1....K 
         % find the corresponding candidate camera position
-        points = specPos(idxsRandomTwo,1,:);
-        directions = R(idxsRandomTwo,1,:);
+        points = specPos(idxsRandomTwo,inlierPairK,:);
+        directions = R(idxsRandomTwo,inlierPairK,:);
         candidate = pointBetweenLines(points, directions);
         % sometimes the lines cross near each other behind the glitter plane...
         % but also a position within a few cm in front of the plane is not
-        % cool... call it 150 = 15cm
-        if candidate(3) < 150
+        % cool... call it 250mm=25cm
+        if candidate(3) < 250
             continue
         end
         % first just check whether this hypothesized camera position even
         % keeps the two rays which hypothesized it as inliers (AKA are the
         % two rays we randomly chose even close together?) and if they are
         % not, move on to the next pair
-        %TODO: 
         if distPointToLine(candidate, reshape(specPos(idxsRandomTwo(1),1,:),1,3), reshape(R(idxsRandomTwo(1),1,:),1,3)) > inlierThreshold
             %disp('here')%based on little testing, this doesn't affect
             %accuracy of method (aka we weren't badly relying on far apart
