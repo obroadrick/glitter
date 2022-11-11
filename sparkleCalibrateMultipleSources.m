@@ -30,7 +30,7 @@ charDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(ne
 setPaths(charDir);
 
 %pointLightImageIndex = 1;
-for pointLightImageIndex=1:1
+for pointLightImageIndex=1:4
     % path to the single image
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
@@ -87,7 +87,7 @@ for pointLightImageIndex=1:1
     % estimate translation and distortion
     % todo/future version
     warning('off','MATLAB:singularMatrix'); 
-    %set(0,'DefaultFigureVisible','off');
+    set(0,'DefaultFigureVisible','off');
     %% estimate translation
     disp('Estimating camera position with sparkles...');
     [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage);
@@ -108,21 +108,22 @@ for pointLightImageIndex=1:1
     %%%%%%%%%%%
     %}
     %% manually set path literals to control the checkerboard outputs being used
+    %{
     format shortG;%display numbers in more reasonable way
     %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
     camParams = matfile([expdir 'camParams']).camParams;
     camParamsErrors = matfile([expdir 'camParamsErrors']).camParamsErrors;
     camPos = matfile([expdir 'camPos']).camPos;
     camRot = matfile([expdir 'camRot']).camRot;
-    %{
+    %}
     %% manually set path literals to control the checkerboard outputs being used
     format shortG;%display numbers in more reasonable way
-    expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
-    camParams = matfile([expir 'camParamsSkew']).camParams;
-    camParamsErrors = matfile([expir 'camParamsErrorsSkew']).camParamsErrors;
-    camPos = matfile([expir 'camPosSkew']).camPos;
-    camRot = matfile([expir 'camRotSkew']).camRot;
-    %}
+    %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
+    camParams = matfile([expdir 'camParamsSkew']).camParams;
+    camParamsErrors = matfile([expdir 'camParamsErrorsSkew']).camParamsErrors;
+    camPos = matfile([expdir 'camPosSkew']).camPos;
+    camRot = matfile([expdir 'camRotSkew']).camRot;
+    
     %%
     %%%%%%%%%%%
     % rotAndIntrinsics = [omega1 omega2 omega3 fx fy cx cy s]
@@ -161,7 +162,7 @@ for pointLightImageIndex=1:1
     
     % solve the linear system and do RQ decomposition to get K and R
     disp('SparkleCalibrate - linear solution');%(but cheating and giving the checkerboard translation estimate)');
-    rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
+    rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPos, pin, mostInliersSpecPos, mostInliersImageSpecPos);
     disp(rotAndIntrinsics2);
     disp('difference with checkerboards');
     disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics2);

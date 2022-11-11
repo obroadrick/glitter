@@ -23,7 +23,11 @@
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/';
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngle/';
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleLessBad/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/';
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneTest/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/';
 
 %  path to the single image
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
@@ -31,7 +35,14 @@ expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/singleImageAug18.JPG';
 %impath = [expdir 'chem2.JPG'];
 %impath = [expdir 'chem1.JPG'];
-impath = [expdir 'cubesat3.JPG'];
+%impath = [expdir 'chem.JPG'];
+impath = [expdir 'cubesat.JPG'];
+%impath = [expdir 'cubesat.JPG'];
+%impath = [expdir 'cubesat copy.JPG'];
+
+%impath = [expdir 'cubesat3.JPG'];
+%impath = [expdir 'chem2-undist.JPG'];
+%impath = [expdir 'chem2-undist.JPG'];
 
 
 % path to single image fiducial marker points
@@ -44,6 +55,25 @@ pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
 pin = double([pinx' piny']);
 fiducialMarkerPoints = pin;
+%{
+% manually found lol
+pin = [...
+    474, 3528; ...
+    267, 365; ...
+    5499, 508; ...
+    5169 3608 ...
+    ];
+%}
+
+%{
+% undistort these points
+k1 = 0;
+k2 = 0;
+k1 = 0.0155;
+k2 = -0.0059;
+k = [k1 k2];
+pin = undistortPin(pin, k);
+%}
 
 %  characterized sheet of glitter: spec locations, normals
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
@@ -72,7 +102,6 @@ disp('Estimating camera position with sparkles...');
 [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir);
 disp('Position estimate complete!');
 
-%return
 
 %% first retrieve the checkerboard calibration information for comparison along the way
 %{
@@ -82,22 +111,22 @@ camParamsErrors = matfile(P.camParamsErrors).camParamsErrors;
 camPos = matfile(P.camPos).camPos;
 camRot = matfile(P.camRot).camRot;
 %%%%%%%%%%%
-%}
+
 %% manually set path literals to control the checkerboard outputs being used
 format shortG;%display numbers in more reasonable way
 camParams = matfile([expdir 'camParams']).camParams;
 camParamsErrors = matfile([expdir 'camParamsErrors']).camParamsErrors;
 camPos = matfile([expdir 'camPos']).camPos;
 camRot = matfile([expdir 'camRot']).camRot;
-%{
+%}
 %% manually set path literals to control the checkerboard outputs being used
 format shortG;%display numbers in more reasonable way
-expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
-camParams = matfile([expir 'camParamsSkew']).camParams;
-camParamsErrors = matfile([expir 'camParamsErrorsSkew']).camParamsErrors;
-camPos = matfile([expir 'camPosSkew']).camPos;
-camRot = matfile([expir 'camRotSkew']).camRot;
-%}
+%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
+camParams = matfile([expdir 'camParamsSkew']).camParams;
+camParamsErrors = matfile([expdir 'camParamsErrorsSkew']).camParamsErrors;
+camPos = matfile([expdir 'camPosSkew']).camPos;
+camRot = matfile([expdir 'camRotSkew']).camRot;
+
 %%
 %%%%%%%%%%%
 % rotAndIntrinsics = [omega1 omega2 omega3 fx fy cx cy s]
@@ -157,7 +186,7 @@ disp(rotAndIntrinsics3);
 disp('difference with checkerboards');
 disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics3);
 R3 = rod2mat(rotAndIntrinsics3(1),rotAndIntrinsics3(2),rotAndIntrinsics3(3));
-Rerr = (180 / pi) * acos((trace(R3 * camRot') - 1) / 2);% angle of rotation difference
+Rerr = rotDiff(R3, camRot);
 disp('difference in rotation (degrees):');
 disp(Rerr);
 
@@ -180,7 +209,7 @@ disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics5);
 disp('percent error (%)');
 disp((rotAndIntrinsicsCheckerboards - rotAndIntrinsics5) ./ rotAndIntrinsicsCheckerboards .* 100);
 R5 = rod2mat(rotAndIntrinsics5(1),rotAndIntrinsics5(2),rotAndIntrinsics5(3));
-Rerr = (180 / pi) * acos((trace(R5 * camRot') - 1) / 2);% angle of rotation difference
+Rerr = rotDiff(R5, camRot);
 disp('difference in rotation (degrees):');
 disp(Rerr);
 %} %

@@ -14,14 +14,16 @@
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_far/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngle/';
-expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
+expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/';
+%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
+%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/';
 % get P
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 % get camParams
 %camParams = matfile(P.camParams).camParams;
 %camParams = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/camParams_07_25_2022.mat').camParams;%july25test
-camParams = matfile([expir 'camParams.mat']).camParams;%ASSUME NO SKEW
-%camParams = matfile([expir 'camParamsSkew.mat']).camParams;%WITH SKEW ESTIMATE
+%camParams = matfile([expir 'camParams.mat']).camParams;%ASSUME NO SKEW
+camParams = matfile([expir 'camParamsSkew.mat']).camParams;%WITH SKEW ESTIMATE
 % get reference image path
 %imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/checkerboards/onGlitterPlane.JPG';
 %imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization/checkerboards/onGlitterPlane.JPG';
@@ -51,5 +53,7 @@ save([P.data 'camRot_' datestr(now, 'mm_dd_yyyy')], "camRot");
 %}
 % also store the pos and rot in the experiment directory;
 %TODO actually check when it is with and without skew estimate
-save([expir 'camPos'], "camPos");
-save([expir 'camRot'], "camRot");
+%save([expir 'camPos'], "camPos");
+%save([expir 'camRot'], "camRot");
+save([expir 'camPosSkew'], "camPos");
+save([expir 'camRotSkew'], "camRot");

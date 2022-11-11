@@ -72,7 +72,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     %% match canonical centroids to those in the characterization
     knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-    K = 15;
+    K = 30;
     [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                                  'K', K, 'Distance', 'euclidean');
     % only consider specs whose mwhatch is within .xx millimeters
@@ -143,7 +143,9 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     %%
     %compute distances to pinhole for these allR reflected rays
     %knownCamPos = matfile(P.camPos).camPos;%
-    knownCamPos = matfile([expdir 'camPos.mat']).camPos; 
+    
+    knownCamPos = matfile([expdir 'camPosSkew.mat']).camPos; 
+    %knownCamPos = matfile([expdir 'camPos.mat']).camPos; 
     %knownCamPos = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/camPos.mat').camPos;
     %knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
     %knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
@@ -171,6 +173,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     for ix=1:size(allTrueDistsNormalized,2)
         colors(ix,:) = green + (red-green)*allTrueDistsNormalized(ix);
     end
+    
     % set specs not within 2cm to red
     % set specs 0 to 2cm from green to red
     %for ix=1:size(allTrueDistsNormalized,2)
@@ -229,7 +232,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     % find a good translation estimate using a RANSAC approach
     rng(314159);
-    inlierThreshold = 10; % (mm) a reflected ray is an inlier
+    inlierThreshold = 15; % (mm) a reflected ray is an inlier
                           % with respect to a hypothesized camera position
                           % if it pases within 10 millimeters of that 
                           % camera position
@@ -275,38 +278,51 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     mostInliersSpecPos = [];
     mostInliersR = [];
     mostInliersL = [];
-    for counter=1:10000 %this is constant right now but could (should) be more dynamic/reactive than that
+    for counter=1:20000 %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
         idxsRandomTwo = randi(size(R,1),1,2);
-        %k = 1; 
         %when hypothesizing, just take the neareast neighbor specs
         %{
-        if nearestDistLines(specPos(idxsRandomTwo,1,:), R(idxsRandomTwo,1,:)) > 2 * inlierThreshold
+        k1 = randi(size(specPos,2));
+        k2 = randi(size(specPos,2));
+        if nearestDistLines(specPos(idxsRandomTwo,k1,:), R(idxsRandomTwo,k2,:)) > 2 * inlierThreshold
             continue
         end
         %}
+        
+        
         inlierPairFound = false;
         inlierPairK = -1;
-        for k=1:size(specPos,2)
-            if nearestDistLines(specPos(idxsRandomTwo,k,:), R(idxsRandomTwo,k,:)) < 2 * inlierThreshold
-                inlierPairFound = true;
-                inlierPairK = k;
-                break;
+        minFound = 1000000;
+        for k1=1:size(specPos,2)
+            for k2=1:size(specPos,2)
+                d = nearestDistLines(specPos(idxsRandomTwo,k1,:), R(idxsRandomTwo,k2,:));
+                if  d < 2 * inlierThreshold
+                    if d < minFound
+                        minFound = d;
+                        inlierPairFound = true;
+                        inlierPairK1 = k1;
+                        inlierPairK2 = k2;
+                    end
+                end
             end
         end
         if ~inlierPairFound
             continue
         end
+        
+
         % TODO try k=1....K 
         % find the corresponding candidate camera position
-        points = specPos(idxsRandomTwo,inlierPairK,:);
-        directions = R(idxsRandomTwo,inlierPairK,:);
+        points = specPos(idxsRandomTwo,inlierPairK1,:);
+        directions = R(idxsRandomTwo,inlierPairK2,:);
         candidate = pointBetweenLines(points, directions);
         % sometimes the lines cross near each other behind the glitter plane...
         % but also a position within a few cm in front of the plane is not
         % cool... call it 250mm=25cm
-        if candidate(3) < 250
+        candidateThreshold = 250;
+        if candidate(3) < candidateThreshold
             continue
         end
         % first just check whether this hypothesized camera position even
@@ -431,8 +447,8 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     %camPosEst = fminsearch(errFun,x0,options)';
     %disp(camPosEst);
     camPosEst = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR);
-    
-    
+
+
     % also compute dists to the known camera location for all shiny specs
     trueDists = [];
     for k=1:size(R,2)%size(R,2) is also just K from knnsearch above
