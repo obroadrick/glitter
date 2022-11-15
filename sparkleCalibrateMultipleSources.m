@@ -30,7 +30,7 @@ charDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(ne
 setPaths(charDir);
 
 %pointLightImageIndex = 1;
-for pointLightImageIndex=1:4
+for pointLightImageIndex=1:1
     % path to the single image
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
@@ -86,16 +86,14 @@ for pointLightImageIndex=1:4
     lightPos = screenPosToWorldPos(positions(pointLightImageIndex,:), M);
     % estimate translation and distortion
     % todo/future version
-    warning('off','MATLAB:singularMatrix'); 
+    %warning('off','MATLAB:singularMatrix');
     set(0,'DefaultFigureVisible','off');
+
     %% estimate translation
     disp('Estimating camera position with sparkles...');
     [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage);
     disp('Position estimate complete!');
-
-    % for now just look at camera position estimates
-    %continue
-    
+    return
     %%
     %{ 
     % per-characteriztion checkerboard calibration info
@@ -161,8 +159,8 @@ for pointLightImageIndex=1:4
     %%
     
     % solve the linear system and do RQ decomposition to get K and R
-    disp('SparkleCalibrate - linear solution');%(but cheating and giving the checkerboard translation estimate)');
-    rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPos, pin, mostInliersSpecPos, mostInliersImageSpecPos);
+    disp('SparkleCalibrate - linear solution');
+    rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir);
     disp(rotAndIntrinsics2);
     disp('difference with checkerboards');
     disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics2);

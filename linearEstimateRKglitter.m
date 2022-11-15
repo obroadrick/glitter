@@ -10,7 +10,7 @@
 % K = [f 0 w/2; 0 f h/2; 0 0 1]; where w and h are the width 
 % and height in pixels of the image
 
-function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos)
+%function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir)
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     MEAS = matfile(P.measurements).M;
     
@@ -406,7 +406,9 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     end
 
     %% compare to expected rotation matrix by matlab checkerboard calibration
-    camRot = matfile([P.camRot]).camRot;
+    %camRot = matfile([P.camRot]).camRot;
+    camRot = matfile([expdir 'camRot.mat']).camRot;
+
     % get rorigues parameters from rotation matrix
     ourRodrig = undoRodrigues(R);
     matlabRodrig = undoRodrigues(camRot);
@@ -416,6 +418,19 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     disp('Rodrigues parameters as estimated by Matlab checkerboard calibration');
     disp(matlabRodrig);
     %}
+    %%
+    % show the reprojection according to the ground truth/checkerboard
+    % results
+    checkerParams = matfile([expdir 'camParams.mat']);
+    checkerK = checkerParams.Intrinsics.IntrinsicMatrix;
+    figure;
+    plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;    
+    title('checkerboard projection: image positions (green) and projected positions (red)');
+    for ix=1:size(imageSpecs,1)
+        projectedSpec = K*camRot * (worldSpecs(ix,:)' - T);
+        projectedSpec = projectedSpec ./ projectedSpec(3);
+        plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
+    end
 
     %% we can also compare the rotations directly by measuring the angle or
     % rotation from one to the other (which gives a notion of how far one would
@@ -560,4 +575,4 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     cy = K(2,3);
     s = K(1,2);
     rotAndIntrinsics = [omega fx fy cx cy s];
-end
+%end

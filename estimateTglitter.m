@@ -72,7 +72,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     %% match canonical centroids to those in the characterization
     knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-    K = 30;
+    K = 5;
     [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                                  'K', K, 'Distance', 'euclidean');
     % only consider specs whose mwhatch is within .xx millimeters
@@ -232,7 +232,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     % find a good translation estimate using a RANSAC approach
     rng(314159);
-    inlierThreshold = 15; % (mm) a reflected ray is an inlier
+    inlierThreshold = 20; % (mm) a reflected ray is an inlier
                           % with respect to a hypothesized camera position
                           % if it pases within 10 millimeters of that 
                           % camera position
@@ -278,7 +278,8 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     mostInliersSpecPos = [];
     mostInliersR = [];
     mostInliersL = [];
-    for counter=1:20000 %this is constant right now but could (should) be more dynamic/reactive than that
+    numRansacIters = 20000;
+    for counter=1:numRansacIters %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
         idxsRandomTwo = randi(size(R,1),1,2);
@@ -294,7 +295,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         
         inlierPairFound = false;
         inlierPairK = -1;
-        minFound = 1000000;
+        minFound = 10000000;
         for k1=1:size(specPos,2)
             for k2=1:size(specPos,2)
                 d = nearestDistLines(specPos(idxsRandomTwo,k1,:), R(idxsRandomTwo,k2,:));
@@ -582,7 +583,6 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     camroll(-80);
     daspect([1 1 1]);
     legend(legendItems);
-    
     %
     %%%
     %%%

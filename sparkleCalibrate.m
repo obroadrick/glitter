@@ -17,7 +17,7 @@
 
 
 %%
-% % set inputs
+% set inputs
 
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/';
@@ -25,7 +25,8 @@
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngle/';
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleLessBad/';
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/';
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneTest/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneTest/';
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/';
 
@@ -36,7 +37,7 @@ expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneTest/';
 %impath = [expdir 'chem2.JPG'];
 %impath = [expdir 'chem1.JPG'];
 %impath = [expdir 'chem.JPG'];
-impath = [expdir 'cubesat.JPG'];
+impath = [expdir 'chem.JPG'];
 %impath = [expdir 'cubesat.JPG'];
 %impath = [expdir 'cubesat copy.JPG'];
 
@@ -91,8 +92,8 @@ lightPos = [x y M.GLIT_TO_MON_PLANES];
 %}
 %lightPos = [0 125-73 535];%july25nikonz7 %TODO store in exp dir
 %lightPos = [0 129-72.9 527];%aug18nikonz7
-%lightPos = matfile([expdir 'chemLightPos']).lightPos;
-lightPos = matfile([expdir 'cubesatLightPos']).lightPos;
+lightPos = matfile([expdir 'chemLightPos']).lightPos;
+%lightPos = matfile([expdir 'cubesatLightPos']).lightPos;
 
 % estimate translation and distortion
 % todo/future version

@@ -11,7 +11,7 @@ function [C, Cmax] = singleImageFindSpecs(im)
     %thresh = 30;
     thresh = 30;
     %thresh = 150;%for the image i sent in glitter channel
-    thresh = 120;
+    %thresh = 120;
     Mt = imf > thresh;
     % get a list of the region centroids
     numPoints = 0;
