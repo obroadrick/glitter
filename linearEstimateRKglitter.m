@@ -10,7 +10,7 @@
 % K = [f 0 w/2; 0 f h/2; 0 0 1]; where w and h are the width 
 % and height in pixels of the image
 
-%function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir)
+function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir)
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     MEAS = matfile(P.measurements).M;
     
@@ -185,7 +185,21 @@
     R = Icorrection * R;
 
     % and then just make it negative. because.
-    R = -R;
+    %R = -R;
+    % well actually check whether we got the negative of the desired
+    % solution or not.
+    % the wrong solution (-R_desired) will have rotated the z axis from
+    % pointing into the glitter plane to pointing the other way and so we
+    % can just choose whichever matrix rotates the z axis by more
+    % we know that the z-axis of the canonical glitter coordinates points
+    % out towards the camera and the desired camera z-axis points back
+    % towards the glitter plane, and so the z-entry of the rotate z-tester
+    % vector (canonical z basis vector) should be negative.
+    ztester = [0 0 1]';
+    neg = -R*ztester;
+    if neg(3) < 0
+        R = -R;
+    end
 
     %{
     if det(R) < 0
@@ -421,7 +435,7 @@
     %%
     % show the reprojection according to the ground truth/checkerboard
     % results
-    checkerParams = matfile([expdir 'camParams.mat']);
+    checkerParams = matfile([expdir 'camParams.mat']).camParams;
     checkerK = checkerParams.Intrinsics.IntrinsicMatrix;
     figure;
     plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;    
@@ -575,4 +589,4 @@
     cy = K(2,3);
     s = K(1,2);
     rotAndIntrinsics = [omega fx fy cx cy s];
-%end
+end

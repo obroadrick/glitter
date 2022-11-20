@@ -19,16 +19,12 @@
 %%
 % set inputs
 
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/';
+% %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
+% %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_far/';
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngle/';
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleLessBad/';
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/';
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneTest/';
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/';
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
 
 %  path to the single image
 %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
@@ -56,25 +52,6 @@ pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
 pin = double([pinx' piny']);
 fiducialMarkerPoints = pin;
-%{
-% manually found lol
-pin = [...
-    474, 3528; ...
-    267, 365; ...
-    5499, 508; ...
-    5169 3608 ...
-    ];
-%}
-
-%{
-% undistort these points
-k1 = 0;
-k2 = 0;
-k1 = 0.0155;
-k2 = -0.0059;
-k = [k1 k2];
-pin = undistortPin(pin, k);
-%}
 
 %  characterized sheet of glitter: spec locations, normals
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
@@ -165,7 +142,7 @@ disp(rotAndIntrinsics1);
 %%
 % solve the linear system and do RQ decomposition to get K and R
 disp('SparkleCalibrate - linear solution');
-rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
+rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir);
 disp(rotAndIntrinsics2);
 disp('difference with checkerboards');
 disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics2);
