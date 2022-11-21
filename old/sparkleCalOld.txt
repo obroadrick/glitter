@@ -1,0 +1,10 @@
+
+%%
+%{
+disp('SparkleCalibrate - fminsearch parameterized by four corners');
+rotAndIntrinsics4 = diffOriginEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
+disp(rotAndIntrinsics4);
+disp('difference with checkerboards');
+disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics4);
+%}
+

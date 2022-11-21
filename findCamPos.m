@@ -28,13 +28,11 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     
     % get rotation and translation from checkerboard coords to camera
     % coords
-    [Rc2,tcam] = estimateWorldCameraPose(imagePoints,worldPoints3d,params);
+    [~,~] = estimateWorldCameraPose(imagePoints,worldPoints3d,params);
     [Rc, translationVector] = extrinsics(imagePoints,worldPoints,params);% bad, bad function, as far as my use goes apparently
-    [orientation, location] = extrinsicsToCameraPose(Rc, translationVector);
-    Rc = Rc;
-    tcam = translationVector;
+    [~, location] = extrinsicsToCameraPose(Rc, translationVector);
+    
     %%
-
     % get homography from image coordinates to glitter coordinates
     tform = getTransform(P,pin);
 
@@ -78,7 +76,6 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     % find the angle of the 2d rotation of the xy-plane from glitter coords
     % to checkerboard coords
     theta = -1*atan2(anglevec(2), anglevec(1));
-    thetadeg = theta * 180 / pi;
 
     % rotation matrix from glitter coords to world/checkerboard coords that
     % puts the x axis in the correct position (by carrying out the 2d

@@ -9,7 +9,7 @@ function [C, Cmax] = singleImageFindSpecs(im)
     imf = imfilter(im, F);
     % apply threshold to get binary map with glitter spec regions
     %thresh = 30;
-    thresh = 30;
+    thresh = 20;
     %thresh = 150;%for the image i sent in glitter channel
     %thresh = 120;
     Mt = imf > thresh;

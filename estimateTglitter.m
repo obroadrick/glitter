@@ -2,7 +2,7 @@
 % source, a picture of sparkling glitter, and a known glitter
 % characterization
 
-function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage)
+function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew)
 
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     M = matfile([expdir 'measurements.mat']).M;
@@ -15,57 +15,21 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
     %impath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/hilight.JPG';
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
-    if ~exist('ambientImage','var')
+    if ~exist('ambientImage','var') && ~(ambientImage == -1)
         im = rgb2gray(imread(impath));
     else
         im = max(rgb2gray(imread(impath)) - ambientImage, 0);
     end
-    
-    % get lighting position in canonical coords form lighting position in
-    % monitor pixel coords
-    %monitorCoords = [1127 574];
-    %x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
-    %y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
-    %lightPos = [x y M.GLIT_TO_MON_PLANES];
-    %lightPos = [0 (130.1-84.05) 440];
-    %lightPos = [0 133.1-72.9 465];
-    %lightPos = [0 132.1-72.7 461];
-    %lightPos = [0 131.1-72.9 462];
-    
+
     %% find spec centroids in image
-    %pin = [1217.34838867 5145.87841797; 1005.55084  295.4278; 6501.5874  490.0575; 6501.952 5363.594];
-    %pin = [ 1118, 5380; 596, 415; 6365, 393; 6065, 5402];% x,y 
-    %pin = [1642.2677 5380.783; 1337.9928 733.52966; 6572.239 726.0792; 6226.173 5270.477];
-    %{
-    allPts = matfile(P.characterizationPoints).arr;
-    pin = allPts(1,:);
-    pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
-    piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
-    pin = double([pinx' piny']);
-    %}
-    %{
-    pin = [850.0531005859375	4638.21875;...
-            454.743408203125	503.7138366699219;...
-            7711.8046875	540.760009765625;...
-            7277.14111328125	4664.25];
-    %}
-    %pin = [865.933837890625	4639.2392578125; 473.364990234375	505.5672302246094; 7731.4736328125	541.7628173828125; 7294.72216796875	4668.791015625];
-    
     figure;
-    %testimpath = "/Users/oliverbroadrick/Desktop/glitter-stuff/july_characterization/homography images/DSC_1931.JPG";
-    %testimpath = [P.homographyImages 'DSC_2192.JPG'];
-    %testimpath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/pointLightSource/DSC_2202.JPG';
-    %testimpath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
-    %testimpath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/DSC_2538.JPG';
-    %testimpath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/verybright.JPG';
     testimpath=impath;
     imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
     plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
     tform = getTransform(P, pin);
     [imageCentroids,~] = singleImageFindSpecs(im); %normal use
     %[imageCentroids,~] = singleImageFindSpecsNoFilter(im); % special use
-    disp([int2str(size(imageCentroids,1)) ' specs detected...']);
-    %disp(size(imageCentroids));
+    fprintf([int2str(size(imageCentroids,1)) ' specs found; ']);
     plot(imageCentroids(:,1),imageCentroids(:,2),'b+');
     out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
     canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
@@ -75,28 +39,25 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     K = 5;
     [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                                  'K', K, 'Distance', 'euclidean');
-    % only consider specs whose mwhatch is within .xx millimeters
-    %closeEnough = .3;
-    %specIdxs = idx(dist<closeEnough);
-    %specPos = knownCanonicalCentroids(idx,:);
     specPos = zeros(size(idx,1),K,3);
     for ix=1:size(idx,1)
         specPos(ix,:,:) = knownCanonicalCentroids(idx(ix,:),:);
     end
-    % draw vector map where each vector goes from a spec to its nearest spec
-    % neighbor
+    % draw vector map where each vector goes from a spec to its matched 
+    % spec neighbor
     figure;
     quiver(canonicalCentroids(:,1), canonicalCentroids(:,2),...
         knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1),...
         knownCanonicalCentroids(idx(:,1),2)-canonicalCentroids(:,2),...
+        'off',...%specifies to not automatically scale the vector lengths
         'LineWidth',2);
-
+    title('vectors from seen specs to matched specs (in glitter coords)')
 
     x = knownCanonicalCentroids(idx(:,1),1)-canonicalCentroids(:,1);
     y = knownCanonicalCentroids(idx(:,1),2)-canonicalCentroids(:,2);
     figure;
-    histogram(atan2(y, x));
-    title('histogram of vector directions');
+    histogram(atan2(y, x),'NumBins',10);
+    title('directions from seen spec to matched spec (in glitter coords)');
     xlabel('direction in radians');
     
     %%
@@ -111,7 +72,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         maxBrightness(ix,:) = allMaxBrightness(idx(ix,:));
     end
     
-    %% NEW CODE TO FIND THE DIST OF RAY TO PINHOLE FOR ALL SPECS SO WE CAN VISUALIZE WHICH SPECS SEEM GOOD
+    %% find dist of ray to pinhole for all specs
     % compute reflected rays: Ri = Li − 2(Li dot Ni)Ni
     % where Li is normalized vector from spec to light
     %       Ni is normalized normal vector
@@ -127,10 +88,8 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     end
     
     %{
-    % as a major sanity check:
-    % draw a single incoming ray, surface normal, and computer reflected
-    % ray
-    % normal for it
+    % as a major sanity check: draw a single incoming ray, surface normal, 
+    % and reflected ray
     figure;
     ix = [1];
     L = ((lightPos - allSpecPos(ix,:)) ./ vecnorm(lightPos - allSpecPos(ix,:),2, 2));
@@ -140,15 +99,16 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     plot3([allSpecPos(ix,1) allSpecPos(ix,1)+allR(ix,1)], [allSpecPos(ix,2) allSpecPos(ix,2)+allR(ix,2)], [allSpecPos(ix,3) allSpecPos(ix,3)+allR(ix,3)],'color','red');
     %}
+
     %%
     %compute distances to pinhole for these allR reflected rays
-    %knownCamPos = matfile(P.camPos).camPos;%
     
-    knownCamPos = matfile([expdir 'camPosSkew.mat']).camPos; 
-    %knownCamPos = matfile([expdir 'camPos.mat']).camPos; 
-    %knownCamPos = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/camPos.mat').camPos;
-    %knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
-    %knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
+    if skew
+        knownCamPos = matfile([expdir 'camPosSkew.mat']).camPos; 
+    else
+        knownCamPos = matfile([expdir 'camPos.mat']).camPos; 
+    end
+
     allTrueDists = [];
     for ix=1:size(allR,1)
         allTrueDists(ix) = distPointToLine(knownCamPos, allSpecPos(ix,:), allR(ix,:));
@@ -157,7 +117,6 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     %%
     % also get the brightness of those specs
     brightness = [];
-    %imageCentroids = imageCentroids(dist<closeEnough,:);
     brightness = interp2(double(im), imageCentroids(:,1), imageCentroids(:,2));
     %% also show the original max image so that we can compare the centroids
     % that we found with the centroids that we characterized from the start
@@ -173,12 +132,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     for ix=1:size(allTrueDistsNormalized,2)
         colors(ix,:) = green + (red-green)*allTrueDistsNormalized(ix);
     end
-    
-    % set specs not within 2cm to red
-    % set specs 0 to 2cm from green to red
-    %for ix=1:size(allTrueDistsNormalized,2)
-    %    plot(characterizedCentroidsOnThisImage(ix,1),characterizedCentroidsOnThisImage(ix,2),'+','Color',colors(ix,:));
-    %end
+
     %%
     %disp('now plotting');
     %{
@@ -215,20 +169,6 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
             size(specNormals,1),size(specNormals,3));
         R(:,ix,:) = -1.*R(:,ix,:);
     end
-
-    %DOING: need to save/return/globalize these light2spec (L) rays for use
-    %in re-reflecting in the optimizeMEasurements script I'm writing. will
-    %need to just save the mostInliersL version (by adding that down below
-    %as a stored part during RANSAC)
-
-    % estimate camera position by minimizing some error function
-    %errFun = @(c) errT(c, specPos, R);
-    %x0 = [M.GLIT_SIDE/2;M.GLIT_SIDE/2;M.GLIT_SIDE];
-    %x0 = [0;0;0];
-    %x0 = [M.GLIT_SIDE;M.GLIT_SIDE;2*M.GLIT_SIDE];
-    %options = optimset('PlotFcns',@optimplotfval);
-    %camPosEst = fminsearch(errFun,x0,options)';
-    %disp(camPosEst);
     
     % find a good translation estimate using a RANSAC approach
     rng(314159);
@@ -258,11 +198,10 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     tc = ['k'];
     legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
     % shown known ground truth camera position
-    %knownCamPos = matfile([P.data 'camPos_06_28_2022']).camPos;
     legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),100,'blue','filled','o','DisplayName','True Camera');
     % show light source as a dot
     legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3),'filled','DisplayName','Light');
-    %draw all lines red to start
+    % draw all lines red to start
     Rlong = R .* 1000;
     for ix=1:size(Rlong,1)
         % draw reflected rays
@@ -270,7 +209,6 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
         z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
         color = [1 0 0];
-        %line(x,y,z,'Color',color);
     end
     numInliers = [];
     legPos = size(legendItems,2)+1;
@@ -278,7 +216,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     mostInliersSpecPos = [];
     mostInliersR = [];
     mostInliersL = [];
-    numRansacIters = 20000;
+    numRansacIters = 10000;
     for counter=1:numRansacIters %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
@@ -291,7 +229,6 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
             continue
         end
         %}
-        
         
         inlierPairFound = false;
         inlierPairK = -1;
@@ -313,8 +250,6 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
             continue
         end
         
-
-        % TODO try k=1....K 
         % find the corresponding candidate camera position
         points = specPos(idxsRandomTwo,inlierPairK1,:);
         directions = R(idxsRandomTwo,inlierPairK2,:);
@@ -427,28 +362,19 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         end
         %}
     end
-    %legend(legendItems);
-    figure;
-    histogram(numInliers);
     
-    disp(['found ' num2str(max(numInliers)) ' consistent inliers among ' int2str(size(imageCentroids,1)) ' detected sparkles...']);
-    
+    fprintf([num2str(max(numInliers)) ' inliers; ']);
+    avgK = sum(mostInliersKmin)/size(mostInliersKmin,1);
+    avgD = sum(dist(mostInliersIdxs))/size(mostInliersKmin,1);
+    stdD = std(dist(mostInliersIdxs));
+    fprintf('matches are %.2fth nearest, at distance %f mm (std=%f)\n', avgK, avgD, stdD);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % now after ransac we can compute for all bright specs the 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %% now just for the model with the most inliers, we build up a 
     % camera position estimate
-    % estimate camera position by minimizing some error function
-    %errFun = @(c) errT(c, mostInliersSpecPos, mostInliersR);
-    %x0 = [M.GLIT_SIDE/2;M.GLIT_SIDE/2;M.GLIT_SIDE];
-    %x0 = [0;0;0];
-    %x0 = [M.GLIT_SIDE;M.GLIT_SIDE;2*M.GLIT_SIDE];
-    %options = optimset('PlotFcns',@optimplotfval);
-    %camPosEst = fminsearch(errFun,x0,options)';
-    %disp(camPosEst);
     camPosEst = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR);
-
 
     % also compute dists to the known camera location for all shiny specs
     trueDists = [];
@@ -524,15 +450,10 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     % show camera as a dot: (dots=cameras)
     cam=camPosEst;
     legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
-    %disp(cam);
     % shown known ground truth camera position
-    %knownCamPos = matfile(P.camPos).camera_in_glitter_coords;
-    disp('camPosEstimate');
-    disp(camPosEst);
-    disp('knownCamPos')
-    disp(knownCamPos);
-    disp('difference (error):');
-    disp(norm(cam - knownCamPos));
+    fprintf('Checker=(%.2f %.2f %.2f) ', knownCamPos);
+    fprintf('Sparkle=(%.2f %.2f %.2f) ', camPosEst);
+    fprintf('Diff=(%.2f %.2f %.2f) |Diff|=%.2f\n', cam - knownCamPos, norm(cam - knownCamPos));
     legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),...
         100,'blue','filled','o','DisplayName','True Camera');
     % show light source as a dot
@@ -562,22 +483,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         %color = [1 c 1];
         line(x,y,z,'Color',color);
     end
-    %for ix=1:size(R,1)
-    %    % draw reflected rays
-    %    x = [bestSpecPos(ix,1) bestSpecPos(ix,1)+bestR(ix,1)*1000]';
-    %    y = [bestSpecPos(ix,2) bestSpecPos(ix,2)+bestR(ix,2)*1000]';
-    %    z = [bestSpecPos(ix,3) bestSpecPos(ix,3)+bestR(ix,3)*1000]';
-    %    %distance form camera estimate
-    %    green = [0 1 0];
-    %    red = [1 0 0];
-    %    %c = min(1, distNormalized(ix)); %color code by spec closeness
-    %    c = 1.0*min(1, brightnessNormalized(ix)); %color code by spec brightness
-    %    %disp(c);
-    %    color = green + c*(red-green);
-    %    %color = [1 c 1];
-    %    line(x,y,z,'Color',color);
-    %end
-    title('green rays are from a brighter sparkle, red from a dimmer one');
+    title(sprintf('final set of inliers (%d)', size(mostInliersSpecPos,1)));
     % set viewpoint:
     view([-110 -30]);
     camroll(-80);
@@ -615,6 +521,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     %brightnessNormalizedInliersOnly = brightnessNormalized(mostInliersIdxs);
     %brightnessNormalizedInliersOnly = mostInliersMaxBrightness';
+    %{
     brightnessNormalizedInliersOnly = brightness(mostInliersIdxs) ./ maxBrightness(mostInliersIdxs);
     figure;
     scatter(minTrueDistsInliers, brightnessNormalizedInliersOnly);
@@ -626,6 +533,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     xlabel('Bogus fraction of the ray in the aperture');
     ylabel('Intensity (of spec centroids, linearly interpolated, normalized)');
     title('Intensity vs Dist to Pinhole: "True" inliers only');
+    %}
 
     % returns:
     camPosEst = camPosEst;
