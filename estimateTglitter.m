@@ -367,7 +367,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     avgK = sum(mostInliersKmin)/size(mostInliersKmin,1);
     avgD = sum(dist(mostInliersIdxs))/size(mostInliersKmin,1);
     stdD = std(dist(mostInliersIdxs));
-    fprintf('matches are %.2fth nearest, at distance %f mm (std=%f)\n', avgK, avgD, stdD);
+    fprintf('avg. matches are %.2fth nearest neighbors, at distance %f mm (std=%f)\n', avgK, avgD, stdD);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % now after ransac we can compute for all bright specs the 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
