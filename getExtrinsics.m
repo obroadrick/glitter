@@ -14,10 +14,10 @@
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_far/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngle/';
-expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/';
+%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
-%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/';
-%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
+%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/';\
+expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
 
 % get P
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;

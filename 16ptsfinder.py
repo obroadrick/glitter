@@ -94,24 +94,27 @@ def findMarkerCorners(pts):
  
  
 
-
+import sys
 
 aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_250)
 para = cv2.aruco.DetectorParameters_create()
 para.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
 para.adaptiveThreshWinSizeMax = 200
 
-frameName = input("Enter relative image directory. Use forward slashes when referencing child directories: ")
+#frameName = input("Enter relative image directory. Use forward slashes when referencing child directories: ")
+frameName = sys.argv[1]
+saveName = sys.argv[2]
+print(frameName)
+print(saveName)
 
 frameCol = cv2.imread(frameName)
 frame = cv2.cvtColor(frameCol, cv2.COLOR_BGR2GRAY)
-plt.imshow(frame)
+#plt.imshow(frame)
 
 bboxs, ids, rejected = cv2.aruco.detectMarkers(frameCol, aruco_dict, parameters = para)
 refPts = []
 h = 0
 w = 0
-
 if  len(bboxs)!=0:  
     for Corner, id in zip(bboxs, ids):               
         corners = Corner.reshape((4, 2))
@@ -154,8 +157,10 @@ if  len(bboxs)!=0:
     np.shape(mat_arr)
 
     import scipy.io
-    scipy.io.savemat('16ptsJUSTCREATED.mat', mdict={'arr': mat_arr})
+    scipy.io.savemat(saveName, mdict={'arr': mat_arr})
 
     print('Success!')
     
     exit()
+else:
+    print('Markers not detected...')

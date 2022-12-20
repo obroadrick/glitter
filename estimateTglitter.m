@@ -36,7 +36,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     %% match canonical centroids to those in the characterization
     knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-    K = 5;
+    K = 4;
     [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                                  'K', K, 'Distance', 'euclidean');
     specPos = zeros(size(idx,1),K,3);
@@ -216,7 +216,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     mostInliersSpecPos = [];
     mostInliersR = [];
     mostInliersL = [];
-    numRansacIters = 10000;
+    numRansacIters = 1000;
     for counter=1:numRansacIters %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
@@ -483,7 +483,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         %color = [1 c 1];
         line(x,y,z,'Color',color);
     end
-    title(sprintf('final set of inliers (%d)', size(mostInliersSpecPos,1)));
+    title(sprintf('final set of inliers (%d/%d)', size(mostInliersSpecPos,1), size(specPos,1)));
     % set viewpoint:
     view([-110 -30]);
     camroll(-80);

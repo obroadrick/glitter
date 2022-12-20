@@ -93,7 +93,7 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     % undistort image spec locations
     imageSpecsUndistorted = undistortPoints(imageSpecs, checkerParams);
     plot(imageSpecsUndistorted(:,1),imageSpecsUndistorted(:,2),'gx');hold on;    
-    title('checkerboard projection: image positions (green) and projected positions (red)');
+    title('checkerboard reprojection: image positions (green) and projected positions (red)');
     for ix=1:size(imageSpecs,1)
         projectedSpec = checkerK*camRot * (worldSpecs(ix,:)' - camPos');
         projectedSpec = projectedSpec ./ projectedSpec(3);

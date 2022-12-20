@@ -15,30 +15,39 @@
 % image center x and y,
 % distortion paramters k1 and k2
 
-% %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/';
-% %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/';
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_far/';
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/';
-%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
+wideangle1 = struct('name','Wide Angle Lens (light position off the monitor, chem side)', ...
+            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/', ...
+            'impath','chem.JPG', ...
+            'lightPosFname', 'chemLightPos.mat', ...
+            'skew', true);
+middle = struct('name','Original Camera (Nikonz7 35mm) middle position (light off monitor, chem side)', ...
+            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/', ...
+            'impath','chem.JPG', ...
+            'lightPosFname', 'chemLightPos.mat', ...
+            'skew', false);
+iphone1 = struct('name','iPhone XR (light off monitor, chem side)', ...
+            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/', ...
+            'impath','chem.JPG', ...
+            'lightPosFname', 'chemLightPos.mat', ...
+            'skew', true);
 
-%  path to the single image
-%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
-%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/glitter/DSC_3113.JPG';
-%impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/singleImageAug18.JPG';
-%impath = [expdir 'chem2.JPG'];
-%impath = [expdir 'chem1.JPG'];
-impath = [expdir 'chem.JPG'];
-%impath = [expdir 'cubesat.JPG'];
-%impath = [expdir 'cubesat copy.JPG'];
-%impath = [expdir 'cubesat3.JPG'];
-%impath = [expdir 'chem2-undist.JPG'];
-
+for input=[wideangle1, middle, iphone1]
+expdir = input.expdir;
+impath = [expdir input.impath];
+lightPos = matfile([expdir input.lightPosFname]).lightPos;
+fprintf('%s\n',input.name);
+skew = input.skew;
 
 % path to single image fiducial marker points
-% get by running Addy's Python script on the single image:
-%allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/16ptsJuly25.mat']).arr;
-%allPts = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/16ptsAug18.mat').arr;
+if ~isfile([expdir '16pts.mat'])
+    % if the 16pts for this experiment haven't already been found, then
+    % find them now using Addy's script
+    setenv('PATH', [getenv('PATH') ':/opt/homebrew/bin/python3.10:/opt/homebrew/bin:/opt/homebrew/sbin']);
+    cmd = sprintf('python3.10 /Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/16ptsfinder.py "%s" "%s"', impath, [expdir '16pts.mat']);
+    system(cmd);
+    disp('here 1!');
+end
+% now that the 16pts have been found, get them in a usable data structure
 allPts = matfile([expdir '16pts.mat']).arr;
 pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
@@ -48,21 +57,6 @@ fiducialMarkerPoints = pin;
 
 %  characterized sheet of glitter: spec locations, normals
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
-
-%  known point light source position
-%{
-monitorCoords = [1127 574];
-x = -M.GLIT_TO_MON_EDGES_X + M.MON_WIDTH_MM - M.PX2MM_X * monitorCoords(1); 
-y = -M.GLIT_TO_MON_EDGES_Y + M.MON_HEIGHT_MM - M.PX2MM_Y * monitorCoords(2); 
-lightPos = [x y M.GLIT_TO_MON_PLANES];
-%}
-%lightPos = [0 125-73 535];%july25nikonz7 %TODO store in exp dir
-%lightPos = [0 129-72.9 527];%aug18nikonz7
-lightPos = matfile([expdir 'chemLightPos']).lightPos;
-%lightPos = matfile([expdir 'cubesatLightPos']).lightPos;
-
-% estimate skew (both with checkerboards and sparkles)
-skew = true;
 
 %% estimate translation
 [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, -1, skew);
@@ -87,9 +81,7 @@ cy = camParams.Intrinsics.PrincipalPoint(2);
 s = camParams.Intrinsics.Skew;
 rotAndIntrinsicsCheckerboards = [camPos omega(1) omega(2) omega(3) fx fy cx cy s];
 columnNames = ["Tx","Ty","Tz","omega1","omega2","omega3","fx","fy","cx","cy","s"];
-fprintf(['%15' ...
-    '' ...
-    's %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s\n'], '', columnNames);
+fprintf(['%15s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s\n'], '', columnNames);
 printRow('Checker est.', rotAndIntrinsicsCheckerboards);
 % also get error estimates
 fxe = camParamsErrors.IntrinsicsErrors.FocalLengthError(1);
@@ -99,7 +91,7 @@ cye = camParamsErrors.IntrinsicsErrors.PrincipalPointError(2);
 se = camParamsErrors.IntrinsicsErrors.SkewError;
 rotAndIntrinsicsCheckerboardsErrors = [-1 -1 -1 -1 -1 -1 fxe fye cxe cye se];
 printRow('Checker err.', rotAndIntrinsicsCheckerboardsErrors);
-51 50
+
 %% solve the linear system and do RQ decomposition to get K and R
 rotAndIntrinsics2 = [camPosEst linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir)];
 % print outputs
@@ -110,10 +102,11 @@ diff = rotAndIntrinsicsCheckerboards - rotAndIntrinsics2;
 percentErrors = (rotAndIntrinsicsCheckerboards - rotAndIntrinsics2) ./ rotAndIntrinsicsCheckerboards .* 100;
 printRow('Percent diff.', percentErrors);
 posDiff = sqrt(sum(((camPosEst-camPos).^2)));
-R2 = rod2mat(rotAndIntrinsics2(1),rotAndIntrinsics2(2),rotAndIntrinsics2(3));
+R2 = rod2mat(rotAndIntrinsics2(4),rotAndIntrinsics2(5),rotAndIntrinsics2(6));
 Rerr = rotDiff(R2, camRot);
 fprintf('               Position diff. (mm): %.2f     Rotation diff. (deg): %.3f\n', posDiff, Rerr);
-return
+
+end
 
 %{ 
 disp('SparkleCalibrate - linear solution as first guess in fminsearch (skew=0)');

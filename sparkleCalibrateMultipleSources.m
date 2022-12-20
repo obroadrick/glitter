@@ -87,13 +87,12 @@ for pointLightImageIndex=1:1
     % estimate translation and distortion
     % todo/future version
     %warning('off','MATLAB:singularMatrix');
-    set(0,'DefaultFigureVisible','off');
+    set(0,'DefaultFigureVisible','on');
+    skew=true;
 
     %% estimate translation
-    disp('Estimating camera position with sparkles...');
-    [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage);
-    disp('Position estimate complete!');
-    return
+    [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew);
+
     %%
     %{ 
     % per-characteriztion checkerboard calibration info
@@ -131,71 +130,37 @@ for pointLightImageIndex=1:1
     cx = camParams.Intrinsics.PrincipalPoint(1);
     cy = camParams.Intrinsics.PrincipalPoint(2);
     s = camParams.Intrinsics.Skew;
-    rotAndIntrinsicsCheckerboards = [omega(1) omega(2) omega(3) fx fy cx cy s];
-    disp('Estimate of rotation and intrinsics using checkerboards');
-    disp('[      omega1       omega2       omega3           fx           fy           cx           cy            s]');
-    disp(rotAndIntrinsicsCheckerboards);
-    % also show their error estimates each
+    rotAndIntrinsicsCheckerboards = [camPos omega(1) omega(2) omega(3) fx fy cx cy s];
+    columnNames = ["Tx","Ty","Tz","omega1","omega2","omega3","fx","fy","cx","cy","s"];
+    fprintf(['%15' ...
+        '' ...
+        's %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s\n'], '', columnNames);
+    printRow('Checker est.', rotAndIntrinsicsCheckerboards);
+    % also get error estimates
     fxe = camParamsErrors.IntrinsicsErrors.FocalLengthError(1);
     fye = camParamsErrors.IntrinsicsErrors.FocalLengthError(2);
     cxe = camParamsErrors.IntrinsicsErrors.PrincipalPointError(1);
     cye = camParamsErrors.IntrinsicsErrors.PrincipalPointError(2);
     se = camParamsErrors.IntrinsicsErrors.SkewError;
-    rotAndIntrinsicsCheckerboardsErrors = [-1 -1 -1 fxe fye cxe cye se];
-    disp('Errors estimates from checkerboards');
-    disp(rotAndIntrinsicsCheckerboardsErrors);
+    rotAndIntrinsicsCheckerboardsErrors = [-1 -1 -1 -1 -1 -1 fxe fye cxe cye se];
+    printRow('Checker err.', rotAndIntrinsicsCheckerboardsErrors);
     
-    %% estimate rotation and intrinsics
-    % rotAndIntrinsics = [omega1 omega2 omega3 fx fy cx cy s]
+    %% solve the linear system and do RQ decomposition to get K and R
+    rotAndIntrinsics2 = [camPosEst linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir)];
+    % print outputs
+    printBreak();
+    printRow('Sparkle est.', rotAndIntrinsics2);
+    diff = rotAndIntrinsicsCheckerboards - rotAndIntrinsics2;
+    %printRow('Diff.', diff);
+    percentErrors = (rotAndIntrinsicsCheckerboards - rotAndIntrinsics2) ./ rotAndIntrinsicsCheckerboards .* 100;
+    printRow('Percent diff.', percentErrors);
+    posDiff = sqrt(sum(((camPosEst-camPos).^2)));
+    R2 = rod2mat(rotAndIntrinsics2(4),rotAndIntrinsics2(5),rotAndIntrinsics2(6));
+    Rerr = rotDiff(R2, camRot);
+    fprintf('               Position diff. (mm): %.2f     Rotation diff. (deg): %.3f\n', posDiff, Rerr);
+    return
     
     %{ 
-    %errRK currently not parameterized correctly for this
-    % use fminsearch parameterized by (fx,fy,s,cx,cy,r1,r2,r3)
-    disp('SparkleCalibrate - fminsearch over the camera params');
-    rotAndIntrinsics1 = estimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
-    disp(rotAndIntrinsics1);
-    %} 
-    
-    %%
-    
-    % solve the linear system and do RQ decomposition to get K and R
-    disp('SparkleCalibrate - linear solution');
-    rotAndIntrinsics2 = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir);
-    disp(rotAndIntrinsics2);
-    disp('difference with checkerboards');
-    disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics2);
-    disp('percent error (%)');
-    disp((rotAndIntrinsicsCheckerboards - rotAndIntrinsics2) ./ rotAndIntrinsicsCheckerboards .* 100);
-    R2 = rod2mat(rotAndIntrinsics2(1),rotAndIntrinsics2(2),rotAndIntrinsics2(3));
-    Rerr = (180 / pi) * acos((trace(R2 * camRot') - 1) / 2);% angle of rotation difference
-    disp('difference in rotation (degrees):');
-    disp(Rerr);
-    
-    %{
-    % solve linear system but with positions in coordinate system with origin
-    % at the center of the image
-    disp('SparkleCalibrate - linear solution with changed origin');
-    rotAndIntrinsics3 = diffOriginEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
-    disp(rotAndIntrinsics3);
-    disp('difference with checkerboards');
-    disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics3);
-    R3 = rod2mat(rotAndIntrinsics3(1),rotAndIntrinsics3(2),rotAndIntrinsics3(3));
-    Rerr = (180 / pi) * acos((trace(R3 * camRot') - 1) / 2);% angle of rotation difference
-    disp('difference in rotation (degrees):');
-    disp(Rerr);
-    %}
-    
-    %%
-    %{
-    disp('SparkleCalibrate - fminsearch parameterized by four corners');
-    rotAndIntrinsics4 = diffOriginEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
-    disp(rotAndIntrinsics4);
-    disp('difference with checkerboards');
-    disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics4);
-    %}
-    
-    %%
-    %{
     disp('SparkleCalibrate - linear solution as first guess in fminsearch (skew=0)');
     rotAndIntrinsics5 = startPointEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
     disp(rotAndIntrinsics5);
@@ -204,10 +169,24 @@ for pointLightImageIndex=1:1
     disp('percent error (%)');
     disp((rotAndIntrinsicsCheckerboards - rotAndIntrinsics5) ./ rotAndIntrinsicsCheckerboards .* 100);
     R5 = rod2mat(rotAndIntrinsics5(1),rotAndIntrinsics5(2),rotAndIntrinsics5(3));
-    Rerr = (180 / pi) * acos((trace(R5 * camRot') - 1) / 2);% angle of rotation difference
+    Rerr = rotDiff(R5, camRot);
     disp('difference in rotation (degrees):');
     disp(Rerr);
-    %}
-    %% save outputs
-    %TODO
+    %} 
+
+
+end
+
+function printRow(rowName, rowVals)
+    w = '10'; dec = '4';
+    s = '%15s ';
+    for i=1:size(rowVals,2)
+        s = [s '%' w '.' dec 'f '];
+    end
+    s = [s '\n'];
+    fprintf(s, rowName, rowVals);
+end
+
+function printBreak()
+    fprintf('               -------------------------------------------------------------------------------------------------------------------------\n');
 end
