@@ -31,7 +31,8 @@ iphone1 = struct('name','iPhone XR (light off monitor, chem side)', ...
             'lightPosFname', 'chemLightPos.mat', ...
             'skew', true);
 
-for input=[wideangle1, middle, iphone1]
+input = middle;
+%for input=[wideangle1, middle, iphone1]
 expdir = input.expdir;
 impath = [expdir input.impath];
 lightPos = matfile([expdir input.lightPosFname]).lightPos;
@@ -49,9 +50,11 @@ if ~isfile([expdir '16pts.mat'])
 end
 % now that the 16pts have been found, get them in a usable data structure
 allPts = matfile([expdir '16pts.mat']).arr;
-pin = allPts(1,:);
-pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
-piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
+pin = [allPts(1,:) allPts(2,:) allPts(3,:) allPts(4,:)];
+for i=1:16
+    pinx(i) = pin{i}(1);
+    piny(i) = pin{i}(2);
+end
 pin = double([pinx' piny']);
 fiducialMarkerPoints = pin;
 
@@ -106,7 +109,6 @@ R2 = rod2mat(rotAndIntrinsics2(4),rotAndIntrinsics2(5),rotAndIntrinsics2(6));
 Rerr = rotDiff(R2, camRot);
 fprintf('               Position diff. (mm): %.2f     Rotation diff. (deg): %.3f\n', posDiff, Rerr);
 
-end
 
 %{ 
 disp('SparkleCalibrate - linear solution as first guess in fminsearch (skew=0)');
