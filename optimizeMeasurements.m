@@ -9,9 +9,34 @@ chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(ne
 setPaths(chardir);
 % the input camera calibration test case to use to test new surface normals
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/oct25_nikonz7_35mm/';
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/';
 
+wideangle1 = struct('name','Wide Angle Lens (light position off the monitor, chem side)', ...
+            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/', ...
+            'impath','chem.JPG', ...
+            'lightPosFname', 'chemLightPos.mat', ...
+            'skew', true, ...
+            'sixteen', false);
+middle = struct('name','Original Camera (Nikonz7 35mm) middle position (light off monitor, chem side)', ...
+            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/', ...
+            'impath','chem.JPG', ...
+            'lightPosFname', 'chemLightPos.mat', ...
+            'skew', false, ...
+            'sixteen', true);
+iphone1 = struct('name','iPhone XR (light off monitor, chem side)', ...
+            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/', ...
+            'impath','chem.JPG', ...
+            'lightPosFname', 'chemLightPos.mat', ...
+            'skew', true, ...
+            'sixteen', true);
 
+input = iphone1;
+%for input=[wideangle1, middle, iphone1]
+expdir = input.expdir;
+impath = [expdir input.impath];
+lightPos = matfile([expdir input.lightPosFname]).lightPos;
+fprintf('\n%s\n',input.name);
+skew = input.skew;
 %now suppose that at this point we have been given a new set of
 %measurements, charM, and we want to see how re-characterizing the glitter
 %sheet with this set of measurements M affects the camera position estimate
@@ -27,9 +52,10 @@ newNormals = matfile(newNormalsPath).specNormals;
 
 % 2. do a sparkle calibration using these normals
 % get inputs (image, fiducial marker points, ambient image, light position)
-pointLightImageIndex = 1;
+%pointLightImageIndex = 1;
 %impath = [expdir int2str(pointLightImageIndex) 'single.JPG'];
-impath = [expdir 'chem.JPG'];
+%impath = [expdir 'chem.JPG'];
+%{
 ambientImage = rgb2gray(imread([expdir 'blank1.JPG']));
 pin = getPoints(expdir);
 w = 3840;h = 2160;xoff = 500;yoff = 300;r = 9;
@@ -38,12 +64,14 @@ for ix=1:size(positions,1)
     positions(ix,:) = positions(ix,:) + r/2;
 end
 lightPos = screenPosToWorldPos(positions(pointLightImageIndex,:), matfile([expdir 'measurements.mat']).M);
-lightPos = matfile([expdir 'chemLightPos.mat']).lightPos;
+%}
+%lightPos = matfile([expdir 'chemLightPos.mat']).lightPos;
 
 % estimate translation
 warning('off','MATLAB:singularMatrix');
 set(0,'DefaultFigureVisible','on');
-[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir);%, ambientImage);
+[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, -1, skew);
+%[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir);%, ambientImage);
 %[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage);
 
 mostInliersL = other.mostInliersL; % this extra return of the estimateTglitter function gives us the rays from light position to spec locations
@@ -89,6 +117,7 @@ errFun = @(x) computeError(x(1), x(2), x(3), 664.32, 373.68,...
                         chardir, expdir, mostInliersLightingMeans, ...
                         mostInliersSpecPos, camPos, lightPos);
 x0 = [628, 126, 83];
+%return
 options = optimset('PlotFcns',@optimplotfval);
 xf = fminsearch(errFun, x0, options);
 

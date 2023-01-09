@@ -2,7 +2,7 @@
 % source, a picture of sparkling glitter, and a known glitter
 % characterization
 
-function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew)
+function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew, other)
 
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     M = matfile([expdir 'measurements.mat']).M;
@@ -27,7 +27,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
     plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
     tform = getTransform(P, pin);
-    [imageCentroids,~] = singleImageFindSpecs(im); %normal use
+    [imageCentroids,imageCentroidsMax,intensitys] = singleImageFindSpecs(im); %normal use
     %[imageCentroids,~] = singleImageFindSpecsNoFilter(im); % special use
     fprintf([int2str(size(imageCentroids,1)) ' specs found; ']);
     plot(imageCentroids(:,1),imageCentroids(:,2),'b+');
@@ -36,7 +36,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     %% match canonical centroids to those in the characterization
     knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-    K = 4;
+    K = 6;
     [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                                  'K', K, 'Distance', 'euclidean');
     specPos = zeros(size(idx,1),K,3);
@@ -116,8 +116,10 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     %%
     % also get the brightness of those specs
-    brightness = [];
+    %brightness = interp2(double(im), imageCentroids(:,1),
+    %imageCentroids(:,2));% linearly interpolate to get brightness of spec
     brightness = interp2(double(im), imageCentroids(:,1), imageCentroids(:,2));
+    
     %% also show the original max image so that we can compare the centroids
     % that we found with the centroids that we characterized from the start
     % now show the canonical spec centroids (mapped onto this image coordinate
@@ -172,51 +174,56 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     % find a good translation estimate using a RANSAC approach
     rng(314159);
-    inlierThreshold = 20; % (mm) a reflected ray is an inlier
+    %inlierThreshold = 50; % (mm) a reflected ray is an inlier
                           % with respect to a hypothesized camera position
-                          % if it pases within 10 millimeters of that 
+                          % if it pases within xx millimeters of that 
                           % camera position
                           % draw rig
-    figure;
-    % glitter square:
-    gx = [0 M.GLIT_WIDTH M.GLIT_WIDTH 0]; 
-    gy = [0 0 M.GLIT_HEIGHT M.GLIT_HEIGHT]; 
-    gz = [0 0 0 0];
-    gc = ['b'];
-    legendItems = [];
-    legendItems(1) = patch(gx,gy,gz,gc,'DisplayName', 'Glitter');hold on;
-    % monitor:
-    mx = [-M.GLIT_TO_MON_EDGES_X -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X]; 
-    my = [-M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y -M.GLIT_TO_MON_EDGES_Y]; 
-    mz = [M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES]; 
-    mc = ['g'];
-    legendItems(size(legendItems,2)+1) = patch(mx,my,mz,mc,'DisplayName','Monitor');
-    % table: (made up coords, doesn't matter, mostly for fun)
-    tx = [-400 -400 600 600];
-    ty = [-120 -120 -120 -120];
-    tz = [-250 1000 1000 -250];
-    tc = ['k'];
-    legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
-    % shown known ground truth camera position
-    legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),100,'blue','filled','o','DisplayName','True Camera');
-    % show light source as a dot
-    legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3),'filled','DisplayName','Light');
-    % draw all lines red to start
-    Rlong = R .* 1000;
-    for ix=1:size(Rlong,1)
-        % draw reflected rays
-        x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
-        y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
-        z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
-        color = [1 0 0];
+    inlierThreshold = other.inlierThreshold;
+    makeBigFigure = false;
+    if makeBigFigure
+        figure;
+        % glitter square:
+        gx = [0 M.GLIT_WIDTH M.GLIT_WIDTH 0]; 
+        gy = [0 0 M.GLIT_HEIGHT M.GLIT_HEIGHT]; 
+        gz = [0 0 0 0];
+        gc = ['b'];
+        legendItems = [];
+        legendItems(1) = patch(gx,gy,gz,gc,'DisplayName', 'Glitter');hold on;
+        % monitor:
+        mx = [-M.GLIT_TO_MON_EDGES_X -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X]; 
+        my = [-M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y -M.GLIT_TO_MON_EDGES_Y]; 
+        mz = [M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES M.GLIT_TO_MON_PLANES]; 
+        mc = ['g'];
+        legendItems(size(legendItems,2)+1) = patch(mx,my,mz,mc,'DisplayName','Monitor');
+        % table: (made up coords, doesn't matter, mostly for fun)
+        tx = [-400 -400 600 600];
+        ty = [-120 -120 -120 -120];
+        tz = [-250 1000 1000 -250];
+        tc = ['k'];
+        legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
+        % shown known ground truth camera position
+        legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),100,'blue','filled','o','DisplayName','True Camera');
+        % show light source as a dot
+        legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3),'filled','DisplayName','Light');
+        % draw all lines red to start
+        Rlong = R .* 1000;
+        for ix=1:size(Rlong,1)
+            % draw reflected rays
+            x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
+            y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
+            z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
+            color = [1 0 0];
+        end
+        legPos = size(legendItems,2)+1;
+        camroll(-80);
     end
     numInliers = [];
-    legPos = size(legendItems,2)+1;
-    camroll(-80);
     mostInliersSpecPos = [];
     mostInliersR = [];
     mostInliersL = [];
-    numRansacIters = 1000;
+    mostInliersIntensitys = [];
+    numRansacIters = 10000;
     for counter=1:numRansacIters %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
@@ -298,8 +305,10 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         inliersR = [];
         inliersL = [];
         inliersMaxBrightness = [];
+        inliersIntensitys = [];
         for ix=1:size(inlierIdxs)
             inliersImageSpecPos(ix,:) = imageCentroids(inlierIdxs(ix),:);
+            inliersIntensitys(ix,:) = intensitys(inlierIdxs(ix));
             inliersSpecPos(ix,:) = specPos(inlierIdxs(ix),kmin(ix),:);
             inliersR(ix,:) = R(inlierIdxs(ix),kmin(ix),:);
             inliersL(ix,:) = L(inlierIdxs(ix),kmin(ix),:);
@@ -314,53 +323,54 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
             mostInliersKmin = kmin;
             mostInliersMinDists = minDists;
             mostInliersMaxBrightness = inliersMaxBrightness;
+            mostInliersIntensitys = inliersIntensitys;
         end
-        %{ one of the big plots
-        % now show the two lines
-        for i=1:size(idxsRandomTwo,2)
-            ix = idxsRandomTwo(i);
-            % draw reflected rays
-            x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
-            y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
-            z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
-            color = [0 0 1];
-            line(x,y,z,'Color',color);
+        if makeBigFigure
+            % now show the two lines
+            for i=1:size(idxsRandomTwo,2)
+                ix = idxsRandomTwo(i);
+                % draw reflected rays
+                x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
+                y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
+                z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
+                color = [0 0 1];
+                line(x,y,z,'Color',color);
+            end
+            % and their inliers as well
+            inliersR = inliersR * 1000;
+            for ix=1:size(inliersR,1)
+                % draw reflected rays
+                x = [inliersSpecPos(ix,1) inliersSpecPos(ix,1)+inliersR(ix,1)]';
+                y = [inliersSpecPos(ix,2) inliersSpecPos(ix,2)+inliersR(ix,2)]';
+                z = [inliersSpecPos(ix,3) inliersSpecPos(ix,3)+inliersR(ix,3)]';
+                color = [0 1 0];
+                line(x,y,z,'Color',color);
+            end
+            view([-110 -30]);
+            %camroll(-80);
+            daspect([1 1 1]);
+            curNumInliers = numInliers(size(numInliers,2));
+            title(['Number of inliers: ' num2str(curNumInliers) ' (max so far: ' num2str(max(numInliers)) ')']);
+            %pause(.5);%
+            red = [1 0 0];
+            % now go back over and draw them all back to red
+            for i=1:size(idxsRandomTwo,1)
+                ix = idxsRandomTwo(i);
+                % draw reflected rays
+                x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
+                y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
+                z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
+                line(x,y,z,'Color',red);
+            end
+            % and their inliers as well
+            for ix=1:size(inliersR,1)
+                % draw reflected rays
+                x = [inliersSpecPos(ix,1) inliersSpecPos(ix,1)+inliersR(ix,1)]';
+                y = [inliersSpecPos(ix,2) inliersSpecPos(ix,2)+inliersR(ix,2)]';
+                z = [inliersSpecPos(ix,3) inliersSpecPos(ix,3)+inliersR(ix,3)]';
+                line(x,y,z,'Color',red);
+            end
         end
-        % and their inliers as well
-        inliersR = inliersR * 1000;
-        for ix=1:size(inliersR,1)
-            % draw reflected rays
-            x = [inliersSpecPos(ix,1) inliersSpecPos(ix,1)+inliersR(ix,1)]';
-            y = [inliersSpecPos(ix,2) inliersSpecPos(ix,2)+inliersR(ix,2)]';
-            z = [inliersSpecPos(ix,3) inliersSpecPos(ix,3)+inliersR(ix,3)]';
-            color = [0 1 0];
-            line(x,y,z,'Color',color);
-        end
-        view([-110 -30]);
-        %camroll(-80);
-        daspect([1 1 1]);
-        curNumInliers = numInliers(size(numInliers,2));
-        title(['Number of inliers: ' num2str(curNumInliers) ' (max so far: ' num2str(max(numInliers)) ')']);
-        %pause(.5);%
-        red = [1 0 0];
-        % now go back over and draw them all back to red
-        for i=1:size(idxsRandomTwo,1)
-            ix = idxsRandomTwo(i);
-            % draw reflected rays
-            x = [specPos(ix,1,1) specPos(ix,1,1)+Rlong(ix,1,1)]';
-            y = [specPos(ix,1,2) specPos(ix,1,2)+Rlong(ix,1,2)]';
-            z = [specPos(ix,1,3) specPos(ix,1,3)+Rlong(ix,1,3)]';
-            line(x,y,z,'Color',red);
-        end
-        % and their inliers as well
-        for ix=1:size(inliersR,1)
-            % draw reflected rays
-            x = [inliersSpecPos(ix,1) inliersSpecPos(ix,1)+inliersR(ix,1)]';
-            y = [inliersSpecPos(ix,2) inliersSpecPos(ix,2)+inliersR(ix,2)]';
-            z = [inliersSpecPos(ix,3) inliersSpecPos(ix,3)+inliersR(ix,3)]';
-            line(x,y,z,'Color',red);
-        end
-        %}
     end
     
     fprintf([num2str(max(numInliers)) ' inliers; ']);
@@ -368,13 +378,15 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     avgD = sum(dist(mostInliersIdxs))/size(mostInliersKmin,1);
     stdD = std(dist(mostInliersIdxs));
     fprintf('avg. matches are %.2fth nearest neighbors, at distance %f mm (std=%f)\n', avgK, avgD, stdD);
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % now after ransac we can compute for all bright specs the 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %% now just for the model with the most inliers, we build up a 
+    %%
+    % now just for the model with the most inliers, we build up a 
     % camera position estimate
-    camPosEst = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR);
+    x0 = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR);
+    errFun = @(x) lossFunc(x, mostInliersSpecPos, mostInliersR, mostInliersIntensitys);
+    options = optimset('PlotFcns',@optimplotfval);
+    xf = fminsearch(errFun, x0, options);
+    camPosEst = xf;
 
     % also compute dists to the known camera location for all shiny specs
     trueDists = [];
@@ -590,4 +602,16 @@ function d = distPointToLine(point, pointOnLine, direction)
     n = (direction./norm(direction))';% unit vector in direction of line
     p = point';% point whose distance is being computed
     d = norm((p-a)-(dot((p-a),n,1)*n));
+end
+function error = lossFunc(camPos, mostInliersSpecPos, mostInliersR, mostInliersIntensitys)
+    error = 0;
+    % for each inlier sparkle
+    for i=1:size(mostInliersSpecPos,1)
+        % compute distance from reflected ray to pinhole (camPos)
+        dist = distPointToLine(camPos, mostInliersSpecPos(i,:), mostInliersR(i,:));
+        % weight this distance's contribution to the loss function by
+        % sparkle intensity(first/naive version)
+        weight = mostInliersIntensitys(i);
+        error = error + dist * weight;
+    end
 end

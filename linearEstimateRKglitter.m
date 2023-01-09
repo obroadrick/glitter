@@ -7,14 +7,20 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     % known points in world coordinates
     worldSpecs = mostInliersSpecPos; % the characterized, canonical spec positions that correspond to the sparkling specs in the image
     imageSpecs = mostInliersImageSpecPos; % the image coordinates of where we find those specs in this image
-    
+
     % also, worldFiducials and imageFiducials give the fiducial marker point
     % correspondences
+    worldFiducials = getFiducialMarkerPts();
+    worldFiducials = [worldFiducials zeros(size(worldFiducials,1),1)];
+
+    worldPoints = [worldSpecs; worldFiducials];
+    imagePoints = [imageSpecs; pin];
+
     T = reshape(camPosEst,3,1);
     
     % find R and K by solving linear system
-    Q = worldSpecs' - T;
-    p = imageSpecs';
+    Q = worldPoints' - T;
+    p = imagePoints';
     % build matrix
     A = zeros(2*size(p,2), 8);
     b = zeros(1, 2*size(p,2));
