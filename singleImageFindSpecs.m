@@ -1,4 +1,4 @@
-%function [C, Cmax, intensitys] = singleImageFindSpecs(im)
+function [C, Cmax, intensitys] = singleImageFindSpecs(im)
     if size(im, 3) == 3
         %convery to grayscale if not already in grayscale
         im = rgb2gray(im);
@@ -52,4 +52,4 @@
     end
     %}
     text(C(:,1),C(:,2),string(intensitys),'Color','cyan');
-%end
+end

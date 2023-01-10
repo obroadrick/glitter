@@ -35,7 +35,7 @@ iphone1 = struct('name','iPhone XR (light off monitor, chem side)', ...
             'skew', true, ...
             'sixteen', true);
 
-input = wideangle1;
+%input = wideangle1;
 for input=[wideangle1, middle, iphone1]
 expdir = input.expdir;
 impath = [expdir input.impath];
@@ -84,9 +84,11 @@ end
 %  characterized sheet of glitter: spec locations, normals
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 
-%% estimate translation
+
 other.inlierThreshold = 30;
-[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, -1, skew, other);
+ambientImage = -1;
+%% estimate translation
+[camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew, other);
 
 %{
 %i = 1;
@@ -146,9 +148,7 @@ posDiff = sqrt(sum(((camPosEst-camPos).^2)));
 R2 = rod2mat(rotAndIntrinsics2(4),rotAndIntrinsics2(5),rotAndIntrinsics2(6));
 Rerr = rotDiff(R2, camRot);
 fprintf('               Position diff. (mm): %.2f     Rotation diff. (deg): %.3f\n', posDiff, Rerr);
-
 end
-
 %{ 
 disp('SparkleCalibrate - linear solution as first guess in fminsearch (skew=0)');
 rotAndIntrinsics5 = startPointEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
@@ -162,7 +162,6 @@ Rerr = rotDiff(R5, camRot);
 disp('difference in rotation (degrees):');
 disp(Rerr);
 %} 
-
 function printRow(rowName, rowVals)
     w = '10'; dec = '4';
     s = '%15s ';
@@ -172,7 +171,6 @@ function printRow(rowName, rowVals)
     s = [s '\n'];
     fprintf(s, rowName, rowVals);
 end
-
 function printBreak()
     fprintf('               -------------------------------------------------------------------------------------------------------------------------\n');
 end

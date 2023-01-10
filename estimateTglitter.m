@@ -3,7 +3,6 @@
 % characterization
 
 function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew, other)
-
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     M = matfile([expdir 'measurements.mat']).M;
 
@@ -383,7 +382,8 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     % now just for the model with the most inliers, we build up a 
     % camera position estimate
     x0 = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR);
-    errFun = @(x) lossFunc(x, mostInliersSpecPos, mostInliersR, mostInliersIntensitys);
+    godGivenStandardDeviation = 4;
+    errFun = @(x) lossFunc(x, mostInliersSpecPos, mostInliersR, mostInliersIntensitys, godGivenStandardDeviation);
     options = optimset('PlotFcns',@optimplotfval);
     xf = fminsearch(errFun, x0, options);
     camPosEst = xf;
@@ -603,15 +603,25 @@ function d = distPointToLine(point, pointOnLine, direction)
     p = point';% point whose distance is being computed
     d = norm((p-a)-(dot((p-a),n,1)*n));
 end
-function error = lossFunc(camPos, mostInliersSpecPos, mostInliersR, mostInliersIntensitys)
+function error = lossFunc(camPos, mostInliersSpecPos, mostInliersR, mostInliersIntensitys, std)
     error = 0;
     % for each inlier sparkle
     for i=1:size(mostInliersSpecPos,1)
         % compute distance from reflected ray to pinhole (camPos)
-        dist = distPointToLine(camPos, mostInliersSpecPos(i,:), mostInliersR(i,:));
+        dist = distPointToLine(camPos, reshape(mostInliersSpecPos(i,:),1,3), reshape(mostInliersR(i,:),1,3));
+        %disp(dist);
+        %{
         % weight this distance's contribution to the loss function by
         % sparkle intensity(first/naive version)
         weight = mostInliersIntensitys(i);
         error = error + dist * weight;
+        %}
+
+        % based on this distance, estimate/predict the intensity
+        %std = 5;
+        predictedDist = sqrt(-2*std^2*log(mostInliersIntensitys(i)/255));
+        %disp(predictedDist);
+        %disp(mostInliersIntensitys(i));
+        error = error + abs(dist - predictedDist);
     end
 end
