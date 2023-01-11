@@ -14,7 +14,7 @@ function [C, Cmax, intensitys] = singleImageFindSpecs(im)
     numPoints = 1;
     C = [];
     Cmax = [];
-    R = regionprops(Mt,'Centroid','PixelIdxList','PixelList');
+    R = regionprops(Mt,'Centroid','PixelIdxList','PixelList','Area');
     %imLike = zeros(size(im));
     for rx = 1:size(R,1)
         Pt = R(rx).Centroid;
@@ -29,7 +29,8 @@ function [C, Cmax, intensitys] = singleImageFindSpecs(im)
         %[~, max2] = max(vals);
         Cmax(numPoints,:) = [R(rx).PixelList(idx,:)];
         %imLike(R(rx).PixelIdxList) = 0;
-        intensitys(numPoints) = intensity;
+        intensitys(numPoints) = single(intensity);
+        areas(numPoints) = single(R(rx).Area);
         numPoints = numPoints + 1;
     end
 
@@ -39,6 +40,13 @@ function [C, Cmax, intensitys] = singleImageFindSpecs(im)
     %
     % not so obvious how best to do this... pondering/procrastinating now
 
+    % normalize the intensitys and areas and then multiply them to get a
+    % more robust(?) metric for overall sparkle intensity
+    intensitys = intensitys ./ max(intensitys);
+    areas = areas ./ max(areas);
+    intensitys = intensitys .* areas;
+    % TODO ablation testing with this once we get final results (test set
+    % and generally working stuff)
 
     %disp(thresh);
     %disp(size(C));

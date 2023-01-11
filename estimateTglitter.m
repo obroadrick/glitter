@@ -119,7 +119,8 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     %imageCentroids(:,2));% linearly interpolate to get brightness of spec
     brightness = interp2(double(im), imageCentroids(:,1), imageCentroids(:,2));
     
-    %% also show the original max image so that we can compare the centroids
+    %{
+    % also show the original max image so that we can compare the centroids
     % that we found with the centroids that we characterized from the start
     % now show the canonical spec centroids (mapped onto this image coordinate
     % system using the inverse homography) to show them 
@@ -133,6 +134,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     for ix=1:size(allTrueDistsNormalized,2)
         colors(ix,:) = green + (red-green)*allTrueDistsNormalized(ix);
     end
+    %}
 
     %%
     %disp('now plotting');
@@ -381,12 +383,15 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     %%
     % now just for the model with the most inliers, we build up a 
     % camera position estimate
-    x0 = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR);
-    godGivenStandardDeviation = 4;
-    errFun = @(x) lossFunc(x, mostInliersSpecPos, mostInliersR, mostInliersIntensitys, godGivenStandardDeviation);
+    godlyStd = 3.5;%based loosely on looking at Addy's receptive field-probing results
+    x0 = [nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR) godlyStd 255];
+    errFun = @(x) lossFunc(x(1:3), mostInliersSpecPos, mostInliersR, mostInliersIntensitys, x(4), x(5));
     options = optimset('PlotFcns',@optimplotfval);
     xf = fminsearch(errFun, x0, options);
-    camPosEst = xf;
+    camPosEst = xf(1:3);
+    godlyStdFound = xf(4);
+    godlyPeakFound = xf(5);
+    fprintf('Sparkle Gaussian stand dev (dist to pinhole, mm): %f and height (intensity, 0-255): %f\n',godlyStdFound, godlyPeakFound);
 
     % also compute dists to the known camera location for all shiny specs
     trueDists = [];
@@ -603,7 +608,7 @@ function d = distPointToLine(point, pointOnLine, direction)
     p = point';% point whose distance is being computed
     d = norm((p-a)-(dot((p-a),n,1)*n));
 end
-function error = lossFunc(camPos, mostInliersSpecPos, mostInliersR, mostInliersIntensitys, std)
+function error = lossFunc(camPos, mostInliersSpecPos, mostInliersR, mostInliersIntensitys, std, peak)
     error = 0;
     % for each inlier sparkle
     for i=1:size(mostInliersSpecPos,1)
@@ -619,9 +624,15 @@ function error = lossFunc(camPos, mostInliersSpecPos, mostInliersR, mostInliersI
 
         % based on this distance, estimate/predict the intensity
         %std = 5;
-        predictedDist = sqrt(-2*std^2*log(mostInliersIntensitys(i)/255));
+        predictedDist = sqrt(-2*std^2*log(mostInliersIntensitys(i)/peak));
         %disp(predictedDist);
         %disp(mostInliersIntensitys(i));
         error = error + abs(dist - predictedDist);
     end
+    %disp(mostInliersIntensitys);
+    % divide by the number of sparkles so that we get a more interpretable
+    % loss function value (i.e. the average difference between the observed
+    % distance from pinhole and the predicted distance to pinhole based on
+    % brightness
+    error = error / size(mostInliersIntensitys,1);
 end

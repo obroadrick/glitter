@@ -29,8 +29,10 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     % get rotation and translation from checkerboard coords to camera
     % coords
     [~,~] = estimateWorldCameraPose(imagePoints,worldPoints3d,params);
-    [Rc, translationVector] = extrinsics(imagePoints,worldPoints,params);% bad, bad function, as far as my use goes apparently
+    [Rc, translationVector] = extrinsics(imagePoints,worldPoints,params);
     [~, location] = extrinsicsToCameraPose(Rc, translationVector);
+    disp(translationVector);
+    disp(location);
     
     %%
     % get homography from image coordinates to glitter coordinates

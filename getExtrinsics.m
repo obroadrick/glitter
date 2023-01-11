@@ -17,24 +17,39 @@
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/';\
-expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
+%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
+expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/odds/';
+expdir = expir;
 
+skew = true;
 % get P
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 % get camParams
 %camParams = matfile(P.camParams).camParams;
 %camParams = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/camParams_07_25_2022.mat').camParams;%july25test
-camParams = matfile([expir 'camParams.mat']).camParams;%ASSUME NO SKEW
-%camParams = matfile([expir 'camParamsSkew.mat']).camParams;%WITH SKEW ESTIMATE
+
+if ~skew
+    camParams = matfile([expir 'camParams.mat']).camParams;%ASSUME NO SKEW
+else
+    camParams = matfile([expir 'camParamsSkew.mat']).camParams;%WITH SKEW ESTIMATE
+end
 % get reference image path
 %imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/checkerboards/onGlitterPlane.JPG';
 %imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization/checkerboards/onGlitterPlane.JPG';
+impath = [expir 'checkerboards/onGlitterPlane.JPG'];
 imPath = [expir 'checkerboards/onGlitterPlane.JPG'];
 %imPath = [expir 'homography.JPG'];
 %imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/checkerboards/onGlitterPlane.JPG';
 % get fiducial marker points
 %allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/16ptsJuly25.mat']).arr;
 %allPts = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/16ptsAug18.mat').arr;
+if ~isfile([expdir '16pts.mat'])
+    % if the 16pts for this experiment haven't already been found, then
+    % find them now using Addy's script
+    setenv('PATH', [getenv('PATH') ':/opt/homebrew/bin/python3.10:/opt/homebrew/bin:/opt/homebrew/sbin']);
+    cmd = sprintf('python3.10 /Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/16ptsfinder.py "%s" "%s"', impath, [expdir '16pts.mat']);
+    system(cmd);
+end
 allPts = matfile([expir '16Pts.mat']).arr;
 pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
@@ -43,7 +58,7 @@ pin = double([pinx' piny']);
 
 %% run computation
 % run findCamPos which computes the camPos and camRot for these inputs
-[t, R] = findCamPos(P, camParams, imPath, pin);
+[t, R] = findCamPos(P, camParams, impath, pin);
 
 %% save results
 camPos = t;
@@ -56,7 +71,10 @@ save([P.data 'camRot_' datestr(now, 'mm_dd_yyyy')], "camRot");
 %}
 % also store the pos and rot in the experiment directory;
 %TODO actually check when it is with and without skew estimate
-save([expir 'camPos'], "camPos");
-save([expir 'camRot'], "camRot");
-%save([expir 'camPosSkew'], "camPos");
-%save([expir 'camRotSkew'], "camRot");
+if ~skew
+    save([expir 'camPos'], "camPos");
+    save([expir 'camRot'], "camRot");
+else
+    save([expir 'camPosSkew'], "camPos");
+    save([expir 'camRotSkew'], "camRot");
+end

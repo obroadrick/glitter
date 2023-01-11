@@ -94,10 +94,12 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     camPos = matfile([expdir 'camPos.mat']).camPos;
     checkerParams = matfile([expdir 'camParams.mat']).camParams;
     checkerK = checkerParams.Intrinsics.IntrinsicMatrix';
+    %{
+    % there is no need to try and do this... why try
     figure;
     %plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;    
     % undistort image spec locations
-    imageSpecsUndistorted = undistortPoints(imageSpecs, checkerParams);
+    imageSpecsUndistorted = imageSpecs;%undistortPoints(imageSpecs, checkerParams);
     plot(imageSpecsUndistorted(:,1),imageSpecsUndistorted(:,2),'gx');hold on;    
     title('checkerboard reprojection: image positions (green) and projected positions (red)');
     for ix=1:size(imageSpecs,1)
@@ -106,6 +108,41 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
         plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
     end
 
+    imageFiducialsUndistorted = pin;%undistortPoints(pin, checkerParams);
+    plot(imageFiducialsUndistorted(:,1),imageFiducialsUndistorted(:,2),'go');hold on;    
+    for ix=1:size(pin,1)
+        projectedFiducial = checkerK*camRot * (worldFiducials(ix,:)' - camPos');
+        projectedFiducial = projectedFiducial ./ projectedFiducial(3);
+        %imageFiducialsUndistorted = pin;%undistortPoints(pin, checkerParams);
+        plot(projectedFiducial(1),projectedFiducial(2),'ro');hold on;
+    end
+    %}
+    figure;
+    %plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;    
+    % undistort image spec locations
+    imageSpecsUndistorted = imageSpecs;%undistortPoints(imageSpecs, checkerParams);
+    plot(imageSpecsUndistorted(:,1),imageSpecsUndistorted(:,2),'gx');hold on;    
+    title('checkerboard reprojection: image positions (green) and projected positions (red)');
+    for ix=1:size(imageSpecs,1)
+        %projectedSpec = checkerK*camRot * (worldSpecs(ix,:)' - camPos');
+        projectedSpec = worldToImage(checkerParams.Intrinsics,camRot',camRot*-camPos',(worldSpecs(ix,:)));
+        %projectedSpec = undistortPoints(projectedSpec, checkerParams);
+        %projectedSpec = projectedSpec ./ projectedSpec(3);
+        projectedSpecs(ix,:) = projectedSpec;
+        plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
+    end
+    imageFiducialsUndistorted = pin;%undistortPoints(pin, checkerParams);
+    plot(imageFiducialsUndistorted(:,1),imageFiducialsUndistorted(:,2),'go');hold on;    
+    for ix=1:size(pin,1)
+        projectedFiducial = worldToImage(checkerParams.Intrinsics,camRot',camRot*-camPos',(worldFiducials(ix,:)));
+        %projectedFiducial = undistortPoints(projectedFiducial, checkerParams);
+        %imageFiducialsUndistorted = pin;%undistortPoints(pin, checkerParams);
+        projectedFiducials(ix,:) = projectedFiducial;
+        plot(projectedFiducial(1),projectedFiducial(2),'ro');hold on;
+    end
+    %meanReprojectionError = sum(sqrt(sum((projectedSpecs - imageSpecs).^2, 2)))/size(imageSpecs,1)    
+    %meanReprojectionError = sum(sqrt(sum((projectedFiducials - pin).^2, 2)))/size(pin,1)    
+    
     %% draw the scene with camera and its frustum
     M = matfile(P.measurements).M;
     figure;

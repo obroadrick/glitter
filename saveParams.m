@@ -26,7 +26,7 @@ save([P.data 'camParamsErrors_' datestr(now, 'mm_dd_yyyy')], "camParamsErrors");
 %chardir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/'];
 %chardir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/'];
 %chardir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/'];
-chardir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/'];
+chardir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/evens/'];
 %save([chardir 'camParams'], "camParams");
 %save([chardir 'camParamsErrors'], "camParamsErrors");
 save([chardir 'camParamsSkew'], "camParams");

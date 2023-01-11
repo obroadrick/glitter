@@ -84,8 +84,7 @@ end
 %  characterized sheet of glitter: spec locations, normals
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 
-
-other.inlierThreshold = 30;
+other.inlierThreshold = 15;
 ambientImage = -1;
 %% estimate translation
 [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew, other);
