@@ -6,7 +6,7 @@
 % glitter coordinates to checkerboard coordinates and then another 
 % rotation and translation from checkerboard coordinates to camera 
 % coordinates (Rc, tc)
-function [t, R] = findCamPos(P, camParams, imPath, pin)
+function [t, R, terr, Rerr, Rvec] = findCamPos(P, camParams, camParamsErrors, imPath, pin)
     %% get coordinates for image with checkerboard on glitter plane
     M = matfile(P.measurements).M;
     params = camParams;%renaming
@@ -26,14 +26,27 @@ function [t, R] = findCamPos(P, camParams, imPath, pin)
     xfar_in_world_coords = [worldPoints3d(indexXfar,:)];
     yfar_in_world_coords = [worldPoints3d(indexYfar,:)];
     
-    % get rotation and translation from checkerboard coords to camera
-    % coords
+    
+    %{ 
+    % OLD WAY: get rotation and translation from checkerboard coords to 
+    % camera coords
     [~,~] = estimateWorldCameraPose(imagePoints,worldPoints3d,params);
     [Rc, translationVector] = extrinsics(imagePoints,worldPoints,params);
     [~, location] = extrinsicsToCameraPose(Rc, translationVector);
-    disp(translationVector);
-    disp(location);
-    
+    %}
+    % new way, to base the extrinsics off the whole checkerboard set 
+    % optimization and get error estimates accordingly
+    onGlitPlaneIndex = 1;% requires naming the on-glitter-plane 
+                         % checkerboard image alphabetically first
+    Rvector = camParams.RotationVectors(onGlitPlaneIndex,:);
+    Rc = rotationVectorToMatrix(Rvector);
+    translationVector = camParams.TranslationVectors(onGlitPlaneIndex,:);
+    [~, location] = extrinsicsToCameraPose(Rc, translationVector);
+    % get/name some of the returns:
+    terr = camParamsErrors.ExtrinsicsErrors.TranslationVectorsError(onGlitPlaneIndex,:);
+    Rerr = camParamsErrors.ExtrinsicsErrors.RotationVectorsError(onGlitPlaneIndex,:);
+    Rvec = Rvector;
+
     %%
     % get homography from image coordinates to glitter coordinates
     tform = getTransform(P,pin);

@@ -104,8 +104,8 @@ para.adaptiveThreshWinSizeMax = 200
 #frameName = input("Enter relative image directory. Use forward slashes when referencing child directories: ")
 frameName = sys.argv[1]
 saveName = sys.argv[2]
-print(frameName)
-print(saveName)
+#print(frameName)
+#print(saveName)
 
 frameCol = cv2.imread(frameName)
 frame = cv2.cvtColor(frameCol, cv2.COLOR_BGR2GRAY)
@@ -159,7 +159,7 @@ if  len(bboxs)!=0:
     import scipy.io
     scipy.io.savemat(saveName, mdict={'arr': mat_arr})
 
-    print('Success!')
+    print('Success - found ArUco Markers!')
     
     exit()
 else:

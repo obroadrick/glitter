@@ -34,9 +34,15 @@ iphone1 = struct('name','iPhone XR (light off monitor, chem side)', ...
             'lightPosFname', 'chemLightPos.mat', ...
             'skew', true, ...
             'sixteen', true);
+jan12_1 = struct('name','Nikon Z7 (January 12 Data) Position 1', ...
+            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/jan12data/', ...
+            'impath','1.JPG', ...
+            'lightPosFname', 'lightPos1.mat', ...
+            'skew', true, ...
+            'sixteen', true);
 
-%input = wideangle1;
-for input=[wideangle1, middle, iphone1]
+input = jan12_1;
+%for input=[wideangle1, middle, iphone1]
 expdir = input.expdir;
 impath = [expdir input.impath];
 lightPos = matfile([expdir input.lightPosFname]).lightPos;
@@ -135,7 +141,7 @@ rotAndIntrinsicsCheckerboardsErrors = [-1 -1 -1 -1 -1 -1 fxe fye cxe cye se];
 printRow('Checker err.', rotAndIntrinsicsCheckerboardsErrors);
 
 %% solve the linear system and do RQ decomposition to get K and R
-rotAndIntrinsics2 = [camPosEst linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir)];
+rotAndIntrinsics2 = [camPosEst linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir, skew)];
 % print outputs
 %printBreak();
 printRow('Sparkle est.', rotAndIntrinsics2);
@@ -147,7 +153,7 @@ posDiff = sqrt(sum(((camPosEst-camPos).^2)));
 R2 = rod2mat(rotAndIntrinsics2(4),rotAndIntrinsics2(5),rotAndIntrinsics2(6));
 Rerr = rotDiff(R2, camRot);
 fprintf('               Position diff. (mm): %.2f     Rotation diff. (deg): %.3f\n', posDiff, Rerr);
-end
+%end
 %{ 
 disp('SparkleCalibrate - linear solution as first guess in fminsearch (skew=0)');
 rotAndIntrinsics5 = startPointEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);

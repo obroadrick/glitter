@@ -18,7 +18,12 @@
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/';\
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
-expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/odds/';
+%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/odds/';
+
+
+for index = 1:10
+%expir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan12data/' num2str(index) '/'];
+expir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(index) '/'];
 expdir = expir;
 
 skew = true;
@@ -36,8 +41,9 @@ end
 % get reference image path
 %imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/checkerboards/onGlitterPlane.JPG';
 %imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep1characterization/checkerboards/onGlitterPlane.JPG';
-impath = [expir 'checkerboards/onGlitterPlane.JPG'];
-imPath = [expir 'checkerboards/onGlitterPlane.JPG'];
+%impath = [expir 'onGlitterPlane' num2str(index) '.JPG'];
+impath = [expir 'A_onGlitterPlane' num2str(index) '.JPG'];
+imPath = impath;
 %imPath = [expir 'homography.JPG'];
 %imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/checkerboards/onGlitterPlane.JPG';
 % get fiducial marker points
@@ -58,7 +64,9 @@ pin = double([pinx' piny']);
 
 %% run computation
 % run findCamPos which computes the camPos and camRot for these inputs
-[t, R] = findCamPos(P, camParams, impath, pin);
+[t, R, terr, Rerr, Rvec] = findCamPos(P, camParams, camParamsErrors, impath, pin);
+camPosErr = terr;
+camRotErr = Rerr;
 
 %% save results
 camPos = t;
@@ -74,7 +82,12 @@ save([P.data 'camRot_' datestr(now, 'mm_dd_yyyy')], "camRot");
 if ~skew
     save([expir 'camPos'], "camPos");
     save([expir 'camRot'], "camRot");
+    save([expir 'camPosErr'], "camPosErr");
+    save([expir 'camRotErr'], "camRotErr");
 else
     save([expir 'camPosSkew'], "camPos");
     save([expir 'camRotSkew'], "camRot");
+    save([expir 'camPosErrSkew'], "camPosErr");
+    save([expir 'camRotErrSkew'], "camRotErr");
+end
 end

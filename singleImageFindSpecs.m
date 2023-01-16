@@ -60,4 +60,5 @@ function [C, Cmax, intensitys] = singleImageFindSpecs(im)
     end
     %}
     text(C(:,1),C(:,2),string(intensitys),'Color','cyan');
+    hold on; title('Sparkle Intensity (normalized (max intensity)*(area))');
 end

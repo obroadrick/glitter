@@ -376,9 +376,10 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     
     fprintf([num2str(max(numInliers)) ' inliers; ']);
     avgK = sum(mostInliersKmin)/size(mostInliersKmin,1);
+    stdK = std(mostInliersKmin);
     avgD = sum(dist(mostInliersIdxs))/size(mostInliersKmin,1);
     stdD = std(dist(mostInliersIdxs));
-    fprintf('avg. matches are %.2fth nearest neighbors, at distance %f mm (std=%f)\n', avgK, avgD, stdD);
+    fprintf('avg. matches are %.2fth nearest neighbors (std=%f), at distance %f mm (std=%f)\n', avgK, stdK, avgD, stdD);
 
     %%
     % now just for the model with the most inliers, we build up a 

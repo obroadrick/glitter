@@ -1,7 +1,7 @@
 % given camera position estimate T, estimate camera rotation matrix R and
 % intrinsic matrix K
 
-function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir)
+function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir, skew)
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     
     % known points in world coordinates
@@ -90,10 +90,17 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
 
     %% show the reprojection according to the ground truth/checkerboard
     % results
-    camRot = matfile([expdir 'camRot.mat']).camRot;
-    camPos = matfile([expdir 'camPos.mat']).camPos;
-    checkerParams = matfile([expdir 'camParams.mat']).camParams;
-    checkerK = checkerParams.Intrinsics.IntrinsicMatrix';
+    if ~skew
+        camRot = matfile([expdir 'camRot.mat']).camRot;
+        camPos = matfile([expdir 'camPos.mat']).camPos;
+        checkerParams = matfile([expdir 'camParams.mat']).camParams;
+        checkerK = checkerParams.Intrinsics.IntrinsicMatrix';
+    else
+        camRot = matfile([expdir 'camRotSkew.mat']).camRot;
+        camPos = matfile([expdir 'camPosSkew.mat']).camPos;
+        checkerParams = matfile([expdir 'camParamsSkew.mat']).camParams;
+        checkerK = checkerParams.Intrinsics.IntrinsicMatrix';
+    end
     %{
     % there is no need to try and do this... why try
     figure;
