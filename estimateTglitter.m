@@ -14,7 +14,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
     %impath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/hilight.JPG';
     %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
-    if ~exist('ambientImage','var') && ~(ambientImage == -1)
+    if ~exist('ambientImage','var') || (ambientImage == -1)
         im = rgb2gray(imread(impath));
     else
         im = max(rgb2gray(imread(impath)) - ambientImage, 0);
@@ -385,7 +385,22 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     % now just for the model with the most inliers, we build up a 
     % camera position estimate
     godlyStd = 3.5;%based loosely on looking at Addy's receptive field-probing results
-    x0 = [nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR) godlyStd 255];
+    quickEst = nearestPointManyLines(mostInliersSpecPos, mostInliersSpecPos+mostInliersR);
+    if ~exist('other.quickEstimate','var')
+        % just return the estimate based on the nearestPointManyLines
+        camPosEst = quickEst;
+        mostInliersSpecPos = mostInliersSpecPos;
+        mostInliersImageSpecPos = mostInliersImageSpecPos;
+        other.mostInliersL = mostInliersL;
+        other.mostInliersSpecPos = mostInliersSpecPos;
+        other.mostInliersIdxs = mostInliersIdxs;
+        other.lightPos = lightPos;
+        other.mostInliersR = mostInliersR;
+        other.overallIdx = idx;
+        other.mostInliersKmin = mostInliersKmin;
+        return;
+    end
+    x0 = [quickEst godlyStd 255];
     errFun = @(x) lossFunc(x(1:3), mostInliersSpecPos, mostInliersR, mostInliersIntensitys, x(4), x(5));
     options = optimset('PlotFcns',@optimplotfval);
     xf = fminsearch(errFun, x0, options);

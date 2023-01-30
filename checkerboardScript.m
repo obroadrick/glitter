@@ -4,13 +4,20 @@
 
 % Define images to process
 numSubsets = 10;
-for i=1:numSubsets
+for i=9:9
     % Get this batch of file names...:
     dirPath = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i)];
     allFiles = dir(dirPath);
     allFiles = allFiles(~ismember({allFiles.name},{'.','..'}));
+    fIdx = 1;
     for j=1:size(allFiles,1)
-        imageFileNames{j} = [allFiles(j).folder '/' allFiles(j).name];
+        % skip over .mat files
+        if ~isempty(regexp(allFiles(j).name,'.mat'))
+            %disp(allFiles(j).name)
+            continue
+        end
+        imageFileNames{fIdx} = [allFiles(j).folder '/' allFiles(j).name];
+        fIdx = fIdx + 1;
     end
 
     % Detect calibration pattern in images

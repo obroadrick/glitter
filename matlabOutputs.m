@@ -55,3 +55,6 @@ columnNames = ["Tx","Ty","Tz","omega1","omega2","omega3","fx","fy","cx","cy","s"
 fprintf(['%15s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s\n'], '', columnNames);
 printRow('range:',ranges);
 printRow('std:',stds);
+
+checkerResults = allData;
+save(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults.mat'], "checkerResults");

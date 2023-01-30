@@ -21,7 +21,7 @@
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/odds/';
 
 
-for index = 1:10
+for index = 9:9
 %expir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan12data/' num2str(index) '/'];
 expir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(index) '/'];
 expdir = expir;
@@ -35,8 +35,10 @@ P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/path
 
 if ~skew
     camParams = matfile([expir 'camParams.mat']).camParams;%ASSUME NO SKEW
+    camParamsErrors = matfile([expir 'camParamsErrors.mat']).camParamsErrors;%ASSUME NO SKEW
 else
     camParams = matfile([expir 'camParamsSkew.mat']).camParams;%WITH SKEW ESTIMATE
+    camParamsErrors = matfile([expir 'camParamsErrorsSkew.mat']).camParamsErrors;%WITH SKEW ESTIMATE
 end
 % get reference image path
 %imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/checkerboards/onGlitterPlane.JPG';

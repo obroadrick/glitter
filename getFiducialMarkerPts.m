@@ -1,5 +1,5 @@
 function pout = getFiducialMarkerPts(four)
-    % computes and returns the coordinates of the 16 corners of the
+    % computes and returns the coordinates of the 16 (or 4) corners of the
     % fiducial markers in the canonical glitter coordinate system
     
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;

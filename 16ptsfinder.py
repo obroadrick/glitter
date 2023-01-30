@@ -21,28 +21,30 @@ def getPoints(arr, loc):
 def findMarkerCorners(pts):
     BL, TL, TR, BR = Marker(), Marker(), Marker(), Marker()
     _ids = ids.flatten()
-    TRidx = np.where(_ids == 2)[0][0]
-    TLidx = np.where(_ids == 1)[0][0]
-    
-    
-    TL.BL = getPoints(pts[TLidx], [0, h/2])[0]
-    TL.BR = getPoints(pts[TLidx], [w/2, h/2])[0]
-    TL.TR = getPoints(pts[TLidx], [w/4, 0])[0]
-    TL.TL = getPoints(pts[TLidx], [0, 0])[0]
-    
-    
-    TR.BL, _ = getPoints(pts[TRidx], [w/2, h/2]) #we're assuming that the bottom left is closest to the center of image
-    TR.BR = getPoints(pts[TRidx], [w, h/2])[0]
-    TR.TR = getPoints(pts[TRidx], [w, 0])[0]
-    TR.TL = getPoints(pts[TRidx], [3*w/4, 0])[0]
-    
-    #cull our array to exclude discovered corners 
-    pts = np.delete(pts, TRidx, 0)
-    delIdx = TLidx
-    if TLidx > TRidx:
-        delIdx = TLidx - 1
-    pts = np.delete(pts, delIdx, 0)
-    #makes the next search easier
+    tr_found = np.where(_ids == 2)[0].shape[0] != 0
+    if tr_found:
+        TRidx = np.where(_ids == 2)[0][0]
+        TR.BL, _ = getPoints(pts[TRidx], [w/2, h/2]) #we're assuming that the bottom left is closest to the center of image
+        TR.BR = getPoints(pts[TRidx], [w, h/2])[0]
+        TR.TR = getPoints(pts[TRidx], [w, 0])[0]
+        TR.TL = getPoints(pts[TRidx], [3*w/4, 0])[0]
+     
+    tl_found = np.where(_ids == 1)[0].shape[0] != 0
+    if tl_found:
+        TLidx = np.where(_ids == 1)[0][0]
+        TL.BL = getPoints(pts[TLidx], [0, h/2])[0]
+        TL.BR = getPoints(pts[TLidx], [w/2, h/2])[0]
+        TL.TR = getPoints(pts[TLidx], [w/4, 0])[0]
+        TL.TL = getPoints(pts[TLidx], [0, 0])[0]
+  
+    if tr_found and tl_found:
+        #cull our array to exclude discovered corners 
+        pts = np.delete(pts, TRidx, 0)
+        delIdx = TLidx
+        if TLidx > TRidx:
+            delIdx = TLidx - 1
+        pts = np.delete(pts, delIdx, 0)
+        #makes the next search easier 
 
     scoresBL = getPoints(pts[0], [0, h]), getPoints(pts[1], [0, h])
     scoresBR = getPoints(pts[0], [w/2, h]), getPoints(pts[1], [w/2, h])
@@ -50,7 +52,8 @@ def findMarkerCorners(pts):
     if scoresBL[0][1] < scoresBL[1][1]:
         BLidx = 0
     BRidx = BLidx - 1
-    BL.BL, BR.BL = scoresBL[BLidx][0], scoresBR[BRidx][0]
+    BL.BL = scoresBL[BLidx][0]
+    BR.BL = scoresBR[BRidx][0]
     
     BL.BR = getPoints(pts[BLidx], [w/2, h])[0]
     BL.TR = getPoints(pts[BLidx], [w/4, 3 * h/4])[0]
@@ -84,7 +87,10 @@ def findMarkerCorners(pts):
     #cv2.waitKey()  
     #cv2.destroyAllWindows()
     #plt.imshow(frameCol)
-    cv2.imwrite("corners.jpg", frameCol)
+
+    # uncomment this line to get a nift image saved with the detected markers outlined
+    #cv2.imwrite("corners.jpg", frameCol)
+
     #return(Marker(BL, TL, TR, BR))
     #print(scoresBR)
     #print(scoresBL)
