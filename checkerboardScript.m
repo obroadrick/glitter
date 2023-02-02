@@ -4,7 +4,7 @@
 
 % Define images to process
 numSubsets = 10;
-for i=9:9
+for i=1:numSubsets
     % Get this batch of file names...:
     dirPath = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i)];
     allFiles = dir(dirPath);
@@ -35,7 +35,7 @@ for i=9:9
     
     % Calibrate the camera
     [cameraParams, imagesUsed, estimationErrors] = estimateCameraParameters(imagePoints, worldPoints, ...
-        'EstimateSkew', true, 'EstimateTangentialDistortion', false, ...
+        'EstimateSkew', false, 'EstimateTangentialDistortion', false, ...
         'NumRadialDistortionCoefficients', 2, 'WorldUnits', 'millimeters', ...
         'InitialIntrinsicMatrix', [], 'InitialRadialDistortion', [], ...
         'ImageSize', [mrows, ncols]);
@@ -47,8 +47,8 @@ for i=9:9
     camParams = cameraParams;
     camParamsErrors = estimationErrors;
     chardir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i) '/'];
-    save([chardir 'camParamsSkew'], "camParams");
-    save([chardir 'camParamsErrorsSkew'], "camParamsErrors");
+    save([chardir 'camParams'], "camParams");
+    save([chardir 'camParamsErrors'], "camParamsErrors");
 
     %{
     % View reprojection errors

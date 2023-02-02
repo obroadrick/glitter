@@ -16,16 +16,17 @@ end
 %%
 % Find the ArUco points in each image
 for i=1:numIms
-    if ~isfile([expdir '/' imnames{i} '_16pts.mat'])
+    %if ~isfile([expdir '/' imnames{i} '_16pts.mat'])
         % Use Addy's Python scipt to detect the ArUco markers
         setenv('PATH', [getenv('PATH') ':/opt/homebrew/bin/python3.10:/opt/homebrew/bin:/opt/homebrew/sbin']);
-        cmd = sprintf('python3.10 /Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/detectArUcos.py "%s" "%s"', impaths{i}, [expdir '/' imnames{i} '_16pts.mat']);
+        cmd = sprintf('python3.10 /Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/detectArUcosNew.py "%s" "%s"', impaths{i}, [expdir '/' imnames{i} '_16pts.mat']);
         system(cmd);
-    end
+    %eend
 end
 
 %%
 % Display images with detected ArUco marker points
+%{
 figure;
 tiledlayout(floor(sqrt(numIms)), ceil(sqrt(numIms)), 'TileSpacing','tight','Padding','tight');
 for i=1:numIms
@@ -41,6 +42,7 @@ for i=1:numIms
     for ix=1:size(pts{i},1)
         if pts{i}(ix,1) > 0 && pts{i}(ix,2) > 0
             plot(pts{i}(ix,1), pts{i}(ix,2),'cX','MarkerSize', 20);
+            text(pts{i}(ix,1), pts{i}(ix,2),num2str(ix));
         end
     end
 
@@ -49,6 +51,7 @@ for i=1:numIms
     title(d(i).name);
     drawnow;
 end
+%}
 
 %%
 % Get the corresponding points in the world/glitter coordinate system
@@ -86,13 +89,21 @@ end
 numPts = 1;
 for i=1:numIms
     if arucoPoints{i} == -1
+        keptImPoints{i} = zeros(0,0);
+        keptWorldPoints{i} = zeros(0,0);
         continue
     end
     % If the points are not all unique, ignore this image (failure of our
     % detection code)
+    %{
     if ~(size(unique(arucoPoints{i},'rows'), 1) == size(arucoPoints{i}, 1))
+        keptImPoints{i} = zeros(0,0);
+        keptWorldPoints{i} = zeros(0,0);
+        disp('here')
         continue
     end
+    %}
+    thisImNumPts = 1;
     for j=1:size(arucoPoints{i},1)
         if ~(arucoPoints{i}(j,1) > 0 && arucoPoints{i}(j,2) > 0)
             continue
@@ -100,21 +111,54 @@ for i=1:numIms
         imPts(numPts,:) = arucoPoints{i}(j,:);
         worldPts(numPts,:) = worldPoints{i}(j,:);
         numPts = numPts + 1;
+        keptImPoints{i}(thisImNumPts,:) = arucoPoints{i}(j,:);
+        keptWorldPoints{i}(thisImNumPts,:) = worldPoints{i}(j,:);
+        thisImNumPts = thisImNumPts + 1;
     end
 end
 
-%{
-%% 
-% uUse only unique entries
-[imPtsPrime, ia, ic] = unique(imPts,'row');
-worldPtsPrime = worldPts(ia,:);
-imPts=imPtsPrime;worldPts=worldPtsPrime;
-%}
-
 %%
 % Get the camera matrix
-[C, r] = estimateCameraMatrix(imPts,worldPts);
-C = C';
+%[C, r] = estimateCameraMatrix(imPts,worldPts);
+C = solveForCameraMatrix(imPts,worldPts);
+
+%%
+% Decompose
+[K,R,IminusC]= Pdecomp(C);
+T = -IminusC(:,4);
+camPos3d = T;
+K = K ./ K(3,3);
+omega = mat2rod(camRot3d);
+fx = K(1,1); fy = K(2,2); cx = K(1,3); cy = K(2,3); s = K(1,2);
+intrinsics =  [omega fx fy cx cy s];
+results = [camPos3d' intrinsics];
+
+%{ 
+%%
+% Using the linear system solution as an initial guess, do a simplix search
+% with the reprojection error as the loss function. 
+% (Turns out doing so doesn't change the reprojection much... (i.e., the 
+% reprojection error is already near-minimum when you solve the linear 
+% system.).)
+% Optimize over the 11 entries in the camera matrix
+f = @(x) reprojectionErrorC(x, imPts, worldPts);
+options = optimset('PlotFcns',@optimplotfval);
+tuned_results = fminsearch(f, C(1:11), options);
+%}
+
+%% 
+% Also estimate the radial distortion by using the solution to the linear
+% system to initialize the rest of the parameters and doing simplex search
+% over all of the parameters at once using the reprojection error as the
+% loss function.
+f = @(x) reprojectionErrorRadialDistortion(x(1:11), x(12:13), imPts, worldPts);
+options = optimset('PlotFcns',@optimplotfval);
+tuned_results = fminsearch(f, [C(1:11) 0 0], options);
+
+
+%%
+% Save results
+save('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults.mat',"results");
 
 %%
 % Compute reprojection errors in pixels
@@ -131,39 +175,205 @@ end
 % Display images with detected ArUco marker points and with reprojected
 % points according to this camera matrix
 figure;
-counter = 0;
-tiledlayout(floor(sqrt(numIms)), ceil(sqrt(numIms)), 'TileSpacing','tight','Padding','tight');
-for i=1:numIms
+tiledlayout(1,3, 'TileSpacing','tight','Padding','tight');
+for i=[2,5,8]
     % Show image
     ax = nexttile;
     imagesc(ims{i}); hold on;
 
-    % Load and plot ArUco points
-    if ~isfile([expdir '/' imnames{i} '_16pts.mat'])
-        continue
-    end
-    pts{i} = loadPoints([expdir '/' imnames{i} '_16pts.mat'],true);
-    for ix=1:size(pts{i},1)
-        if pts{i}(ix,1) > 0 && pts{i}(ix,2) > 0
-            % Show the ArUco point
-            plot(pts{i}(ix,1), pts{i}(ix,2),'cX','MarkerSize', 20, 'LineWidth',2);
+    for ix=1:size(keptImPoints{i},1)
+        % Show the detected ArUco image point
+        plot(keptImPoints{i}(ix,1), keptImPoints{i}(ix,2),'cX','MarkerSize', 20, 'LineWidth',2);
 
-            % Show the world point reprojected according to our camera
-            % matrix
-            reproj = reproject(worldPoints{i}(ix,:)',C);
-            plot(reproj(1), reproj(2), 'r+', 'MarkerSize', 15, 'LineWidth',2);
-
-            counter = counter + 1;
-        end
+        % Show the world point reprojected according to our camera matrix
+        reproj = reproject(keptWorldPoints{i}(ix,:)',C);
+        plot(reproj(1), reproj(2), 'r+', 'MarkerSize', 15, 'LineWidth',2);
     end
 
     % Draw plot
-    set(ax,'xticklabel',[],'yticklabel',[])
+    set(ax,'xticklabel',[],'yticklabel',[]);
     title(d(i).name);
     drawnow;
 end
 
-%%
+%{
+% What if we take random subsets of the available points? This way we get
+% at least some sense of the distribution of estimates by this calibration
+% method...
+% Divide into N random subsets (of roughly equal size)
+N = 4;
+n = size(imPts,1); 
+m = floor(n/N);
+idx = randperm(n);
+for ix=1:N
+    % Get this random subset of the point correspondences
+    imPtsCur = imPts(idx((ix-1)*floor(n/N)+1:ix*floor(n/N)),:);
+    worldPtsCur = worldPts(idx((ix-1)*floor(n/N)+1:ix*floor(n/N)),:);
+    % Estimate the camera matrix based on these correspondences
+    [C, r] = estimateCameraMatrix(imPtsCur,worldPtsCur);
+    C = C';
+    % Decompose
+    [K,R,IminusC]= Pdecomp(C);
+    camPos3d = -IminusC(:,4);
+    camRot3d = R;
+    K = K ./ K(3,3);
+    omega = mat2rod(camRot3d);
+    fx = K(1,1); fy = K(2,2); cx = K(1,3); cy = K(2,3); s = K(1,2);
+    intrinsics =  [omega fx fy cx cy s];
+    results(ix,:) = [camPos3d' intrinsics];
+end
+save(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults' num2str(N) '.mat'],"results");
+%}
+
+%{
+%% See how checkerboard parameters and glitter parameters reproject these 
+% 3d points correspondences onto the image...
+sparkleResults = matfile([expdir 'sparkleResults.mat']).results;
+checkerResults = matfile([expdir 'checkerResults.mat']).results;
+for i=1:10
+    sparkleE(i) = reprojectionError(sparkleResults(i,:),imPts,worldPts);
+    checkerE(i) = reprojectionError(checkerResults(i,:),imPts,worldPts);
+
+    % Let matlab reproject the point (using distortion too)
+    camParams = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i) '/camParams.mat']).camParams;
+    intrinsics = camParams.Intrinsics;
+    rotationMatrix = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i) '/camRot.mat']).camRot;
+    rotationMatrix = rotationMatrix';
+    camPos = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i) '/camPos.mat']).camPos;
+    translationVector = -rotationMatrix * camPos';
+    e = 0;
+    for ix=1:size(imPts,1)
+        reproj = worldToImage(intrinsics,rotationMatrix,translationVector,worldPts(ix,:));
+        disp(reproj);disp(imPts(i,:));
+        e = e + norm(reproj - imPts(i,:));
+    end
+    e = e  / size(imPts,1);
+    checkerEdist(i) = e
+end
+%}
+
+
+
+
+
+
+%% 
+% Also estimate the radial distortion by using the solution to the linear
+% system to initialize the rest of the parameters and doing simplex search
+% over all of the parameters at once using the reprojection error as the
+% loss function.
+%{
+f = @(x) reprojectionErrorRadialDistortion(x(1:11), x(12:13), imPts, worldPts);
+options = optimset('PlotFcns',@optimplotfval);
+tuned_results = fminsearch(f, [C(1:11) 0 0], options);
+% What if you just optimized over the radial distortion coefficients
+% (keeping the rest of the parameters fixed as found by linear solution)...
+f = @(x) reprojectionErrorRadialDistortion(C(1:11), x, imPts, worldPts);
+options = optimset('PlotFcns',@optimplotfval);
+tuned_results = fminsearch(f, [0 0], options);
+%}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% functions: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function r = reproject(X,C)
+    y = C * [X; 1];
+    r = y ./ y(3);
+end
+
+function e = reprojectionError(results,imPts,worldPts)
+    T = results(1:3)';
+    R = rod2mat(results(4),results(5),results(6));
+    K = [results(7) results(11) results(9); 0 results(8) results(10); 0 0 1];
+    e = 0;
+    for i=1:size(imPts,1)
+        x = K * R * (worldPts(i,:)' - T);
+        x = x ./ x(3);
+        x = x(1:2);
+        e = e + norm(x-imPts(i,:)');
+    end
+    % Divide by number of points reprojected so that e gives the average
+    % reprojection error (more interpretable)
+    e = e / size(imPts,1);
+end
+
+function e = reprojectionErrorC(C,imPts,worldPts)
+    % Reconstruct the full camera matrix from the 11 entries passed
+    C = [C(1:3)' C(4:6)' C(7:9)' [C(10:11) 1]'];
+    % Reproject all the passed world points, summing up the difference
+    % between the reprojections and the passed corresponding image points
+    e = 0;
+    for i=1:size(imPts,1)
+        x = C * [worldPts(i,:)'; 1];
+        x = x ./ x(3);
+        x = x(1:2);
+        e = e + norm(x-imPts(i,:)');
+    end
+    % Divide by number of points reprojected so that e gives the average
+    % reprojection error (more interpretable)
+    e = e / size(imPts,1);
+end
+
+function e = reprojectionErrorRadialDistortion(C, k, imPts, worldPts)
+% Reconstruct the full camera matrix from the 11 entries passed
+    C = [C(1:3)' C(4:6)' C(7:9)' [C(10:11) 1]'];
+    % Reproject all the passed world points, summing up the difference
+    % between the reprojections and the passed corresponding image points
+    e = 0;
+    [K,R,IminusC]= Pdecomp(C);
+    T = -IminusC(:,4);
+    for i=1:size(imPts,1)
+        worldPt = worldPts(i,:)';
+        x = reprojectRadialDistortion(K,R,T,k,worldPt);
+        e = e + norm(x-imPts(i,:)');
+    end
+    % Divide by number of points reprojected so that e gives the average
+    % reprojection error (more interpretable)
+    e = e / size(imPts,1);
+end
+
+function p = reprojectRadialDistortion(K,R,T,k,worldPt)
+disp(k)
+    % Compute the linear projection of worldPt onto the image
+    x = K * R * (worldPt - T);
+    x = x ./ x(3);
+    x = x(1:2);
+
+    % Apply radial distortion:
+    % Convert into normalized image coordinates
+    x = x - [K(1,3) K(2,3)]'; % translate to optical center
+    x = x ./ [K(1,1) K(2,2)]';% divide by focal length
+    % Get updated position based on radial distortion model
+    if size (k < 3)
+        k(3) = 0;
+    end
+    rsquared = x(1)^2 + x(2)^2;
+    x = x .* (1 + k(1)*rsquared + k(2)*rsquared^2 + k(3)*rsquared^3);
+    % Convert back into image coordinates
+    x = x .* [K(1,1) K(2,2)]';
+    x = x + [K(1,3) K(2,3)]';
+
+    p = x(1:2);
+end
+
+function P = solveForCameraMatrix(imPts,worldPts)
+    % Solve the linear system to get the camera parameters using these
+    % correspondences
+    for i=1:size(imPts,1)
+        C(i*2-1,:) = [worldPts(i,1) worldPts(i,2) worldPts(i,3) 1 0 0 0 0 -worldPts(i,1)*imPts(i,1) -worldPts(i,2)*imPts(i,1) -worldPts(i,3)*imPts(i,1)];
+        C(i*2,:) = [0 0 0 0 worldPts(i,1) worldPts(i,2) worldPts(i,3) 1 -worldPts(i,1)*imPts(i,2) -worldPts(i,2)*imPts(i,2) -worldPts(i,3)*imPts(i,2)];
+        b(i*2-1,:) = [imPts(i,1)];
+        b(i*2,:) = [imPts(i,2)];
+        %{
+        b(i*3-2,:) = [imPts(i,1)];
+        b(i*3-1,:) = [imPts(i,2)];
+        b(i*3,:) = [1];
+        %}
+    end
+    x = C\b;
+    P = [x(1:4)';x(5:8)';[x(9:11)' 1]];
+end
+
 % Compute the camera position and rotation (in the ways we usually use
 % them) so that we can compare against the other calibration methods
 %{
@@ -206,42 +416,4 @@ omega = mat2rod(camRot3d);
 fx = K(1,1); fy = K(2,2); cx = K(1,3); cy = K(2,3); s = K(1,2);
 intrinsics =  [omega fx fy cx cy s];
 results = [camPos3d' intrinsics];
-%}
-
-%%
-% Decompose
-[K,R,IminusC]= Pdecomp(C);
-camPos3d = -IminusC(:,4);
-camRot3d = R;
-K = K ./ K(3,3);
-omega = mat2rod(camRot3d);
-fx = K(1,1); fy = K(2,2); cx = K(1,3); cy = K(2,3); s = K(1,2);
-intrinsics =  [omega fx fy cx cy s];
-results = [camPos3d' intrinsics];
-
-% Save results
-save('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults.mat',"results");
-
-function r = reproject(X,C)
-    y = C * [X; 1];
-    r = y ./ y(3);
-end
-
-%{
-% At first I began implementing this myself... how silly.
-%%
-% Solve the linear system to get the camera parameters using these
-% correspondences
-for i=1:size(imPts,1)
-    C(i*3-2,:) = [worldPts(i,1) worldPts(i,2) worldPts(i,3) 1 0 0 0 0 0 0 0 0 zeros(1,i-1) -imPts(i,1) zeros(1,size(imPts,1)-i+1)];
-    C(i*3-1,:) = [0 0 0 0 worldPts(i,1) worldPts(i,2) worldPts(i,3) 1 0 0 0 0 zeros(1,i-1) -imPts(i,2) zeros(1,size(imPts,1)-i+1)];
-    C(i*3,:) =   [0 0 0 0 0 0 0 0 worldPts(i,1) worldPts(i,2) worldPts(i,3) 1 zeros(1,i-1) -1          zeros(1,size(imPts,1)-i+1)];
-    %{
-    b(i*3-2,:) = [imPts(i,1)];
-    b(i*3-1,:) = [imPts(i,2)];
-    b(i*3,:) = [1];
-    %}
-end
-b = zeros(size(C,1),1);
-x = C\b;
 %}

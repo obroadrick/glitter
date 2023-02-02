@@ -1,5 +1,5 @@
 
-skew = true;
+skew = false;
 for index = 1:10
 %expdir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/odds/'];
 %expdir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan12data/' num2str(index) '/'];
@@ -57,4 +57,4 @@ printRow('range:',ranges);
 printRow('std:',stds);
 
 checkerResults = allData;
-save(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults.mat'], "checkerResults");
+save(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResultsNoSkew.mat'], "checkerResults");

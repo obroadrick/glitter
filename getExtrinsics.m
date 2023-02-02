@@ -16,7 +16,7 @@
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngle/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR/';
-%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/';\
+%expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/odds/';
 
@@ -26,7 +26,7 @@ for index = 9:9
 expir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(index) '/'];
 expdir = expir;
 
-skew = true;
+skew = false;
 % get P
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 % get camParams
@@ -34,11 +34,11 @@ P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/path
 %camParams = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/camParams_07_25_2022.mat').camParams;%july25test
 
 if ~skew
-    camParams = matfile([expir 'camParams.mat']).camParams;%ASSUME NO SKEW
-    camParamsErrors = matfile([expir 'camParamsErrors.mat']).camParamsErrors;%ASSUME NO SKEW
+    camParams = matfile([expir 'camParams.mat']).camParams;
+    camParamsErrors = matfile([expir 'camParamsErrors.mat']).camParamsErrors;
 else
-    camParams = matfile([expir 'camParamsSkew.mat']).camParams;%WITH SKEW ESTIMATE
-    camParamsErrors = matfile([expir 'camParamsErrorsSkew.mat']).camParamsErrors;%WITH SKEW ESTIMATE
+    camParams = matfile([expir 'camParamsSkew.mat']).camParams;
+    camParamsErrors = matfile([expir 'camParamsErrorsSkew.mat']).camParamsErrors;
 end
 % get reference image path
 %imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/checkerboards/onGlitterPlane.JPG';
@@ -58,11 +58,14 @@ if ~isfile([expdir '16pts.mat'])
     cmd = sprintf('python3.10 /Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/16ptsfinder.py "%s" "%s"', impath, [expdir '16pts.mat']);
     system(cmd);
 end
+%{
 allPts = matfile([expir '16Pts.mat']).arr;
 pin = allPts(1,:);
 pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
 piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
 pin = double([pinx' piny']);
+%}
+pin = loadPoints([expir '16Pts.mat'], true);
 
 %% run computation
 % run findCamPos which computes the camPos and camRot for these inputs

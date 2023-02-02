@@ -25,4 +25,24 @@ function tform = getTransform(P, pin)
     end
     % homography
     tform = fitgeotrans(pin, pout, 'projective');
+
+    % Visualize the homography we found
+    vis(pin, pout);
+end
+
+function vis(pin, pout)
+    figure; 
+    tiledlayout(1,2,"TileSpacing","tight","Padding","tight");
+    nexttile;
+    hold on;
+    for ix=1:size(pin,1)
+        plot(pin(ix,1), pin(ix,2));
+        text(pin(ix,1), pin(ix,2), num2str(ix));
+    end
+    nexttile;
+    hold on;
+    for ix=1:size(pout,1)
+        plot(pout(ix,1), pout(ix,2));
+        text(pout(ix,1), pout(ix,2), num2str(ix));
+    end
 end

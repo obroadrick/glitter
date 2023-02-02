@@ -7,6 +7,10 @@ import matplotlib as mpl
 import pandas as pd
 from dataclasses import dataclass
 
+
+import warnings
+warnings.filterwarnings("ignore")
+
 @dataclass
 class Marker:
     BL: list[float] = list[0.0, 0.0]
@@ -14,9 +18,11 @@ class Marker:
     TR: list[float] = list[0.0, 0.0]
     BR: list[float] = list[0.0, 0.0]
 
+"""
 def getPoints(arr, loc):
     scores = [np.sqrt((pt[0] - loc[0])**2 + (pt[1] - loc[1])**2) for pt in arr]
     return arr[np.argmin(scores)], np.mean(scores)
+"""
 
 def findMarkerCorners(pts):
     BL, TL, TR, BR = Marker(), Marker(), Marker(), Marker()
@@ -31,10 +37,10 @@ def findMarkerCorners(pts):
     
     if(len(np.where(_ids == 2)[0]) > 0):
         TRidx = np.where(_ids == 2)[0][0]
-        TR.BL, _ = getPoints(pts[TRidx], [w/2, h/2]) #we're assuming that the bottom left is closest to the center of image
-        TR.BR = getPoints(pts[TRidx], [w, h/2])[0]
-        TR.TR = getPoints(pts[TRidx], [w, 0])[0]
-        TR.TL = getPoints(pts[TRidx], [3*w/4, 0])[0]
+        TR.BL = pts[TRidx][3]#getPoints(pts[TRidx], [w/2, h/2]) #we're assuming that the bottom left is closest to the center of image
+        TR.BR = pts[TRidx][2]#getPoints(pts[TRidx], [w, h/2])[0]
+        TR.TR = pts[TRidx][1]#getPoints(pts[TRidx], [w, 0])[0]
+        TR.TL = pts[TRidx][0]#getPoints(pts[TRidx], [3*w/4, 0])[0]
     else:
         TR.BL = [-1, -1]
         TR.BR = [-1, -1]
@@ -44,10 +50,10 @@ def findMarkerCorners(pts):
     if(len(np.where(_ids == 1)[0]) > 0):
         TLidx = np.where(_ids == 1)[0][0]
         
-        TL.BL = getPoints(pts[TLidx], [0, h/2])[0]
-        TL.BR = getPoints(pts[TLidx], [w/2, h/2])[0]
-        TL.TR = getPoints(pts[TLidx], [w/4, 0])[0]
-        TL.TL = getPoints(pts[TLidx], [0, 0])[0]
+        TL.BL = pts[TLidx][3] #getPoints(pts[TLidx], [0, h/2])[0]
+        TL.BR = pts[TLidx][2] #getPoints(pts[TLidx], [w/2, h/2])[0]
+        TL.TR = pts[TLidx][1] #getPoints(pts[TLidx], [w/4, 0])[0]
+        TL.TL = pts[TLidx][0] #getPoints(pts[TLidx], [0, 0])[0]
     else:
         TL.BL = [-1, -1]
         TL.BR = [-1, -1]
@@ -57,10 +63,10 @@ def findMarkerCorners(pts):
     if(len(np.where(_ids == 0)[0]) > 0):
         BLidx = np.where(_ids == 0)[0][0]
     
-        BL.BR = getPoints(pts[BLidx], [w/2, h])[0]
-        BL.TR = getPoints(pts[BLidx], [w/4, 3 * h/4])[0]
-        BL.TL = getPoints(pts[BLidx], [0, 3*h/4])[0]
-        BL.BL = getPoints(pts[BLidx], [0, h])[0]
+        BL.BR = pts[BLidx][2] #getPoints(pts[BLidx], [w/2, h])[0]
+        BL.TR = pts[BLidx][1] #getPoints(pts[BLidx], [w/4, 3 * h/4])[0]
+        BL.TL = pts[BLidx][0] #getPoints(pts[BLidx], [0, 3*h/4])[0]
+        BL.BL = pts[BLidx][3] #getPoints(pts[BLidx], [0, h])[0]
     else:
         BL.BL = [-1, -1]
         BL.BR = [-1, -1]
@@ -71,10 +77,10 @@ def findMarkerCorners(pts):
     if(len(np.where(_ids == 3)[0]) > 0):
         BRidx = np.where(_ids == 3)[0][0]
     
-        BR.BR = getPoints(pts[BRidx], [w, h])[0]
-        BR.TR = getPoints(pts[BRidx], [w, 3*h/4])[0]
-        BR.TL = getPoints(pts[BRidx], [3*w/4, h/2])[0]
-        BR.BL = getPoints(pts[BRidx], [w/2, h])[0]
+        BR.BR = pts[BRidx][2] #getPoints(pts[BRidx], [w, h])[0]
+        BR.TR = pts[BRidx][1] #getPoints(pts[BRidx], [w, 3*h/4])[0]
+        BR.TL = pts[BRidx][0] #getPoints(pts[BRidx], [3*w/4, h/2])[0]
+        BR.BL = pts[BRidx][3] #getPoints(pts[BRidx], [w/2, h])[0]
     else:
         BR.BL = [-1, -1]
         BR.BR = [-1, -1]
@@ -82,6 +88,7 @@ def findMarkerCorners(pts):
         BR.TL = [-1, -1]
     
     
+    """
     cv2.circle(frameCol, (int(BL.BL[0]), int(BL.BL[1])), 10, (255, 0, 0), 9)
     cv2.circle(frameCol, (int(BL.TL[0]), int(BL.TL[1])), 10, (255, 0, 0), 9)
     cv2.circle(frameCol, (int(BL.TR[0]), int(BL.TR[1])), 10, (255, 0, 0), 9)
@@ -110,6 +117,7 @@ def findMarkerCorners(pts):
     #return(Marker(BL, TL, TR, BR))
     #print(scoresBR)
     #print(scoresBL)
+    """
     
     return([BL, TL, TR, BR])
     
@@ -134,8 +142,6 @@ frame = cv2.cvtColor(frameCol, cv2.COLOR_BGR2GRAY)
 #plt.imshow(frame)
 
 bboxs, ids, rejected = cv2.aruco.detectMarkers(frameCol, aruco_dict, parameters = para)
-print(bboxs)
-print(ids)
 refPts = []
 h = 0
 w = 0
@@ -168,7 +174,6 @@ if  len(bboxs)!=0:
 
     h, w = frameCol.shape[:2]
     #print(ids)
-    #print(refPts)
     fidMarkerPos = findMarkerCorners(refPts)
 
     df = pd.DataFrame(columns = [" ", "Bottom Left Marker", "Top Left Marker", "Top Right Marker", "Bottom Right Marker"])
@@ -184,7 +189,7 @@ if  len(bboxs)!=0:
     import scipy.io
     scipy.io.savemat(saveName, mdict={'arr': mat_arr})
 
-    print('Success - found ArUco Markers!')
+    print('Found ArUco markers...')
     
     #exit()
 else:

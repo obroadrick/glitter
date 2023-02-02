@@ -25,33 +25,23 @@ function [t, R, terr, Rerr, Rvec] = findCamPos(P, camParams, camParamsErrors, im
     origin_in_world_coords = [worldPoints3d(indexOrigin,:)];
     xfar_in_world_coords = [worldPoints3d(indexXfar,:)];
     yfar_in_world_coords = [worldPoints3d(indexYfar,:)];
-    
-    
-    %{ 
-    % OLD WAY: get rotation and translation from checkerboard coords to 
-    % camera coords
-    [~,~] = estimateWorldCameraPose(imagePoints,worldPoints3d,params);
-    [Rc, translationVector] = extrinsics(imagePoints,worldPoints,params);
-    [~, location] = extrinsicsToCameraPose(Rc, translationVector);
-    %}
+
     % new way, to base the extrinsics off the whole checkerboard set 
     % optimization and get error estimates accordingly
     onGlitPlaneIndex = 1;% requires naming the on-glitter-plane 
                          % checkerboard image alphabetically first
-    Rvector = camParams.RotationVectors(onGlitPlaneIndex,:);
-    Rc = rotationVectorToMatrix(Rvector);
+    Rvec = camParams.RotationVectors(onGlitPlaneIndex,:);
+    Rc = rotationVectorToMatrix(Rvec);
     translationVector = camParams.TranslationVectors(onGlitPlaneIndex,:);
     [~, location] = extrinsicsToCameraPose(Rc, translationVector);
-    % get/name some of the returns:
+    % get error estimates for returns
     terr = camParamsErrors.ExtrinsicsErrors.TranslationVectorsError(onGlitPlaneIndex,:);
     Rerr = camParamsErrors.ExtrinsicsErrors.RotationVectorsError(onGlitPlaneIndex,:);
-    Rvec = Rvector;
 
-    %%
     % get homography from image coordinates to glitter coordinates
     tform = getTransform(P,pin);
 
-    % find the points (in world coordinates) directly back on the glitter
+    % find the points (in checker coordinates) directly back on the glitter
     % (perpendicularly projected on the glitter plane) (we can use these 
     % points to find the rotation in the xy-plane from glitter coordinates 
     % to world/checkerboard coordinates)
@@ -60,7 +50,7 @@ function [t, R, terr, Rerr, Rvec] = findCamPos(P, camParams, camParamsErrors, im
     yfar_in_world_coords = yfar_in_world_coords + [0 0 M.CALIBRATION_BOARD_THICKNESS];
 
     % now we can find the corresponding image coordinates for those points
-    % since we know the rotation and intrinsic matrix K from this
+    % since we know the rotation and intrinsic matrix K for this
     % checkerboard calibration
     rotationMatrix = Rc;
     origin_in_image_coords = worldToImage(params.Intrinsics,rotationMatrix,translationVector,origin_in_world_coords);
