@@ -57,6 +57,35 @@ function [t, R, terr, Rerr, Rvec] = findCamPos(P, camParams, camParamsErrors, im
     xfar_in_image_coords = worldToImage(params.Intrinsics,rotationMatrix,translationVector,xfar_in_world_coords);
     yfar_in_image_coords = worldToImage(params.Intrinsics,rotationMatrix,translationVector,yfar_in_world_coords);
     
+    %%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%% INTERMEDIATE VISUALIZATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Are the points in image coordinates corresponding to the orthogonally
+    % projected checkerboard points on the glitter plane in reasonable
+    % positions? Are they not? I hope they are. :-|
+    figure;impath=imPath;
+    imagesc(imread(impath));
+    hold on;
+    plot(xfar_in_image_coords(1),xfar_in_image_coords(2),'g+','LineWidth',2);
+    plot(yfar_in_image_coords(1),yfar_in_image_coords(2),'g+','LineWidth',2);
+    plot(origin_in_image_coords(1),origin_in_image_coords(2),'g+','LineWidth',2);
+
+    % also plot just the image points that were detected
+    xfar_detected = imagePoints(indexXfar,:);
+    yfar_detected = imagePoints(indexYfar,:);
+    origin_detected = imagePoints(indexOrigin,:);
+    plot(xfar_detected(1),xfar_detected(2),'RX','LineWidth',2);
+    plot(yfar_detected(1),yfar_detected(2),'RX','LineWidth',2);
+    plot(origin_detected(1),origin_detected(2),'RX','LineWidth',2);
+
+    % ok and plot the detected aruco marker points
+    plot(pin(:,1),pin(:,2),'cx','linewidth',2)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%
+
     % use our homograpy from image coordinates to glitter plane coordinates
     % to get the checkerboard points (which have projected onto the glitter
     % plane) in glitter coordinates.

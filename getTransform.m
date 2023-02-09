@@ -33,14 +33,14 @@ end
 function vis(pin, pout)
     figure; 
     tiledlayout(1,2,"TileSpacing","tight","Padding","tight");
-    nexttile;
-    hold on;
+    nexttile;title('pin (image points)');
+    hold on;set(gca, 'YDir','reverse');
     for ix=1:size(pin,1)
         plot(pin(ix,1), pin(ix,2));
         text(pin(ix,1), pin(ix,2), num2str(ix));
     end
     nexttile;
-    hold on;
+    hold on;title('pout (world points)');
     for ix=1:size(pout,1)
         plot(pout(ix,1), pout(ix,2));
         text(pout(ix,1), pout(ix,2), num2str(ix));

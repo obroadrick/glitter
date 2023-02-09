@@ -7,12 +7,12 @@ trainSet = false;
 if trainSet 
     sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/sparkleResults').sparkleResults;
     checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/checkerResults').checkerResults;
-    sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_charCamPosOptimization").results;
+    sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_charMeasOptimization").results;
 else
     sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/sparkleResults').sparkleResults;
     %checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults').checkerResults;
     checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResultsNoSkew').checkerResults;
-    sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charCamPosOptimization").results;
+    sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization").results;
     %threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults.mat").results;
     threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults4.mat").results;
 end

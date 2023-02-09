@@ -120,7 +120,48 @@ end
 %%
 % Get the camera matrix
 %[C, r] = estimateCameraMatrix(imPts,worldPts);
-C = solveForCameraMatrix(imPts,worldPts);
+%C = solveForCameraMatrix(imPts,worldPts);
+
+%%
+% Instead of camera matrix, now solve for the homography for each image
+% separately to get a lower bound on the reprojection error
+for i=1:numIms
+    if size(keptImPoints{i},1) > 0
+        tforms{i} = fitgeotrans(keptWorldPoints{i}(:,1:2),keptImPoints{i}, 'projective');
+        H{i} = tforms{i}.T;
+    end
+end
+%
+% Display images with detected ArUco marker points and with reprojected
+% points according to their respective homographies
+figure;
+tiledlayout(5,5, 'TileSpacing','tight','Padding','tight');
+e = 0;
+n = 0;
+for i=1:numIms
+    % Show image
+    ax = nexttile;
+    imagesc(ims{i}); hold on;
+    for ix=1:size(keptImPoints{i},1)
+        % Show the detected ArUco image point
+        plot(keptImPoints{i}(ix,1), keptImPoints{i}(ix,2),'cX','MarkerSize', 20, 'LineWidth',2);
+
+        % Show the world point reprojected according to our camera matrix
+        %reproj = reproject(keptWorldPoints{i}(ix,1:2)',H{i});
+        reproj = transformPointsForward(tforms{i}, keptWorldPoints{i}(ix,1:2));
+        e = e + norm(reproj' - keptImPoints{i}(ix,:)');
+        n = n + 1;
+        plot(reproj(1), reproj(2), 'r+', 'MarkerSize', 15, 'LineWidth',2);
+    end
+
+    % Draw plot
+    set(ax,'xticklabel',[],'yticklabel',[]);
+    title(d(i).name);
+    drawnow;
+end
+
+avgErr = e / size(imPts,1);
+
 
 %%
 % Decompose
@@ -330,7 +371,42 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% functions: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%
+% Display images with detected ArUco marker points and with reprojected
+% points according to their respective homographies
+figure;
+tiledlayout(1,3, 'TileSpacing','tight','Padding','tight');
+for i=[2,5,13]
+    % Show image
+    ax = nexttile;
+    imagesc(ims{i}); hold on;
+
+    for ix=1:size(keptImPoints{i},1)
+        % Show the detected ArUco image point
+        plot(keptImPoints{i}(ix,1), keptImPoints{i}(ix,2),'cX','MarkerSize', 20, 'LineWidth',2);
+
+        % Show the world point reprojected according to our camera matrix
+        reproj = reproject(keptWorldPoints{i}(ix,1:2)',H{i});
+        plot(reproj(1), reproj(2), 'r+', 'MarkerSize', 15, 'LineWidth',2);
+    end
+
+    % Draw plot
+    set(ax,'xticklabel',[],'yticklabel',[]);
+    title(d(i).name);
+    drawnow;
+end
+
+
 function r = reproject(X,C)
+    if size(C,1) == 3 && size(C,2) == 3
+        disp(C)
+        disp(X)
+        y = C * [X; 1];
+        r = y ./ y(3);
+        r = r(1:2);
+        return
+    end
     y = C * [X; 1];
     r = y ./ y(3);
     r = r(1:2);

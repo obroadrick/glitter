@@ -20,13 +20,14 @@
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/';
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/odds/';
 
-
-for index = 9:9
+%index=2;
+numcases = 10;
+for index = 1:1
 %expir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan12data/' num2str(index) '/'];
 expir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(index) '/'];
 expdir = expir;
 
-skew = false;
+skew = true;
 % get P
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 % get camParams
@@ -95,4 +96,4 @@ else
     save([expir 'camPosErrSkew'], "camPosErr");
     save([expir 'camRotErrSkew'], "camRotErr");
 end
-end
+end% end big for loop

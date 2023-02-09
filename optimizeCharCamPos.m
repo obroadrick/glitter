@@ -45,7 +45,7 @@ lightingMeans = matfile([chardir 'lightingmeans.mat']).means;
 
 % do only the translation-estimating part of a sparkle calibration
 warning('off','MATLAB:singularMatrix');
-set(0,'DefaultFigureVisible','on');
+set(0,'DefaultFigureVisible','off');
 other.inlierThreshold = 20;
 % pass a setting to get a quick estimate rather than a fully-fine-tuned
 % estimate of the camera position
@@ -78,55 +78,56 @@ end
 % then use error in the avg camera position estimate that results as the 
 % error function (for time, simply using the nearest-point-to-lines
 % heuristic to get the sparkle estimate of camera position)
-set(0,'DefaultFigureVisible','on');
+set(0,'DefaultFigureVisible','off');
 %{
 errFun = @(x) computeError(x(1), x(2), x(3), 664.32, 373.68,...
                         chardir, expdir, mostInliersLightingMeans, ...
                         mostInliersSpecPos, camPos, lightPos);
 %}
-%%
+%% do the "training" optimization
 GLIT_TO_MON_PLANES = charM.GLIT_TO_MON_PLANES;
 GLIT_TO_MON_EDGES_X = charM.GLIT_TO_MON_EDGES_X;
 GLIT_TO_MON_EDGES_Y = charM.GLIT_TO_MON_EDGES_Y;
 MON_WIDTH_MM = charM.MON_WIDTH_MM;
 MON_HEIGHT_MM = charM.MON_HEIGHT_MM;
-%{
-campos and measurements
+
+%campos and measurements
 errFun = @(x) computeError(x(4), x(5), x(6),MON_WIDTH_MM, ...
                               MON_HEIGHT_MM, chardir, expdir, ...
                               mostInliersLightingMeans, ...
                               mostInliersSpecPos, x(1:3), lightPos, ...
                               train, mostInliersImageSpecPosAll, false);
-%}
+%{
 errFun = @(x) computeError(x(1), x(2), x(3),MON_WIDTH_MM, ...
                               MON_HEIGHT_MM, chardir, expdir, ...
                               mostInliersLightingMeans, ...
                               mostInliersSpecPos, charCamPos, lightPos, ...
                               train, mostInliersImageSpecPosAll, false);
-x0 = [GLIT_TO_MON_PLANES, ...
+%}
+x0 = [charCamPos, GLIT_TO_MON_PLANES,...
             GLIT_TO_MON_EDGES_X,...
             GLIT_TO_MON_EDGES_Y];
 options = optimset('PlotFcns',@optimplotfval);
 
 xf = fminsearch(errFun, x0, options);
 
-%%
+%% get results of the previous optimization to visualize
 % compute the error for the "train" set based on the new characterization 
 % found by the optimization using the "train" set (to visualize)
-%{
-campos and measurements
+
+%campos and measurements
 [error,results] = computeError(xf(4),xf(5),xf(6),MON_WIDTH_MM,...
                               MON_HEIGHT_MM, chardir, expdir, ...
                               mostInliersLightingMeans, ...
                               mostInliersSpecPos, xf(1:3), lightPos, ...
                               train, mostInliersImageSpecPosAll, true);
-%}
+%{
 [error,results] = computeError(xf(1),xf(2),xf(3),MON_WIDTH_MM,...
                               MON_HEIGHT_MM, chardir, expdir, ...
                               mostInliersLightingMeans, ...
                               mostInliersSpecPos, charCamPos, lightPos, ...
                               train, mostInliersImageSpecPosAll, true);
-
+%}
 save("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_charMeasOptimization","results");
 
 %%
@@ -148,7 +149,7 @@ end
 
 % do only the translation-estimating part of a sparkle calibration
 warning('off','MATLAB:singularMatrix');
-set(0,'DefaultFigureVisible','on');
+set(0,'DefaultFigureVisible','off');
 other.inlierThreshold = 20;
 % pass a setting to get a quick estimate rather than a fully-fine-tuned
 % estimate of the camera position
@@ -176,31 +177,87 @@ for index=1:numcases
     mostInliersLightingMeansTest{index}(:,:) = lightingMeans(:,mostInliersOverallIdxsTest{index});
 end
 
-%%
+%% get results on the "test" set to visualize/compare also
 % compute the error for the "test" set based on the new characterization f
 % ound by the optimization using the "train" set
-%{
-campos and measurements
+
+%campos and measurements
 [error,results] = computeError(xf(4),xf(5),xf(6),MON_WIDTH_MM,...
                               MON_HEIGHT_MM, chardir, expdirTest, ...
                               mostInliersLightingMeansTest, ...
                               mostInliersSpecPosTest, xf(1:3), lightPosTest, ...
                               test, mostInliersImageSpecPosTest, true);
-%}
+%{
 [error,results] = computeError(xf(1),xf(2),xf(3),MON_WIDTH_MM,...
                               MON_HEIGHT_MM, chardir, expdirTest, ...
                               mostInliersLightingMeansTest, ...
                               mostInliersSpecPosTest, charCamPos, lightPosTest, ...
                               test, mostInliersImageSpecPosTest, true);
+%}
 save("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization","results");
 
 % for this "test" set, plot all the newly solved-for parameters
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
+%%
 function [error, results] = computeError(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,...
+                              GLIT_TO_MON_EDGES_Y,MON_WIDTH_MM,...
+                              MON_HEIGHT_MM, chardir, expdir, ...
+                              mostInliersLightingMeans, ...
+                              mostInliersSpecPos, camPos, lightPos, ...
+                              input, mostInliersImageSpecPos, getResults)
+    
+    charM = setMeasurements(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,...
+                              GLIT_TO_MON_EDGES_Y);
+    % track sums of camera position estimates to compute average at end
+    camPosEst = [0 0 0];
+    knownCamPos = [0 0 0];
+    numcases = 10;
+    for index=1:numcases
+        % recompute normals only of the sparkling specs
+        mostInliersNewNormals = computeSomeNormals(mostInliersLightingMeans{index}, mostInliersSpecPos{index}, camPos, charM);
+    
+        % re-reflect the rays for the sparkling specs
+        R = reflect(mostInliersSpecPos{index}, mostInliersNewNormals, lightPos{index});
+        R = reshape(R,size(R,1),size(R,3));
+        
+        % compute the new camera position estimate according to these rays
+        curCamPosEst = nearestPointManyLines(mostInliersSpecPos{index}, mostInliersSpecPos{index}+R);
+        camPosEsts{index} = curCamPosEst;
+        knownCamPoss{index} = matfile([expdir{index} '/' num2str(index) '/camPosSkew.mat']).camPos; 
+        if getResults
+            % also compute the intrinsics
+            results(index,:) = [curCamPosEst ...
+                        linearEstimateRKglitter(input(index).impath,...
+                                                curCamPosEst, ...
+                                                getPoints(expdir{index}), ...
+                                                mostInliersSpecPos{index}, ...
+                                                mostInliersImageSpecPos{index}, ...
+                                                expdir{index}, ...
+                                                input(index).skew)];
+        end
+    end
+
+    % Find differences between each sparkle calibration and get them to
+    % approach the single average of the checkerboard estimates
+    checkerAvg = 0;
+    for i=1:numcases
+        checkerAvg = checkerAvg + knownCamPoss{i};
+    end
+    checkerAvg = checkerAvg / numcases;
+    diffSum = 0;
+    for i=1:numcases
+        curDiff = norm(camPosEsts{i} - checkerAvg);
+        diffSum = diffSum + curDiff;
+    end
+
+    % the overall error is the difference in the average camera position
+    % estimates of each method.
+    error = diffSum;
+end
+
+function [error, results] = computeErrorOriginal(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,...
                               GLIT_TO_MON_EDGES_Y,MON_WIDTH_MM,...
                               MON_HEIGHT_MM, chardir, expdir, ...
                               mostInliersLightingMeans, ...
