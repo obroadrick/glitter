@@ -22,7 +22,14 @@ for i=1:numSubsets
 
     % Detect calibration pattern in images
     detector = vision.calibration.monocular.CheckerboardDetector();
-    [imagePoints, imagesUsed] = detectPatternPoints(detector, imageFileNames);
+    if ~isfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i) '/imagePoints.mat'])
+        [imagePoints, imagesUsed] = detectPatternPoints(detector, imageFileNames);
+        save(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i) '/imagePoints.mat'],"imagePoints");
+        save(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i) '/imagesUsed.mat'],"imagesUsed");
+    else
+        imagePoints = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i) '/imagePoints.mat']).imagePoints;
+        imagesUsed = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i) '/imagesUsed.mat']).imagesUsed;
+    end
     imageFileNames = imageFileNames(imagesUsed);
     
     % Read the first image to obtain image size
@@ -35,7 +42,7 @@ for i=1:numSubsets
     
     % Calibrate the camera
     [cameraParams, imagesUsed, estimationErrors] = estimateCameraParameters(imagePoints, worldPoints, ...
-        'EstimateSkew', false, 'EstimateTangentialDistortion', false, ...
+        'EstimateSkew', true, 'EstimateTangentialDistortion', false, ...
         'NumRadialDistortionCoefficients', 2, 'WorldUnits', 'millimeters', ...
         'InitialIntrinsicMatrix', [], 'InitialRadialDistortion', [], ...
         'ImageSize', [mrows, ncols]);
@@ -50,7 +57,7 @@ for i=1:numSubsets
     save([chardir 'camParams'], "camParams");
     save([chardir 'camParamsErrors'], "camParamsErrors");
 
-    %{
+    
     % View reprojection errors
     h1=figure; showReprojectionErrors(cameraParams);
     

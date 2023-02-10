@@ -152,10 +152,11 @@ tuned_results = fminsearch(f, C(1:11), options);
 % system to initialize the rest of the parameters and doing simplex search
 % over all of the parameters at once using the reprojection error as the
 % loss function.
+%{
 f = @(x) reprojectionErrorRadialDistortion(x(1:11), x(12:13), imPts, worldPts);
 options = optimset('PlotFcns',@optimplotfval);
 tuned_results = fminsearch(f, [C(1:11) 0 0], options);
-
+%}
 
 %%
 % Save results
@@ -198,11 +199,11 @@ for i=[2,5,13]
 end
 
 %%
-%{
 % What if we take random subsets of the available points? This way we get
 % at least some sense of the distribution of estimates by this calibration
 % method...
 % Divide into N random subsets (of roughly equal size)
+return
 N = 4;
 n = size(imPts,1); 
 m = floor(n/N);
@@ -225,7 +226,8 @@ for ix=1:N
     results(ix,:) = [camPos3d' intrinsics];
 end
 save(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults' num2str(N) '.mat'],"results");
-%}
+
+%%
 
 %{
 %% See how checkerboard parameters and glitter parameters reproject these 
@@ -279,11 +281,14 @@ tuned_results = fminsearch(f, x0, options);
 %}
 % What if we optimized over the very 3d relative positions of the ArUco
 % markers themselves?
+%{
 f = @(x) reprojectionErrorMoveMarkers3d(x, imPts, imnames, arucoPoints);
 options = optimset('PlotFcns',@optimplotfval);
 x0 = reshape([getFiducialMarkerPts() zeros(size(getFiducialMarkerPts(),1),1)], [], 1);
 tuned_results = fminsearch(f, x0, options);
+%}
 
+%{
 %%
 % TEMPORARY IN-LINE EXECUTION OF THE ABOVE LOSS FUNCTION
 f(tuned_results);
@@ -310,6 +315,8 @@ end
 % Divide by number of points reprojected so that e gives the average
 % reprojection error (more interpretable)
 e = e / size(imPts,1);
+%}
+
 
 %{
 xf = tuned_results;

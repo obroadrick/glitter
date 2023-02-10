@@ -2,7 +2,7 @@
 % where all these camera position estimates are at...
 
 % hope to debug, planning to cry
-
+M=matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/measurements.mat').M;
 figure;
 hold on;
 axis vis3d;
@@ -24,7 +24,9 @@ tx = [-200 -200 600 600];
 ty = [-120 -120 -120 -120];
 tz = [-100 700 700 -100];
 tc = ['k'];
+patch(tx,ty,tz,tc,'DisplayName','Monitor');
 hold on;
+%{
 % now draw the checkboard x and y axes on the glitter plane
 plot3([origin_in_glitter_coords(1) xfar_in_glitter_coords(1)],...
     [origin_in_glitter_coords(2) xfar_in_glitter_coords(2)],...
@@ -67,10 +69,70 @@ ezc = (rotation_g2c * ez')';
 quiver3(lxc,lyc,lzc,[exc(1) eyc(1) ezc(1)],[exc(2) eyc(2) ezc(2)],[exc(3) eyc(3) ezc(3)], 'Color', 'red','LineWidth',3);
 text(lxc+[exc(1) eyc(1) ezc(1)],lyc+[exc(2) eyc(2) ezc(2)],lzc+[exc(3) eyc(3) ezc(3)],["xc","yc","zc"],"FontSize",14,"Color",'c');
 % show the computed camera position as a dot too
-scatter3([camPos(1)], [camPos(2)], [camPos(3)], [80], 'filled')
+%scatter3([camPos(1)], [camPos(2)], [camPos(3)], [80], 'filled')
 % finish up the figure
+%}
+
+trainSet = true;
+hold on;
+if trainSet 
+    sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/sparkleResults').sparkleResults;
+    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/checkerResults').checkerResults;
+    sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_charMeasOptimization").results;
+else
+    sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/sparkleResults').sparkleResults;
+    %checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults').checkerResults;
+    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResultsNoSkew').checkerResults;
+    sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization").results;
+    %threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults.mat").results;
+    threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults4.mat").results;
+end
+
+
+% camera position
+hold on;
+title('camera position (tx,ty,tz)');
+plot3(sparkleResults(:,1),sparkleResults(:,2),sparkleResults(:,3),'r*','markersize',10,'linewidth',2);
+plot3(sparkleResultsOrig(:,1),sparkleResultsOrig(:,2),sparkleResultsOrig(:,3),'b*','markersize',10,'linewidth',2);
+plot3(checkerResults(:,1),checkerResults(:,2),checkerResults(:,3),'gS','markersize',10,'linewidth',2);
+if exist("threedCalResults", "var")
+    plot3(threedCalResults(:,1),threedCalResults(:,2),threedCalResults(:,3),'mX','MarkerSize',10,'LineWidth',2);
+end
+xlabel('x (mm)');ylabel('y (mm)');zlabel('z (mm)');
+
+trainSet = false;
+hold on;
+if trainSet 
+    sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/sparkleResults').sparkleResults;
+    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/checkerResults').checkerResults;
+    sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_charMeasOptimization").results;
+else
+    sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/sparkleResults').sparkleResults;
+    %checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults').checkerResults;
+    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResultsNoSkew').checkerResults;
+    sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization").results;
+    %threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults.mat").results;
+    threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults4.mat").results;
+end
+
+
+% camera position
+hold on;
+title('camera position (tx,ty,tz)');
+plot3(sparkleResults(:,1),sparkleResults(:,2),sparkleResults(:,3),'r*','markersize',10,'linewidth',2);
+plot3(sparkleResultsOrig(:,1),sparkleResultsOrig(:,2),sparkleResultsOrig(:,3),'b*','markersize',10,'linewidth',2);
+plot3(checkerResults(:,1),checkerResults(:,2),checkerResults(:,3),'gS','markersize',10,'linewidth',2);
+if exist("threedCalResults", "var")
+    plot3(threedCalResults(:,1),threedCalResults(:,2),threedCalResults(:,3),'mX','MarkerSize',10,'LineWidth',2);
+end
+xlabel('x (mm)');ylabel('y (mm)');zlabel('z (mm)');
+
+
+
+
+
 axis equal;
 axis vis3d;
 title('visualization of rotations and translations');
-legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
+%legendItems(size(legendItems,2)+1) = patch(tx,ty,tz,tc,'DisplayName','Table');
 

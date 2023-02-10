@@ -84,7 +84,6 @@ save([P.data 'camPos_' datestr(now, 'mm_dd_yyyy')], "camPos");
 save([P.data 'camRot_' datestr(now, 'mm_dd_yyyy')], "camRot");
 %}
 % also store the pos and rot in the experiment directory;
-%TODO actually check when it is with and without skew estimate
 if ~skew
     save([expir 'camPos'], "camPos");
     save([expir 'camRot'], "camRot");
