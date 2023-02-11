@@ -1,17 +1,21 @@
-% single image camera calibration with glitter
-testcases = loadTestCases();
-% automatically perform 10 calibrations for 10 camera positions
-for index = 1:10
+% Single-image camera calibration with glitter
 
+% Automatically perform 10 calibrations for 10 camera positions
+testcases = loadTestCases();
+useOptimizedNormals = true;
+for index = 1:10
 input = testcases.feb10(index);
 expdir = input.expdir;
 impath = [expdir input.impath];
 lightPos = matfile([expdir input.lightPosFname]).lightPos;
 skew = input.skew; % whether we assume zero skew
 compare = false; % whether this script will output comparisons with checkerboard results
-
-% Print name of test case being worked on right now
 fprintf('\n%s\n',input.name);
+if useOptimizedNormals
+    resultsSaveName = ['optimizedSparkleResults' num2str(index)];
+else
+    resultsSaveName = ['sparkleResults' num2str(index)];
+end
 
 % Find ArUco markers (if they haven't been detected and saved already)
 if ~isfile([expdir '16pts.mat'])
@@ -39,12 +43,15 @@ if input.sixteen && isfile([expdir 'bright.JPG'])
     end
 end
 
-% Get paths for characterized spec locations and surface normals
+% Get characterization paths for spec locations and surface normals
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 
 %% Estimate translation
 other.inlierThreshold = 15;
 ambientImage = -1;
+if useOptimizedNormals
+    other.customNormals = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(new-1)/optimized_normals.mat';
+end
 [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew, other);
 
 %% Estimate rotation and intrinsics
@@ -52,7 +59,7 @@ rotAndIntrinsics2 = [camPosEst linearEstimateRKglitter(impath, camPosEst, pin, m
 
 %% Save results
 sparkleResults(index,:) = rotAndIntrinsics2';
-save([expdir 'sparkleResults' num2str(index)], "rotAndIntrinsics2");
+save([expdir saveName], "rotAndIntrinsics2");
 
 %% Optimize for the skew=0 case
 %{ 

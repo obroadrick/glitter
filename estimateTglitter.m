@@ -7,13 +7,6 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     M = matfile([expdir 'measurements.mat']).M;
 
     % read in image
-    %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/new_captures/circles_on_monitor/2022-06-10T18,17,57circle-calib-W1127-H574-S48.jpg';
-    %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july_characterization/pointLightSource2.JPG';
-    %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july12characterization/pointLightSource/DSC_2202.JPG';
-    %impath = [P.characterizationDirectory 'circlesOnMonitor/2022-07-11T16,42,12circle-calib-W1127-H574-S48.jpg'];
-    %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/xenon_06_23_2022/2022-06-23T14,15,20Single-Glitter.JPG';
-    %impath = '/Users/oliverbroadrick/Desktop/oliver-took-pictures/homographies and point captures/hilight.JPG';
-    %impath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july19characterization/circleOnMonitor/2022-07-19T13,54,52circle-calib-W1127-H574-S48.jpg';
     if ~exist('ambientImage','var') || (ambientImage == -1)
         im = rgb2gray(imread(impath));
     else
@@ -59,8 +52,12 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     title('directions from seen spec to matched spec (in glitter coords)');
     xlabel('direction in radians');
     
-    %%
-    allSpecNormals = matfile(P.specNormals).specNormals;
+    %% Get the specs' surface normals
+    if exist("other.customNormals", "var")
+        allSpecNormals = matfile(other.customNormals).specNormals;
+    else
+        allSpecNormals = matfile(P.specNormals).specNormals;
+    end
     specNormals = zeros(size(idx,1),K,3);
     for ix=1:size(idx,1)
         specNormals(ix,:,:) = allSpecNormals(idx(ix,:),:);

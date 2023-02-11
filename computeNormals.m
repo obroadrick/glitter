@@ -1,13 +1,19 @@
 % computes the glitter specs' surface normals given already found
 % spec locations and brightness distribution gaussian means
 % inputs: P, matlab struct with paths to the data (means, spec locs)
-function specNormalsPath = computeNormals(P, chardir, charM)
+function specNormalsPath = computeNormals(P, chardir, charM, passedCamPos, optionalName)
     means = matfile(P.means).means;
     C = matfile(P.imageCentroids).imageCentroids;
     %M = matfile(P.measurements).M;
     %M = matfile([chardir 'measurements.mat']).M;
     M = charM;% now an argument so that re-characterizing according to new measurement sets is easy
-    cam = matfile([chardir 'camPos.mat']).camPos;
+    % If a camera position is passed, use it; otherwise use the camera 
+    % position in the characterization directory.
+    if exist("passedCamPos","var")
+        cam = passedCamPos;
+    else
+        cam = matfile([chardir 'camPos.mat']).camPos;
+    end
 
     %% spec to lightsource vectors in glitter coords
     % map the gaussian means to lighting positions
@@ -38,15 +44,23 @@ function specNormalsPath = computeNormals(P, chardir, charM)
     specNormals = specNormals ./ vecnorm(specNormals, 2, 2);
 
     % save results
-    if ~exist('savedir','var')
-        specNormalsPath = [P.data 'spec_normals_' datestr(now, 'mm_dd_yyyy')];
-        save(specNormalsPath, "specNormals");
+    if exist("optionalName","var")
+        specNormalsPath = [chardir optionalName];
+    else
         specNormalsPath = [chardir 'spec_normals.mat'];
+    end
+    save(specNormalsPath, "specNormals");
+    %{
+    if ~exist('savedir','var')
+        %specNormalsPath = [P.data 'spec_normals_' datestr(now, 'mm_dd_yyyy')];
+        %save(specNormalsPath, "specNormals");
+        specNormalsPath = [chardir 'spec_normals' name '.mat'];
         save(specNormalsPath, "specNormals");
     else
         specNormalsPath = [savedir 'spec_normals.mat'];
         save(specNormalsPath, "specNormals");
     end
+    %}
     
     %{
     specNormals = spec2light + spec2cam; %just add since they are normalized
@@ -58,7 +72,7 @@ function specNormalsPath = computeNormals(P, chardir, charM)
     %}
 
     %{
-    % as a major sanity check:
+    % normal sized sanity check:
     % draw a single incoming ray and reflect ray and the computed surface
     % normal for it
     figure;

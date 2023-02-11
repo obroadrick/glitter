@@ -10,32 +10,26 @@
 chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(new-1)/';
 %charDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep19characterization(new-2)/';
 setPaths(chardir);
-
 testcases = loadTestCases();
-
 train = testcases.jan12;
 test = testcases.jan13;
 testTwo = testcases.feb10;
-
-numcases = 10; 
-
+numcases = 10;
 for index=1:numcases
     input = train(index);
-
     expdir{index} = input.expdir;
     curExpdir = expdir{index};
     impath{index} = [curExpdir input.impath];
     lightPos{index} = matfile([curExpdir input.lightPosFname]).lightPos;
-    %fprintf('\n%s\n',input.name);
     skew = input.skew;
 end
-%characterization measurements (trusted)
+%characterization measurements
 charM = matfile([chardir 'measurements.mat']).M;
 
 %initial charCamPos guess (whatever was originally used, found by checkers)
 charCamPos = matfile([chardir 'camPos.mat']).camPos;
 
-% recompute normals
+% compute original normals
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 newNormalsPath = computeNormals(P, chardir, charM);
 newNormals = matfile(newNormalsPath).specNormals;
@@ -74,24 +68,13 @@ for index=1:numcases
     mostInliersLightingMeans{index}(:,:) = lightingMeans(:,mostInliersOverallIdxs{index});
 end
 
-% the optimization begins: for each charCamPos we use
-% these light2spec rays, re-compute the surface normals, re-reflect, and
-% then use error in the avg camera position estimate that results as the 
-% error function (for time, simply using the nearest-point-to-lines
-% heuristic to get the sparkle estimate of camera position)
+%% Do the "training" optimization
 set(0,'DefaultFigureVisible','off');
-%{
-errFun = @(x) computeError(x(1), x(2), x(3), 664.32, 373.68,...
-                        chardir, expdir, mostInliersLightingMeans, ...
-                        mostInliersSpecPos, camPos, lightPos);
-%}
-%% do the "training" optimization
 GLIT_TO_MON_PLANES = charM.GLIT_TO_MON_PLANES;
 GLIT_TO_MON_EDGES_X = charM.GLIT_TO_MON_EDGES_X;
 GLIT_TO_MON_EDGES_Y = charM.GLIT_TO_MON_EDGES_Y;
 MON_WIDTH_MM = charM.MON_WIDTH_MM;
 MON_HEIGHT_MM = charM.MON_HEIGHT_MM;
-
 %campos and measurements
 errFun = @(x) computeError(x(4), x(5), x(6),MON_WIDTH_MM, ...
                               MON_HEIGHT_MM, chardir, expdir, ...
@@ -109,14 +92,18 @@ x0 = [charCamPos, GLIT_TO_MON_PLANES,...
             GLIT_TO_MON_EDGES_X,...
             GLIT_TO_MON_EDGES_Y];
 options = optimset('PlotFcns',@optimplotfval);
-
 xf = fminsearch(errFun, x0, options);
 
-%% get results of the previous optimization to visualize
-% compute the error for the "train" set based on the new characterization 
-% found by the optimization using the "train" set (to visualize)
+%% Re-compute all the surface normals of the glitter sheet based on the
+% optimized parameters (camera position and measurements)
+optimizedCameraPosition = xf(1:3);
+optimizedCharM = charM;
+optimizedCharM.GLIT_TO_MON_PLANES = xf(4);
+optimizedCharM.GLIT_TO_MON_EDGES_X = xf(5);
+optimizedCharM.GLIT_TO_MON_EDGES_Y = xf(6);
+specNormalsPath = computeNormals(P, chardir, optimizedCharM, optimizedCameraPosition, 'optimized_normals');
 
-%campos and measurements
+%% Get results of sparkle calibration using the optimized characterization
 [error,results] = computeError(xf(4),xf(5),xf(6),MON_WIDTH_MM,...
                               MON_HEIGHT_MM, chardir, expdir, ...
                               mostInliersLightingMeans, ...
@@ -131,12 +118,7 @@ xf = fminsearch(errFun, x0, options);
 %}
 save("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_charMeasOptimization","results");
 
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Now... for this xf (optimized camera position for this characterization
-% based on the "train" set of sparkle calibrations)... see if it
-% "generalizes" to the "test" set of sparkle calibrations from another
-% camera position... i.e., run the error function once for the "test" set
+%% Check if the optimized characterization 'generalizes' to the test case
 for index=1:numcases
     input = test(index);
 
@@ -178,7 +160,7 @@ for index=1:numcases
     mostInliersLightingMeansTest{index}(:,:) = lightingMeans(:,mostInliersOverallIdxsTest{index});
 end
 
-%% get results on the "test" set(s) to visualize/compare also
+%% get results on the "test" set(s) to visualize/compare
 % Both cam position and monitor relative position measurements
 [error,results] = computeError(xf(4),xf(5),xf(6),MON_WIDTH_MM,...
                               MON_HEIGHT_MM, chardir, expdirTest, ...
@@ -195,23 +177,9 @@ end
 %}
 save("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization","results");
 
-[error,results] = computeError(xf(4),xf(5),xf(6),MON_WIDTH_MM,...
-                              MON_HEIGHT_MM, chardir, expdirTest, ...
-                              mostInliersLightingMeansTest, ...
-                              mostInliersSpecPosTest, xf(1:3), lightPosTest, ...
-                              test, mostInliersImageSpecPosTest, true);
-%{
-[error,results] = computeError(xf(1),xf(2),xf(3),MON_WIDTH_MM,...
-                              MON_HEIGHT_MM, chardir, expdirTest, ...
-                              mostInliersLightingMeansTest, ...
-                              mostInliersSpecPosTest, charCamPos, lightPosTest, ...
-                              test, mostInliersImageSpecPosTest, true);
-%}
-save("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization","results");
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
+%%%%%% FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [error, results] = computeError(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,...
                               GLIT_TO_MON_EDGES_Y,MON_WIDTH_MM,...
                               MON_HEIGHT_MM, chardir, expdir, ...
@@ -249,7 +217,6 @@ function [error, results] = computeError(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,
                                                 input(index).skew)];
         end
     end
-
     % Find differences between each sparkle calibration and get them to
     % approach the single average of the checkerboard estimates
     checkerAvg = 0;
@@ -262,19 +229,16 @@ function [error, results] = computeError(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,
         curDiff = norm(camPosEsts{i} - checkerAvg);
         diffSum = diffSum + curDiff;
     end
-
     % the overall error is the difference in the average camera position
     % estimates of each method.
     error = diffSum;
 end
-
 function [error, results] = computeErrorOriginal(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,...
                               GLIT_TO_MON_EDGES_Y,MON_WIDTH_MM,...
                               MON_HEIGHT_MM, chardir, expdir, ...
                               mostInliersLightingMeans, ...
                               mostInliersSpecPos, camPos, lightPos, ...
                               input, mostInliersImageSpecPos, getResults)
-    
     charM = setMeasurements(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,...
                               GLIT_TO_MON_EDGES_Y);
     % track sums of camera position estimates to compute average at end
@@ -305,96 +269,14 @@ function [error, results] = computeErrorOriginal(GLIT_TO_MON_PLANES,GLIT_TO_MON_
                                                 input(index).skew)];
         end
     end
-
     % knownCamPos and camPosEst currently have sums across all numcases 
     % trials for each of sparkles and checkerboards. 
     % now we compute the average position estimate for each.
     avgKnownCamPos = knownCamPos ./ numcases;
     avgCamPosEst = camPosEst ./ numcases;
-
     % the overall error is the difference in the average camera position
     % estimates of each method.
     error = norm(avgKnownCamPos-avgCamPosEst);
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% functions
-function d = nearestDistLines(points, directions)
-    % normal for the parallel planes each containing one of the lines
-    n = cross(directions(1,:),directions(2,:));
-    % now get a point from each of the planes (from the lines)
-    p1 = points(1,:);
-    p2 = points(2,:);
-    % a vector from one of these points to the other can then
-    % be projected onto the plane normal to get distance
-    % between the planes
-    v = p1 - p2;
-    proj_n_v = dot(v,n,2) / norm(n)^2 .* n;
-    d = norm(proj_n_v);
-end
-function p = pointBetweenLines(points, directions)
-    p1 = points(1,:)';
-    p2 = points(2,:)';
-    d1 = directions(1,:)';
-    d2 = directions(2,:)';
-    A = [dot(p1,d1) -1*dot(p1,d2);...
-         dot(p2,d1) -1*dot(p2,d2)];
-    B = [-1*dot(p1-p2,p1);...
-         -1*dot(p1-p2,p2)]; 
-    x = linsolve(A,B);
-    s = x(1);
-    t = x(2);
-    Q = p1 + d1.*t;
-    R = p2 + d2.*s;
-    p = (Q+R)./2;
-    p = p';
-end
-function d = distPointToLine(point, pointOnLine, direction)
-    a = pointOnLine';% point on the line
-    n = (direction./norm(direction))';% unit vector in direction of line
-    p = point';% point whose distance is being computed
-    d = norm((p-a)-(dot((p-a),n,1)*n));
-end
-%{
-function R = reflect(specPos, specNormals, lightPos)
-    % computes the position of light reflected off the passed spec
-    % positions with specNormals from lightPos assuming that specPos is of
-    % the shape nxkx3 where n is number of specs, k is number of
-    % hypothesized positions for that spec, and 3 is number of dimensions
-    % (x,y,z)
-    R=[];
-    for ix=1:size(specPos,2)
-        % compute reflected rays: Ri = Li − 2(Li dot Ni)Ni
-        % where Li is normalized vector from spec to light
-        %       Ni is normalized normal vector
-        %       Ri is normalized reflected vector
-        L = (lightPos - reshape(specPos(:,ix,:),size(specPos,1),...
-            size(specPos,3))) ./ vecnorm(lightPos - reshape(specPos(:,ix,:),size(specPos,1),size(specPos,3)), 2, 2);
-        R(:,ix,:) = L - 2 * dot(L, reshape(specNormals(:,ix,:),...
-            size(specNormals,1),size(specNormals,3)), 2) .* reshape(specNormals(:,ix,:),...
-            size(specNormals,1),size(specNormals,3));
-        R(:,ix,:) = -1.*R(:,ix,:);
-    end
-end
-%}
-function R = reflectNew(L, specNormals)
-    % computes the position of light reflected off the passed spec
-    % positions with specNormals from lightPos assuming that specPos is of
-    % the shape nxkx3 where n is number of specs, k is number of
-    % hypothesized positions for that spec, and 3 is number of dimensions
-    % (x,y,z)
-    % compute reflected rays: Ri = Li − 2(Li dot Ni)Ni
-    % where Li is normalized vector from spec to light
-    %       Ni is normalized normal vector
-    %       Ri is normalized reflected vector
-    %L = (lightPos - reshape(specPos(:,:),size(specPos,1),...
-    %    size(specPos,3))) ./ vecnorm(lightPos - reshape(specPos(:,:),size(specPos,1),size(specPos,3)), 2, 2);
-    whos L
-    whos specNormals
-    R = [];
-    for ix=1:size(L,1)
-        R(ix,:) = L(ix,:) - 2 * dot(L(ix,:), specNormals(ix,:)) .* specNormals(ix,:);
-    end
-    %R(:,:) = -1.*R(:,:);
 end
 function R = reflect(specPos, specNormals, lightPos)
     % computes the position of light reflected off the passed spec
