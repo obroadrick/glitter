@@ -81,8 +81,8 @@ if trainSet
     sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_charMeasOptimization").results;
 else
     sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/sparkleResults').sparkleResults;
-    %checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults').checkerResults;
-    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResultsNoSkew').checkerResults;
+    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults').checkerResults;
+    %checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResultsNoSkew').checkerResults;
     sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization").results;
     %threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults.mat").results;
     threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults4.mat").results;
@@ -108,13 +108,12 @@ if trainSet
     sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_charMeasOptimization").results;
 else
     sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/sparkleResults').sparkleResults;
-    %checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults').checkerResults;
-    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResultsNoSkew').checkerResults;
+    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults').checkerResults;
+    %checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResultsNoSkew').checkerResults;
     sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization").results;
     %threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults.mat").results;
     threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults4.mat").results;
 end
-
 
 % camera position
 hold on;
@@ -128,7 +127,22 @@ end
 xlabel('x (mm)');ylabel('y (mm)');zlabel('z (mm)');
 
 
-
+% third data set!
+sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/sparkleResults').sparkleResults;
+checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/checkerResults').checkerResults;
+%sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/test_after_charMeasOptimization").results;
+%threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults.mat").results;
+   
+% camera position
+hold on;
+title('camera position (tx,ty,tz)');
+%plot3(sparkleResults(:,1),sparkleResults(:,2),sparkleResults(:,3),'r*','markersize',10,'linewidth',2);
+plot3(sparkleResultsOrig(:,1),sparkleResultsOrig(:,2),sparkleResultsOrig(:,3),'b*','markersize',10,'linewidth',2);
+plot3(checkerResults(:,1),checkerResults(:,2),checkerResults(:,3),'gS','markersize',10,'linewidth',2);
+if exist("threedCalResults", "var")
+    plot3(threedCalResults(:,1),threedCalResults(:,2),threedCalResults(:,3),'mX','MarkerSize',10,'LineWidth',2);
+end
+xlabel('x (mm)');ylabel('y (mm)');zlabel('z (mm)');
 
 
 axis equal;

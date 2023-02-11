@@ -1,10 +1,9 @@
 
-skew = true;
+skew = false;
 for index = 1:10
 %expdir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/odds/'];
 %expdir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan12data/' num2str(index) '/'];
 expdir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(index) '/'];
-
 
 %% get checkerboard outputs for comparison
 if skew

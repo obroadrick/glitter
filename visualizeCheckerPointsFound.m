@@ -4,7 +4,10 @@
 
 % Define images to process
 numSubsets = 10;
-for i=1:numSubsets
+
+%figure;
+%tiledlayout(3,4,"TileSpacing",'tight','Padding','tight');
+for i=1:10
     % Get this batch of file names...:
     dirPath = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i)];
     allFiles = dir(dirPath);
@@ -17,6 +20,7 @@ for i=1:numSubsets
             continue
         end
         imageFileNames{fIdx} = [allFiles(j).folder '/' allFiles(j).name];
+        imageFileJustNames{fIdx} = allFiles(j).name;
         fIdx = fIdx + 1;
     end
 
@@ -31,4 +35,20 @@ for i=1:numSubsets
         imagesUsed = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(i) '/imagesUsed.mat']).imagesUsed;
     end
     imageFileNames = imageFileNames(imagesUsed);
+
+    %
+    s = ceil(sqrt(size(imageFileNames,2)));
+    figure; t= tiledlayout(s,s,'TileSpacing','tight','Padding','tight');
+    title(t,dirPath);
+    for ix=1:size(imageFileNames,2)
+        nexttile;
+        hold on;title(imageFileJustNames{ix}(1:size(imageFileJustNames{ix},2)-4),'interpreter','none');
+        resizeFactor = .01;
+        imagesc(imresize(imread(imageFileNames{ix}),resizeFactor));
+        plot(imagePoints(:,1,ix).*resizeFactor,imagePoints(:,2,ix).*resizeFactor,'CX')%,'linewidth',2,'markersize',10);
+        %set(gca,'xtick',[],'ytick',[]);%,'xticklabel',[],'yticklabel',[]);
+        set(gca,'visible','off','xtick',[],'ytick',[],'YDir','reverse');
+        set(findall(gca, 'type', 'text'), 'visible', 'on');
+        drawnow;
+    end
 end

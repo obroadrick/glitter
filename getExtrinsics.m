@@ -21,18 +21,16 @@
 %expir = '/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/odds/';
 
 %index=2;
+%overallExpDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/jan12data/';
+%overallExpDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/';
+overallExpDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/';
 numcases = 10;
-for index = 1:1
-%expir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan12data/' num2str(index) '/'];
-expir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(index) '/'];
-expdir = expir;
 
-skew = true;
-% get P
+for index = 1:10
+expir = [overallExpDir num2str(index) '/'];
+expdir = expir;
+skew = false;
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
-% get camParams
-%camParams = matfile(P.camParams).camParams;
-%camParams = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/camParams_07_25_2022.mat').camParams;%july25test
 
 if ~skew
     camParams = matfile([expir 'camParams.mat']).camParams;
@@ -47,11 +45,6 @@ end
 %impath = [expir 'onGlitterPlane' num2str(index) '.JPG'];
 impath = [expir 'A_onGlitterPlane' num2str(index) '.JPG'];
 imPath = impath;
-%imPath = [expir 'homography.JPG'];
-%imPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/checkerboards/onGlitterPlane.JPG';
-% get fiducial marker points
-%allPts = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/july25testNikonz7/16ptsJuly25.mat']).arr;
-%allPts = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/aug18test/16ptsAug18.mat').arr;
 if ~isfile([expdir '16pts.mat'])
     % if the 16pts for this experiment haven't already been found, then
     % find them now using Addy's script
@@ -59,31 +52,18 @@ if ~isfile([expdir '16pts.mat'])
     cmd = sprintf('python3.10 /Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/16ptsfinder.py "%s" "%s"', impath, [expdir '16pts.mat']);
     system(cmd);
 end
-%{
-allPts = matfile([expir '16Pts.mat']).arr;
-pin = allPts(1,:);
-pinx = [pin{1}(1) pin{2}(1) pin{3}(1) pin{4}(1)];
-piny = [pin{1}(2) pin{2}(2) pin{3}(2) pin{4}(2)];
-pin = double([pinx' piny']);
-%}
 pin = loadPoints([expir '16Pts.mat'], true);
 
-%% run computation
+%% 
 % run findCamPos which computes the camPos and camRot for these inputs
 [t, R, terr, Rerr, Rvec] = findCamPos(P, camParams, camParamsErrors, impath, pin);
 camPosErr = terr;
 camRotErr = Rerr;
-
-%% save results
 camPos = t;
 camRot = R;
-%{
-P.camPos = [P.data 'camPos_' datestr(now, 'mm_dd_yyyy')];
-P.camRot = [P.data 'camRot_' datestr(now, 'mm_dd_yyyy')];
-save([P.data 'camPos_' datestr(now, 'mm_dd_yyyy')], "camPos");
-save([P.data 'camRot_' datestr(now, 'mm_dd_yyyy')], "camRot");
-%}
-% also store the pos and rot in the experiment directory;
+
+%% 
+% save results for this sub-experiment
 if ~skew
     save([expir 'camPos'], "camPos");
     save([expir 'camRot'], "camRot");
@@ -95,4 +75,23 @@ else
     save([expir 'camPosErrSkew'], "camPosErr");
     save([expir 'camRotErrSkew'], "camRotErr");
 end
+
+% Track the overall set of checkerboard results for this experiment so that
+% we can save that at the end also
+omega = undoRodrigues(camRot);
+fx = camParams.Intrinsics.FocalLength(1);
+fy = camParams.Intrinsics.FocalLength(2);
+cx = camParams.Intrinsics.PrincipalPoint(1);
+cy = camParams.Intrinsics.PrincipalPoint(2);
+s = camParams.Intrinsics.Skew;
+rotAndIntrinsicsCheckerboards = [camPos omega(1) omega(2) omega(3) fx fy cx cy s];
+
+allData(index,:) = rotAndIntrinsicsCheckerboards';
+
 end% end big for loop
+
+
+% Save the overall results for this set of checkerboard images for this
+% experiment for easy/quick access in future
+checkerResults = allData;
+save([overallExpDir 'checkerResults.mat'], "checkerResults");

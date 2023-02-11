@@ -21,47 +21,66 @@ def getPoints(arr, loc):
 def findMarkerCorners(pts):
     BL, TL, TR, BR = Marker(), Marker(), Marker(), Marker()
     _ids = ids.flatten()
-    tr_found = np.where(_ids == 2)[0].shape[0] != 0
-    if tr_found:
+    #if np.where(_ids == 2)
+    TRidx = -1
+    TLidx = -1
+    BRidx = -1
+    BLidx = -1
+    
+    #print(np.where(_ids == 2))
+    
+    if(len(np.where(_ids == 2)[0]) > 0):
         TRidx = np.where(_ids == 2)[0][0]
         TR.BL, _ = getPoints(pts[TRidx], [w/2, h/2]) #we're assuming that the bottom left is closest to the center of image
         TR.BR = getPoints(pts[TRidx], [w, h/2])[0]
         TR.TR = getPoints(pts[TRidx], [w, 0])[0]
         TR.TL = getPoints(pts[TRidx], [3*w/4, 0])[0]
-     
-    tl_found = np.where(_ids == 1)[0].shape[0] != 0
-    if tl_found:
+    else:
+        TR.BL = [-1, -1]
+        TR.BR = [-1, -1]
+        TR.TR = [-1, -1]
+        TR.TL = [-1, -1]
+    
+    if(len(np.where(_ids == 1)[0]) > 0):
         TLidx = np.where(_ids == 1)[0][0]
+        
         TL.BL = getPoints(pts[TLidx], [0, h/2])[0]
         TL.BR = getPoints(pts[TLidx], [w/2, h/2])[0]
         TL.TR = getPoints(pts[TLidx], [w/4, 0])[0]
         TL.TL = getPoints(pts[TLidx], [0, 0])[0]
-  
-    if tr_found and tl_found:
-        #cull our array to exclude discovered corners 
-        pts = np.delete(pts, TRidx, 0)
-        delIdx = TLidx
-        if TLidx > TRidx:
-            delIdx = TLidx - 1
-        pts = np.delete(pts, delIdx, 0)
-        #makes the next search easier 
-
-    scoresBL = getPoints(pts[0], [0, h]), getPoints(pts[1], [0, h])
-    scoresBR = getPoints(pts[0], [w/2, h]), getPoints(pts[1], [w/2, h])
-    BLidx = 1
-    if scoresBL[0][1] < scoresBL[1][1]:
-        BLidx = 0
-    BRidx = BLidx - 1
-    BL.BL = scoresBL[BLidx][0]
-    BR.BL = scoresBR[BRidx][0]
+    else:
+        TL.BL = [-1, -1]
+        TL.BR = [-1, -1]
+        TL.TR = [-1, -1]
+        TL.TL = [-1, -1]
     
-    BL.BR = getPoints(pts[BLidx], [w/2, h])[0]
-    BL.TR = getPoints(pts[BLidx], [w/4, 3 * h/4])[0]
-    BL.TL = getPoints(pts[BLidx], [0, 3*h/4])[0]
+    if(len(np.where(_ids == 0)[0]) > 0):
+        BLidx = np.where(_ids == 0)[0][0]
     
-    BR.BR = getPoints(pts[BRidx], [w, h])[0]
-    BR.TR = getPoints(pts[BRidx], [w, 3*h/4])[0]
-    BR.TL = getPoints(pts[BRidx], [3*w/4, h/2])[0]
+        BL.BR = getPoints(pts[BLidx], [w/2, h])[0]
+        BL.TR = getPoints(pts[BLidx], [w/4, 3 * h/4])[0]
+        BL.TL = getPoints(pts[BLidx], [0, 3*h/4])[0]
+        BL.BL = getPoints(pts[BLidx], [0, h])[0]
+    else:
+        BL.BL = [-1, -1]
+        BL.BR = [-1, -1]
+        BL.TR = [-1, -1]
+        BL.TL = [-1, -1]
+    
+    
+    if(len(np.where(_ids == 3)[0]) > 0):
+        BRidx = np.where(_ids == 3)[0][0]
+    
+        BR.BR = getPoints(pts[BRidx], [w, h])[0]
+        BR.TR = getPoints(pts[BRidx], [w, 3*h/4])[0]
+        BR.TL = getPoints(pts[BRidx], [3*w/4, h/2])[0]
+        BR.BL = getPoints(pts[BRidx], [w/2, h])[0]
+    else:
+        BR.BL = [-1, -1]
+        BR.BR = [-1, -1]
+        BR.TR = [-1, -1]
+        BR.TL = [-1, -1]
+    
     
     cv2.circle(frameCol, (int(BL.BL[0]), int(BL.BL[1])), 10, (255, 0, 0), 9)
     cv2.circle(frameCol, (int(BL.TL[0]), int(BL.TL[1])), 10, (255, 0, 0), 9)
@@ -87,10 +106,7 @@ def findMarkerCorners(pts):
     #cv2.waitKey()  
     #cv2.destroyAllWindows()
     #plt.imshow(frameCol)
-
-    # uncomment this line to get a nift image saved with the detected markers outlined
-    #cv2.imwrite("corners.jpg", frameCol)
-
+    cv2.imwrite("corners.jpg", frameCol)
     #return(Marker(BL, TL, TR, BR))
     #print(scoresBR)
     #print(scoresBL)
@@ -118,6 +134,8 @@ frame = cv2.cvtColor(frameCol, cv2.COLOR_BGR2GRAY)
 #plt.imshow(frame)
 
 bboxs, ids, rejected = cv2.aruco.detectMarkers(frameCol, aruco_dict, parameters = para)
+print(bboxs)
+print(ids)
 refPts = []
 h = 0
 w = 0
@@ -149,7 +167,8 @@ if  len(bboxs)!=0:
     #cv2.destroyAllWindows()
 
     h, w = frameCol.shape[:2]
-
+    #print(ids)
+    #print(refPts)
     fidMarkerPos = findMarkerCorners(refPts)
 
     df = pd.DataFrame(columns = [" ", "Bottom Left Marker", "Top Left Marker", "Top Right Marker", "Bottom Right Marker"])
@@ -167,6 +186,6 @@ if  len(bboxs)!=0:
 
     print('Success - found ArUco Markers!')
     
-    exit()
+    #exit()
 else:
     print('Markers not detected...')

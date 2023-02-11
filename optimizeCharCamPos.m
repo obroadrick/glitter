@@ -15,6 +15,7 @@ testcases = loadTestCases();
 
 train = testcases.jan12;
 test = testcases.jan13;
+testTwo = testcases.feb10;
 
 numcases = 10; 
 
@@ -177,11 +178,23 @@ for index=1:numcases
     mostInliersLightingMeansTest{index}(:,:) = lightingMeans(:,mostInliersOverallIdxsTest{index});
 end
 
-%% get results on the "test" set to visualize/compare also
-% compute the error for the "test" set based on the new characterization f
-% ound by the optimization using the "train" set
+%% get results on the "test" set(s) to visualize/compare also
+% Both cam position and monitor relative position measurements
+[error,results] = computeError(xf(4),xf(5),xf(6),MON_WIDTH_MM,...
+                              MON_HEIGHT_MM, chardir, expdirTest, ...
+                              mostInliersLightingMeansTest, ...
+                              mostInliersSpecPosTest, xf(1:3), lightPosTest, ...
+                              test, mostInliersImageSpecPosTest, true);
+%{
+% Just monitor relative position measurements
+[error,results] = computeError(xf(1),xf(2),xf(3),MON_WIDTH_MM,...
+                              MON_HEIGHT_MM, chardir, expdirTest, ...
+                              mostInliersLightingMeansTest, ...
+                              mostInliersSpecPosTest, charCamPos, lightPosTest, ...
+                              test, mostInliersImageSpecPosTest, true);
+%}
+save("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization","results");
 
-%campos and measurements
 [error,results] = computeError(xf(4),xf(5),xf(6),MON_WIDTH_MM,...
                               MON_HEIGHT_MM, chardir, expdirTest, ...
                               mostInliersLightingMeansTest, ...
@@ -195,8 +208,6 @@ end
                               test, mostInliersImageSpecPosTest, true);
 %}
 save("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization","results");
-
-% for this "test" set, plot all the newly solved-for parameters
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

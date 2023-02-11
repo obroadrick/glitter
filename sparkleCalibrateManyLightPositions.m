@@ -1,92 +1,27 @@
 % single image camera calibration with glitter
+testcases = loadTestCases();
+% automatically perform 10 calibrations for 10 camera positions
+for index = 1:10
 
-% % input: 
-%  path to the single image
-%  path to matfile with fiducial marker points
-%  known point light source position
-%  characterized sheet of glitter: spec locations, normals
-% % output:
-%  saves as matfile all the parameters estimated:
-% intrinsic matrix, 
-% rotation matrix, 
-% rodrigues parameters,
-% focal length x and y,
-% skew,
-% image center x and y,
-% distortion paramters k1 and k2
-warning('off','MATLAB:singularMatrix');
-
-wideangle1 = struct('name','Wide Angle Lens (light position off the monitor, chem side)', ...
-            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/', ...
-            'impath','chem.JPG', ...
-            'lightPosFname', 'chemLightPos.mat', ...
-            'skew', true, ...
-            'sixteen', false);
-middle = struct('name','Original Camera (Nikonz7 35mm) middle position (light off monitor, chem side)', ...
-            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/newCamPosNov6_middle/', ...
-            'impath','chem.JPG', ...
-            'lightPosFname', 'chemLightPos.mat', ...
-            'skew', false, ...
-            'sixteen', true);
-iphone1 = struct('name','iPhone XR (light off monitor, chem side)', ...
-            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/iphone/', ...
-            'impath','chem.JPG', ...
-            'lightPosFname', 'chemLightPos.mat', ...
-            'skew', true, ...
-            'sixteen', true);
-
-for index = 1:1
-%{
-jan12_1 = struct('name',['Nikon Z7 (January 12 Data) Position ' num2str(index)], ...
-            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/jan12data/', ...
-            'impath',[num2str(index) '.JPG'], ...
-            'lightPosFname', ['lightPos' num2str(num2str(index)) '.mat'], ...
-            'skew', true, ...
-            'sixteen', true);
-%}
-jan12 = struct('name',['Nikon Z7 (January 12 Data) Position ' num2str(index)], ...
-            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/', ...
-            'impath',[num2str(index) '.JPG'], ...
-            'lightPosFname', ['lightPos' num2str(num2str(index)) '.mat'], ...
-            'skew', true, ...
-            'sixteen', true);
-jan13 = struct('name',['Nikon Z7 (January 13 Data) Position ' num2str(index)], ...
-            'expdir','/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/', ...
-            'impath',[num2str(index) '.JPG'], ...
-            'lightPosFname', ['lightPos' num2str(num2str(index)) '.mat'], ...
-            'skew', true, ...
-            'sixteen', true);
-
-
-input = jan13;
-%for input=[wideangle1, middle, iphone1]
+input = testcases.feb10(index);
 expdir = input.expdir;
 impath = [expdir input.impath];
 lightPos = matfile([expdir input.lightPosFname]).lightPos;
-fprintf('\n%s\n',input.name);
-skew = input.skew;
+skew = input.skew; % whether we assume zero skew
+compare = false; % whether this script will output comparisons with checkerboard results
 
-% path to single image fiducial marker points
+% Print name of test case being worked on right now
+fprintf('\n%s\n',input.name);
+
+% Find ArUco markers (if they haven't been detected and saved already)
 if ~isfile([expdir '16pts.mat'])
-    % if the 16pts for this experiment haven't already been found, then
-    % find them now using Addy's script
     setenv('PATH', [getenv('PATH') ':/opt/homebrew/bin/python3.10:/opt/homebrew/bin:/opt/homebrew/sbin']);
     cmd = sprintf('python3.10 /Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/16ptsfinder.py "%s" "%s"', impath, [expdir '16pts.mat']);
     system(cmd);
 end
-% now that the 16pts have been found, get them in a usable data structure
-allPts = matfile([expdir '16pts.mat']).arr;
-pin = [allPts(1,:) allPts(2,:) allPts(3,:) allPts(4,:)];
-for i=1:16
-    pinx(i) = pin{i}(1);
-    piny(i) = pin{i}(2);
-end
-pin = double([pinx' piny']);
-fiducialMarkerPoints = pin;
-if ~(input.sixteen)
-    pin = pin(1:4,:);
-end
+pin = loadPoints([expdir '16pts.mat'], input.sixteen);
 
+% Visualize the detected ArUco marker points on a bright image
 if input.sixteen && isfile([expdir 'bright.JPG'])
     % visualize the fiducial marker points (both pin and pout)
     figure; tiledlayout(1,2,"TileSpacing","tight","Padding","tight");
@@ -104,29 +39,37 @@ if input.sixteen && isfile([expdir 'bright.JPG'])
     end
 end
 
-%  characterized sheet of glitter: spec locations, normals
+% Get paths for characterized spec locations and surface normals
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 
+%% Estimate translation
 other.inlierThreshold = 15;
 ambientImage = -1;
-%% estimate translation
 [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew, other);
 
-%{
-%i = 1;
-%inlierThresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45];
-%for inlierThreshold = inlierThresholds
-    other.inlierThreshold = inlierThreshold;
-    [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos] = estimateTglitter(impath, lightPos, pin, expdir, -1, skew, other);
-    %camPosEstList(i,:) = camPosEst;
-    %numInliersList(i,:) = size(mostInliersSpecPos, 1);
-    %i = i + 1;
-%end
-%errs2 = sqrt(sum((camPosEstList - camPos).^2, 2));
-%inliers2 = numInliersList;
-%}
+%% Estimate rotation and intrinsics
+rotAndIntrinsics2 = [camPosEst linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir, skew)];
 
-%% get checkerboard outputs for comparison
+%% Save results
+sparkleResults(index,:) = rotAndIntrinsics2';
+save([expdir 'sparkleResults' num2str(index)], "rotAndIntrinsics2");
+
+%% Optimize for the skew=0 case
+%{ 
+disp('SparkleCalibrate - linear solution as first guess in fminsearch (skew=0)');
+rotAndIntrinsics5 = startPointEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
+disp(rotAndIntrinsics5);
+disp('difference with checkerboards');
+disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics5);
+disp('percent error (%)');
+disp((rotAndIntrinsicsCheckerboards - rotAndIntrinsics5) ./ rotAndIntrinsicsCheckerboards .* 100);
+R5 = rod2mat(rotAndIntrinsics5(1),rotAndIntrinsics5(2),rotAndIntrinsics5(3));
+Rerr = rotDiff(R5, camRot);
+disp('difference in rotation (degrees):');
+disp(Rerr);
+%}
+%% Compare results with checkerboard-based estimates
+if compare
 if skew
     camParams = matfile([expdir '/' num2str(index) '/camParamsSkew']).camParams;
     camParamsErrors = matfile([expdir '/' num2str(index) '/camParamsErrorsSkew']).camParamsErrors;
@@ -160,38 +103,23 @@ cye = camParamsErrors.IntrinsicsErrors.PrincipalPointError(2);
 se = camParamsErrors.IntrinsicsErrors.SkewError;
 rotAndIntrinsicsCheckerboardsErrors = [camPosErr camRotErr fxe fye cxe cye se];
 printRow('Checker err.', rotAndIntrinsicsCheckerboardsErrors);
-
-%% solve the linear system and do RQ decomposition to get K and R
-rotAndIntrinsics2 = [camPosEst linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir, skew)];
-% print outputs
-%printBreak();
 printRow('Sparkle est.', rotAndIntrinsics2);
 diff = rotAndIntrinsicsCheckerboards - rotAndIntrinsics2;
-%printRow('Diff.', diff);
 percentErrors = (rotAndIntrinsicsCheckerboards - rotAndIntrinsics2) ./ rotAndIntrinsicsCheckerboards .* 100;
 printRow('Percent diff.', percentErrors);
 posDiff = sqrt(sum(((camPosEst-camPos).^2)));
 R2 = rod2mat(rotAndIntrinsics2(4),rotAndIntrinsics2(5),rotAndIntrinsics2(6));
 Rerr = rotDiff(R2, camRot);
 fprintf('               Position diff. (mm): %.2f     Rotation diff. (deg): %.3f\n', posDiff, Rerr);
+end % end if compare
+end % end for loop
 
-sparkleResults(index,:) = rotAndIntrinsics2';
-save([expdir 'sparkleResults' num2str(index)], "rotAndIntrinsics2");
-
+% Save all the sparkle results in one file
+for i=1:10
+    sparkleResults(i,:) = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/' 'sparkleResults' num2str(i)]).rotAndIntrinsics2;
 end
-%{ 
-disp('SparkleCalibrate - linear solution as first guess in fminsearch (skew=0)');
-rotAndIntrinsics5 = startPointEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos);
-disp(rotAndIntrinsics5);
-disp('difference with checkerboards');
-disp(rotAndIntrinsicsCheckerboards - rotAndIntrinsics5);
-disp('percent error (%)');
-disp((rotAndIntrinsicsCheckerboards - rotAndIntrinsics5) ./ rotAndIntrinsicsCheckerboards .* 100);
-R5 = rod2mat(rotAndIntrinsics5(1),rotAndIntrinsics5(2),rotAndIntrinsics5(3));
-Rerr = rotDiff(R5, camRot);
-disp('difference in rotation (degrees):');
-disp(Rerr);
-%} 
+save(['/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/' 'sparkleResults'], "sparkleResults");
+
 function printRow(rowName, rowVals)
     w = '10'; dec = '4';
     s = '%15s ';
