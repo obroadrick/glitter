@@ -130,13 +130,13 @@ xlabel('x (mm)');ylabel('y (mm)');zlabel('z (mm)');
 % third data set!
 sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/sparkleResults').sparkleResults;
 checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/checkerResults').checkerResults;
-%sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/test_after_charMeasOptimization").results;
+sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/test_after_charMeasOptimization").results;
 %threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults.mat").results;
-   
+
 % camera position
 hold on;
 title('camera position (tx,ty,tz)');
-%plot3(sparkleResults(:,1),sparkleResults(:,2),sparkleResults(:,3),'r*','markersize',10,'linewidth',2);
+plot3(sparkleResults(:,1),sparkleResults(:,2),sparkleResults(:,3),'r*','markersize',10,'linewidth',2);
 plot3(sparkleResultsOrig(:,1),sparkleResultsOrig(:,2),sparkleResultsOrig(:,3),'b*','markersize',10,'linewidth',2);
 plot3(checkerResults(:,1),checkerResults(:,2),checkerResults(:,3),'gS','markersize',10,'linewidth',2);
 if exist("threedCalResults", "var")

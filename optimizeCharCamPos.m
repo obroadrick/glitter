@@ -12,8 +12,8 @@ chardir = '/Users/oliverbroadrick/Desktop/glitter-stuff/sep18characterization(ne
 setPaths(chardir);
 testcases = loadTestCases();
 train = testcases.jan12;
-test = testcases.jan13;
-testTwo = testcases.feb10;
+%test = testcases.jan13;
+test = testcases.feb10;
 numcases = 10;
 for index=1:numcases
     input = train(index);
@@ -116,7 +116,7 @@ specNormalsPath = computeNormals(P, chardir, optimizedCharM, optimizedCameraPosi
                               mostInliersSpecPos, charCamPos, lightPos, ...
                               train, mostInliersImageSpecPosAll, true);
 %}
-save("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_charMeasOptimization","results");
+save([train(1).expdir 'train_after_charMeasOptimization"'],"results");
 
 %% Check if the optimized characterization 'generalizes' to the test case
 for index=1:numcases
@@ -127,7 +127,7 @@ for index=1:numcases
     impathTest{index} = [curExpdir input.impath];
     lightPosTest{index} = matfile([curExpdir input.lightPosFname]).lightPos;
     %fprintf('\n%s\n',input.name);
-    skew = input.skew;
+    skew = false;%temporary fixed false
 end
 
 % do only the translation-estimating part of a sparkle calibration
@@ -175,7 +175,7 @@ end
                               mostInliersSpecPosTest, charCamPos, lightPosTest, ...
                               test, mostInliersImageSpecPosTest, true);
 %}
-save("/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/test_after_charMeasOptimization","results");
+save([test(1).expdir 'test_after_charMeasOptimization'],"results");
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -204,7 +204,8 @@ function [error, results] = computeError(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,
         % compute the new camera position estimate according to these rays
         curCamPosEst = nearestPointManyLines(mostInliersSpecPos{index}, mostInliersSpecPos{index}+R);
         camPosEsts{index} = curCamPosEst;
-        knownCamPoss{index} = matfile([expdir{index} '/' num2str(index) '/camPosSkew.mat']).camPos; 
+        %knownCamPoss{index} = matfile([expdir{index} '/' num2str(index) '/camPosSkew.mat']).camPos; 
+        knownCamPoss{index} = matfile([expdir{index} '/' num2str(index) '/camPos.mat']).camPos; 
         if getResults
             % also compute the intrinsics
             results(index,:) = [curCamPosEst ...

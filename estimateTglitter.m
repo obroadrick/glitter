@@ -53,7 +53,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     xlabel('direction in radians');
     
     %% Get the specs' surface normals
-    if exist("other.customNormals", "var")
+    if isfield(other, "customNormals")
         allSpecNormals = matfile(other.customNormals).specNormals;
     else
         allSpecNormals = matfile(P.specNormals).specNormals;
@@ -99,15 +99,18 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     %%
     %compute distances to pinhole for these allR reflected rays
     
+    if other.compare
     if skew
         knownCamPos = matfile([expdir 'camPosSkew.mat']).camPos; 
     else
         knownCamPos = matfile([expdir 'camPos.mat']).camPos; 
     end
-
+    end
+    if other.compare
     allTrueDists = [];
     for ix=1:size(allR,1)
         allTrueDists(ix) = distPointToLine(knownCamPos, allSpecPos(ix,:), allR(ix,:));
+    end
     end
     
     %%
@@ -169,7 +172,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
             size(specNormals,1),size(specNormals,3));
         R(:,ix,:) = -1.*R(:,ix,:);
     end
-    
+
     % find a good translation estimate using a RANSAC approach
     rng(314159);
     %inlierThreshold = 50; % (mm) a reflected ray is an inlier
@@ -395,6 +398,16 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         other.mostInliersR = mostInliersR;
         other.overallIdx = idx;
         other.mostInliersKmin = mostInliersKmin;
+
+        other.mostInliersIntensitys = mostInliersIntensitys;
+
+        % also return the distance of each reflected ray to the estimated
+        % pinhole position for aperture things
+        reflectedRayToPinholeDists = [];
+        for i=1:size(mostInliersR,1)
+            reflectedRayToPinholeDists(i) = distPointToLine(camPosEst, reshape(mostInliersSpecPos(i,:),1,3), reshape(mostInliersR(i,:),1,3));
+        end
+        other.reflectedRayToPinholeDists = reflectedRayToPinholeDists;
         return;
     end
     x0 = [quickEst godlyStd 255];
@@ -537,7 +550,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     % also do so for just the inliers of the final estimate
     trueDistsInliersOnly = zeros(size(mostInliersR,1),1);
     for ix=1:size(mostInliersR,1)
-        trueDistsInliersOnly(ix) = distPointToLine(knownCamPos, mostInliersSpecPos(ix,:), mostInliersR(ix,:));
+        trueDistsInliersOnly(ix) = distPointToLine(knownCamPos, reshape(mostInliersSpecPos(ix,:),1,3), reshape(mostInliersR(ix,:),1,3));
     end
     %brightnessNormalizedInliersOnly = brightnessNormalized(mostInliersIdxs);
     %brightnessNormalizedInliersOnly = mostInliersMaxBrightness';

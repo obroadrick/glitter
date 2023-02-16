@@ -3,6 +3,11 @@
 % Automatically perform 10 calibrations for 10 camera positions
 testcases = loadTestCases();
 useOptimizedNormals = true;
+if useOptimizedNormals
+    resultsSaveName = 'optimizedSparkleResults';
+else
+    resultsSaveName = 'sparkleResults';
+end
 for index = 1:10
 input = testcases.feb10(index);
 expdir = input.expdir;
@@ -11,11 +16,6 @@ lightPos = matfile([expdir input.lightPosFname]).lightPos;
 skew = input.skew; % whether we assume zero skew
 compare = false; % whether this script will output comparisons with checkerboard results
 fprintf('\n%s\n',input.name);
-if useOptimizedNormals
-    resultsSaveName = ['optimizedSparkleResults' num2str(index)];
-else
-    resultsSaveName = ['sparkleResults' num2str(index)];
-end
 
 % Find ArUco markers (if they haven't been detected and saved already)
 if ~isfile([expdir '16pts.mat'])
@@ -59,7 +59,7 @@ rotAndIntrinsics2 = [camPosEst linearEstimateRKglitter(impath, camPosEst, pin, m
 
 %% Save results
 sparkleResults(index,:) = rotAndIntrinsics2';
-save([expdir saveName], "rotAndIntrinsics2");
+save([expdir resultsSaveName num2str(i)], "rotAndIntrinsics2");
 
 %% Optimize for the skew=0 case
 %{ 
@@ -120,12 +120,12 @@ Rerr = rotDiff(R2, camRot);
 fprintf('               Position diff. (mm): %.2f     Rotation diff. (deg): %.3f\n', posDiff, Rerr);
 end % end if compare
 end % end for loop
-
+%%
 % Save all the sparkle results in one file
 for i=1:10
-    sparkleResults(i,:) = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/' 'sparkleResults' num2str(i)]).rotAndIntrinsics2;
+    sparkleResults(i,:) = matfile(['/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/' resultsSaveName num2str(i)]).rotAndIntrinsics2;
 end
-save(['/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/' 'sparkleResults'], "sparkleResults");
+save(['/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/' resultsSaveName], "sparkleResults");
 
 function printRow(rowName, rowVals)
     w = '10'; dec = '4';

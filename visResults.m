@@ -20,6 +20,7 @@ elseif casenum ==2
     name = '"test" data';
 elseif casenum == 3
     sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/sparkleResults').sparkleResults;
+    sparkleResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/test_after_charMeasOptimization').results;
     checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/checkerResults').checkerResults;
     %threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/3dCalibrationResults4.mat").results;
     name = 'third position';
