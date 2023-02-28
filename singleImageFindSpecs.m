@@ -1,15 +1,31 @@
-function [C, Cmax, intensitys] = singleImageFindSpecs(im)
+function [C, Cmax, intensitys, intensitysWithArea] = singleImageFindSpecs(im, threshold, options)
     if size(im, 3) == 3
         %convery to grayscale if not already in grayscale
         im = rgb2gray(im);
     end
-    % filter image to keep only specs of glitter bright enough to be of interest
-    F = fspecial('Gaussian',[15 15],1) - fspecial('Gaussian',[15 15],7);
-    %F = fspecial('Gaussian',[40 40],7) - fspecial('Gaussian',[40 40],30);
-    imf = imfilter(im, F);
+    % check if options.filter is set to true/false (but if not, filter by
+    % default)
+    if exist("options.filter", "var")
+        if options.filter
+            % filter image to keep only specs of glitter bright enough to be of interest
+            F = fspecial('Gaussian',[15 15],1) - fspecial('Gaussian',[15 15],7);
+            %F = fspecial('Gaussian',[40 40],7) - fspecial('Gaussian',[40 40],30);
+            im = imfilter(im, F);
+        end
+    else
+        % By default, filter
+        % filter image to keep only specs of glitter bright enough to be of interest
+        F = fspecial('Gaussian',[15 15],1) - fspecial('Gaussian',[15 15],7);
+        %F = fspecial('Gaussian',[40 40],7) - fspecial('Gaussian',[40 40],30);
+        im = imfilter(im, F);
+    end
     % apply threshold to get binary map with glitter spec regions
-    thresh = 25;
-    Mt = imf > thresh;
+    if exist("threshold", "var")
+        thresh = threshold;
+    else
+        thresh = 25;
+    end
+    Mt = im > thresh;
     % get a list of the region centroids
     numPoints = 1;
     C = [];
@@ -42,9 +58,11 @@ function [C, Cmax, intensitys] = singleImageFindSpecs(im)
 
     % normalize the intensitys and areas and then multiply them to get a
     % more robust(?) metric for overall sparkle intensity
-    intensitys = intensitys ./ max(intensitys);
+    
+    intensitysWithArea = intensitys ./ max(intensitys);
     areas = areas ./ max(areas);
-    intensitys = intensitys .* areas;
+    intensitysWithArea = intensitysWithArea .* areas;
+    
     % TODO ablation testing with this once we get final results (test set
     % and generally working stuff)
 

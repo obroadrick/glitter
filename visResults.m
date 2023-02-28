@@ -3,7 +3,7 @@ sparkleResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/spa
 checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/checkerResults').checkerResults;
 %}
 clear;
-casenum = 3;
+casenum = 1;
 
 if casenum == 1
     sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/sparkleResults').sparkleResults;

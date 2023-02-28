@@ -82,7 +82,7 @@ end
 P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
 
 %% Estimate translation
-other.inlierThreshold = 15;
+other.inlierThreshold = 25;
 ambientImage = -1;
 other.compare = false;
 [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew, other);
@@ -162,14 +162,46 @@ end % end for loop
 
 % visualize the histograms of reflectedRayToPinholeDists for each index
 figure;
-w=ceil(sqrt(size(reflectedRayToPinholeDists,2)));
+w=ceil(sqrt(2)*sqrt(size(reflectedRayToPinholeDists,2)));
 tiledlayout(w,w,'TileSpacing','tight','Padding','tight');
 for index=1:size(reflectedRayToPinholeDists,2)
     nexttile;
     histogram(reflectedRayToPinholeDists{index},10);
     xlabel('mm to pinhole');
+    xlim([0 other.inlierThreshold]);
+    nexttile
+    histogram(mostInliersIntensitys{index},15);
+    xlabel('itensity');
+    xlim([0 1]);
 end
 
+%%
+% intensity vs distance to pinhole
+figure;
+w=ceil(sqrt(size(reflectedRayToPinholeDists,2)));
+tiledlayout(w,w,'TileSpacing','tight','Padding','tight');
+for index=1:size(reflectedRayToPinholeDists,2)
+    nexttile;
+    plot(reflectedRayToPinholeDists{index}, mostInliersIntensitys{index},'b*');
+    xlabel('mm to pinhole');
+    ylabel('intensity');
+    xlim([0 other.inlierThreshold]);
+    ylim([0 1]);
+    title(imageFileJustNames(index));
+end
+
+%{
+% intensity vs aperture
+figure;
+for index=1:size(reflectedRayToPinholeDists,2)
+    plot(reflectedRayToPinholeDists{index}, mostInliersIntensitys{index},'b*');
+    xlabel('aperture f-x');
+    ylabel('intensity');
+    xlim([1 16]);
+    ylim([0 1]);
+    title(imageFileJustNames(index));
+end
+%}
 
 %%
 %{
