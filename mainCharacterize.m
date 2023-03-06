@@ -24,15 +24,6 @@ fprintf("Computing homography...\n");
 P.tform = saveTransform(P, fiducialMarkerPoints, chardir);
 fprintf("Homography computed after %f minutes\n", toc(tStart)/60);
 
-%%
-%{
-%% Calibrate camera: find the camera's position in the canonical
-%                    coordinate system using checkerboards
-fprintf("Calibrating camera...\n");
-P.camParams = calibrateCamera(P, fiducialMarkerPoints);
-fprintf("Camera calibrated after %f minutes\n", toc(tStart)/60);
-%}
-
 %% Detect specs:    find specs that sparkled during a sweep of light
 fprintf("Detecting spec centroids...\n");
 [P.imageCentroids, P.canonicalCentroids] = detectSpecs(P, chardir);

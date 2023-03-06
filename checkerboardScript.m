@@ -16,7 +16,7 @@ for i=1:numSubsets
             continue
         end
         imageFileNames{fIdx} = [allFiles(j).folder '/' allFiles(j).name];
-        fIdx = fIdx + 1;00Å¸
+        fIdx = fIdx + 1;
     end
 
     % Detect calibration pattern in images

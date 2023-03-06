@@ -1,7 +1,7 @@
 % given camera position estimate T, estimate camera rotation matrix R and
 % intrinsic matrix K
 
-function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir, skew)
+function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, mostInliersSpecPos, mostInliersImageSpecPos, expdir, skew, other)
     P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
     
     % known points in world coordinates
@@ -38,6 +38,7 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     x = A \ b';
     M = [x(1) x(2) x(3); x(4) x(5) x(6); x(7) x(8) 1];
 
+    if other.plotStuff
     %% show (before decomposition) the reprojected points to confirm that they make sense
     figure;
     plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;
@@ -46,6 +47,7 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
         projectedSpec = M * (worldSpecs(ix,:)' - T);
         projectedSpec = projectedSpec ./ projectedSpec(3);
         plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
+    end
     end
     
     %%
@@ -79,6 +81,7 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     end
 
     %%
+    if other.plotStuff
     figure;
     plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;    
     title('AFTER DECOMPOSITION: the original image specs (green) and projected by M specs (red)');
@@ -87,8 +90,10 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
         projectedSpec = projectedSpec ./ projectedSpec(3);
         plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
     end
+    end
 
     %% show the reprojection according to the ground truth/checkerboard
+    if other.plotStuff
     % results
     if ~skew
         camRot = matfile([expdir 'camRot.mat']).camRot;
@@ -149,9 +154,10 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     end
     %meanReprojectionError = sum(sqrt(sum((projectedSpecs - imageSpecs).^2, 2)))/size(imageSpecs,1)    
     %meanReprojectionError = sum(sqrt(sum((projectedFiducials - pin).^2, 2)))/size(pin,1)    
-    
+    end
     %% draw the scene with camera and its frustum
     M = matfile(P.measurements).M;
+    if other.plotStuff
     figure;
     hold on;
     % draw frustum
@@ -188,10 +194,13 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, most
     patch(tx,ty,tz,tc,'DisplayName','Table');
     axis vis3d;
     axis equal;
+    end
 
+    if other.plotStuff
     % visualize the predicted transformation being applied to the canonical
     % axes
     visAxesRT(R,T);
+    end
 
     % returns
     omega = undoRodrigues(R);

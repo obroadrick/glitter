@@ -27,8 +27,13 @@ save([P.data 'camParamsErrors_' datestr(now, 'mm_dd_yyyy')], "camParamsErrors");
 %chardir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/iphoneXR2/'];
 %chardir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/wideAngleCardboard/'];
 %chardir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/evens/'];
-chardir = ['/Users/oliverbroadrick/Desktop/checkerboards2/1/'];
-%save([chardir 'camParams'], "camParams");
-%save([chardir 'camParamsErrors'], "camParamsErrors");
-save([chardir 'camParamsSkew'], "camParams");
-save([chardir 'camParamsErrorsSkew'], "camParamsErrors");
+%chardir = ['/Users/oliverbroadrick/Desktop/checkerboards2/1/'];
+chardir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/mar3/'];
+skew = true;
+if ~skew
+    save([chardir 'camParams'], "camParams");
+    save([chardir 'camParamsErrors'], "camParamsErrors");
+else
+    save([chardir 'camParamsSkew'], "camParams");
+    save([chardir 'camParamsErrorsSkew'], "camParamsErrors");
+end
