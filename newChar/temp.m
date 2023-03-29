@@ -1,0 +1,14 @@
+figure;
+tiledlayout(1,2,'Padding','tight','TileSpacing','tight');
+nexttile;
+%plot(imageSpecs(:,1),imageSpecs(:,2),'gx');
+plot(mostInliersImageSpecPos(:,1),mostInliersImageSpecPos(:,2),'gx');
+hold on;
+set(gca,'YDir','reverse');
+title('image specs');
+nexttile;
+%plot(worldSpecs(:,1),worldSpecs(:,2),'gx');
+plot(mostInliersSpecPos(:,1),mostInliersSpecPos(:,2),'gx');
+hold on;
+set(gca,'YDir','reverse');
+title('world specs');

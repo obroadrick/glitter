@@ -7,4 +7,5 @@ function P = getMar4charPaths()
     P.canonicalCentroids = '/Users/oliverbroadrick/Desktop/glitter-stuff/mar3-characterization/canonical_centroids';
     P.means = '/Users/oliverbroadrick/Desktop/glitter-stuff/mar3-characterization/lightingmeans.mat';
     P.specNormals = '/Users/oliverbroadrick/Desktop/glitter-stuff/mar3-characterization/spec_normals.mat';
+    P.measurements = '/Users/oliverbroadrick/Desktop/glitter-stuff/mar3-characterization/measurements.mat';
 end

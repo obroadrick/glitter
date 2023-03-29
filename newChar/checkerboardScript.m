@@ -1,8 +1,9 @@
 
 % Define images to process
 %expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/';
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/';
-numSubsets = 10;
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/';
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/ICCV_camPos1/';
+numSubsets = 6;
 for i=1:numSubsets
     % Get this batch of file names...:
     dirPath = [expdir num2str(i)];
@@ -11,7 +12,7 @@ for i=1:numSubsets
     fIdx = 1;
     for j=1:size(allFiles,1)
         % skip over .mat files
-        if ~isempty(regexp(allFiles(j).name,'.mat'))
+        if ~isempty(regexp(allFiles(j).name,'.mat')) || ~isempty(regexp(allFiles(j).name,'DS_Store'))
             %disp(allFiles(j).name)
             continue
         end
@@ -40,8 +41,9 @@ for i=1:numSubsets
     worldPoints = generateWorldPoints(detector, 'SquareSize', squareSize);
     
     % Calibrate the camera
+    skew = true;
     [cameraParams, imagesUsed, estimationErrors] = estimateCameraParameters(imagePoints, worldPoints, ...
-        'EstimateSkew', true, 'EstimateTangentialDistortion', false, ...
+        'EstimateSkew', skew, 'EstimateTangentialDistortion', false, ...
         'NumRadialDistortionCoefficients', 2, 'WorldUnits', 'millimeters', ...
         'InitialIntrinsicMatrix', [], 'InitialRadialDistortion', [], ...
         'ImageSize', [mrows, ncols]);
@@ -53,9 +55,36 @@ for i=1:numSubsets
     camParams = cameraParams;
     camParamsErrors = estimationErrors;
     chardir = [dirPath '/'];
-    save([chardir 'camParams'], "camParams");
-    save([chardir 'camParamsErrors'], "camParamsErrors");
 
+    if skew
+        save([chardir 'camParamsSkew'], "camParams");
+        save([chardir 'camParamsErrorsSkew'], "camParamsErrors");    
+    else
+        save([chardir 'camParams'], "camParams");
+        save([chardir 'camParamsErrors'], "camParamsErrors");
+    end
+
+    % then get campos and camrot from params
+    camParams = matfile([chardir 'camParamsSkew.mat']).camParams;
+    ApositionIndex = 1;%size(camParams.TranslationVectors,1);
+    translationVector = camParams.TranslationVectors(ApositionIndex,:);
+    Rvec = camParams.RotationVectors(ApositionIndex,:);
+    Rc = rotationVectorToMatrix(Rvec);
+    [~, camPos] = extrinsicsToCameraPose(Rc, translationVector);
+    camRot = Rc';
+    camPosErr = camParamsErrors.ExtrinsicsErrors.TranslationVectorsError(ApositionIndex,:);
+    camRotErr = camParamsErrors.ExtrinsicsErrors.RotationVectorsError(ApositionIndex,:);
+    if skew
+        save([chardir 'camPosSkew.mat'], "camPos");
+        save([chardir 'camRotSkew.mat'], "camRot");
+        save([chardir 'camPosErrSkew.mat'], "camPosErr");
+        save([chardir 'camRotErrSkew.mat'], "camRotErr");
+    else
+        save([chardir 'camPos.mat'], "camPos");
+        save([chardir 'camRot.mat'], "camRot");
+        save([chardir 'camPosErr.mat'], "camPosErr");
+        save([chardir 'camRotErr.mat'], "camRotErr");
+    end
     %{ 
     % other stuff that we don't need to bother showing every time one of
     % these is run

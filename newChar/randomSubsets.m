@@ -1,12 +1,13 @@
 % read in all the checkerboard image file names
 %dirPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerboards-all/';
-dirPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/checkerboards/';
+%dirPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/checkerboards/';
+dirPath = '/Users/oliverbroadrick/Desktop/glitter-stuff/ICCV_camPos1/checkerboards/';
 allFiles = dir(dirPath);
 allFiles=allFiles(~ismember({allFiles.name},{'.','..'}));
 
 % using a random permutation of the order of all filenames, divide them
 % into numSubsets subsets
-numSubsets = 10;
+numSubsets = 6;
 p = randperm(size(allFiles,1));
 perList = floor(size(allFiles,1) / numSubsets);
 for i = 1:numSubsets

@@ -1,120 +1,24 @@
+
 % 3d calibration - don't solve that tricky many-planar-patterns problem,
 % just use known relative positions of points!
 
-expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3d-cal-ims/';
+expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/ICCV_camPos1/3dcalA/';
+%expdir = '/Users/oliverbroadrick/Desktop/glitter-stuff/ICCV_camPos1/3dcalB/';
 d = dir([expdir '*.JPG']);
 d = d(~ismember({d.name},{'.','..'}));
 numIms = size(d,1);
 
 % Load in images
+imPts = [];
+worldPts = [];
 for i=1:numIms
     imnames{i} = [d(i).name];
     impaths{i} = [d(i).folder '/' d(i).name];
     ims{i} = imread(impaths{i});
-end
-
-%%
-% Find the ArUco points in each image
-for i=1:numIms
-    %if ~isfile([expdir '/' imnames{i} '_16pts.mat'])
-        % Use Addy's Python scipt to detect the ArUco markers
-        setenv('PATH', [getenv('PATH') ':/opt/homebrew/bin/python3.10:/opt/homebrew/bin:/opt/homebrew/sbin']);
-        cmd = sprintf('python3.10 /Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/detectArUcosNew.py "%s" "%s"', impaths{i}, [expdir '/' imnames{i} '_16pts.mat']);
-        system(cmd);
-    %eend
-end
-
-%%
-% Display images with detected ArUco marker points
-%{
-figure;
-tiledlayout(floor(sqrt(numIms)), ceil(sqrt(numIms)), 'TileSpacing','tight','Padding','tight');
-for i=1:numIms
-    % Show image
-    ax = nexttile;
-    imagesc(ims{i}); hold on;
-
-    % Load and plot ArUco points
-    if ~isfile([expdir '/' imnames{i} '_16pts.mat'])
-        continue
-    end
-    pts{i} = loadPoints([expdir '/' imnames{i} '_16pts.mat'],true);
-    for ix=1:size(pts{i},1)
-        if pts{i}(ix,1) > 0 && pts{i}(ix,2) > 0
-            plot(pts{i}(ix,1), pts{i}(ix,2),'cX','MarkerSize', 20);
-            text(pts{i}(ix,1), pts{i}(ix,2),num2str(ix));
-        end
-    end
-
-    % Draw plot
-    set(ax,'xticklabel',[],'yticklabel',[])
-    title(d(i).name);
-    drawnow;
-end
-%}
-
-%%
-% Get the corresponding points in the world/glitter coordinate system
-for i=1:numIms
-    if ~isfile([expdir '/' imnames{i} '_16pts.mat'])
-        arucoPoints{i} = -1;
-        continue
-    end
-    
-    % Load in the detected ArUco points in the image
-    arucoPoints{i} = loadPoints([expdir '/' imnames{i} '_16pts.mat'],true);
-
-    % Get the position of the markers on the glitter sheet
-    p = getFiducialMarkerPts(false); 
-    p = [p(:,1) p(:,2) zeros(size(p,1),1)];
-
-    % Adjust for the position of the glitter sheet on the table
-    % (the file name encodes the position on the table)
-    direction = 1;
-    if imnames{i}(1) == 'n'
-        direction = -1;
-    end
-    distance = str2double(imnames{i}(2:3));
-    MM_PER_INCH = 25.4;
-    adjustment_inches = distance * direction * MM_PER_INCH;
-
-    worldPoints{i} = p + [0 0 adjustment_inches];
-end
-
-%% 
-% Get all the legitimate correspondences (remove those which are
-% negative ones from failed aruco point detection). Also, if any two of the
-% four correspondences for a given marker are the same, then ignore that
-% set of four correspondences.
-numPts = 1;
-for i=1:numIms
-    if arucoPoints{i} == -1
-        keptImPoints{i} = zeros(0,0);
-        keptWorldPoints{i} = zeros(0,0);
-        continue
-    end
-    % If the points are not all unique, ignore this image (failure of our
-    % detection code)
-    %{
-    if ~(size(unique(arucoPoints{i},'rows'), 1) == size(arucoPoints{i}, 1))
-        keptImPoints{i} = zeros(0,0);
-        keptWorldPoints{i} = zeros(0,0);
-        disp('here')
-        continue
-    end
-    %}
-    thisImNumPts = 1;
-    for j=1:size(arucoPoints{i},1)
-        if ~(arucoPoints{i}(j,1) > 0 && arucoPoints{i}(j,2) > 0)
-            continue
-        end
-        imPts(numPts,:) = arucoPoints{i}(j,:);
-        worldPts(numPts,:) = worldPoints{i}(j,:);
-        numPts = numPts + 1;
-        keptImPoints{i}(thisImNumPts,:) = arucoPoints{i}(j,:);
-        keptWorldPoints{i}(thisImNumPts,:) = worldPoints{i}(j,:);
-        thisImNumPts = thisImNumPts + 1;
-    end
+    other.perImageNaming = true;
+    [~, imagePoints{i}, worldPoints{i}] = getCheckerboardHomography(expdir, imnames{i}, other);
+    imPts = [imPts; imagePoints{i}];
+    worldPts = [worldPts; worldPoints{i}];
 end
 
 %%
@@ -160,7 +64,7 @@ tuned_results = fminsearch(f, [C(1:11) 0 0], options);
 
 %%
 % Save results
-save('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/3dCalibrationResults.mat',"results");
+save([expdir '3dCalibrationResults.mat'],"results");
 
 %%
 % Compute reprojection errors in pixels
@@ -480,6 +384,9 @@ function P = solveForCameraMatrix(imPts,worldPts)
         b(i*3-1,:) = [imPts(i,2)];
         b(i*3,:) = [1];
         %}
+    end
+    if size(imPts,1) == 0
+        disp('here');
     end
     x = C\b;
     P = [x(1:4)';x(5:8)';[x(9:11)' 1]];

@@ -3,7 +3,7 @@ sparkleResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/spa
 checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/checkerResults').checkerResults;
 %}
 clear;
-casenum = 2;
+casenum = 4;
 
 if casenum == 1
     sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/sparkleResults').sparkleResults;
@@ -11,7 +11,7 @@ if casenum == 1
     sparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_charMeasOptimization").results;
     intrinsicSparkleResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/jan12/train_after_geometricCorrection").results;
     name = '"training" data';
-elseif casenum ==2
+elseif casenum == 2
     sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/sparkleResults').sparkleResults;
     %checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults').checkerResults;
     checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResultsNoSkew').checkerResults;
@@ -26,6 +26,18 @@ elseif casenum == 3
     checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/checkerResults').checkerResults;
     %threedCalResults = matfile("/Users/oliverbroadrick/Desktop/glitter-stuff/feb10/3dCalibrationResults4.mat").results;
     name = 'third position';
+elseif casenum == 4
+    sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/ICCV_camPos1/sparkleResults').sparkleResults;
+    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/ICCV_camPos1/checkerResults').checkerResults;
+    name = 'new characterized board first test set';
+elseif casenum == 5
+    sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/c1/sparkleResults').sparkleResults;
+    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/c1/checkerResults').checkerResults;
+    name = 'c1 new characterized board';
+elseif casenum == 6
+    sparkleResultsOrig = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/c2/sparkleResults').sparkleResults;
+    checkerResults = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/c2/checkerResults').checkerResults;
+    name = 'c2 new characterized board';
 end
 
 figure;

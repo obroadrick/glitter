@@ -1,26 +1,30 @@
 % given camera position estimate T, estimate camera rotation matrix R and
 % intrinsic matrix K
 
-function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, worldFiducials, mostInliersSpecPos, mostInliersImageSpecPos, expdir, skew, other)
-    P = matfile('/Users/oliverbroadrick/Desktop/glitter-stuff/glitter-repo/data/paths.mat').P;
+function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, imageFiducials, worldFiducials, mostInliersSpecPos, mostInliersImageSpecPos, expdir, skew, other)
     
-    % known points in world coordinates
-    worldSpecs = mostInliersSpecPos; % the characterized, canonical spec positions that correspond to the sparkling specs in the image
-    imageSpecs = mostInliersImageSpecPos; % the image coordinates of where we find those specs in this image
+    P = getMar4charPaths();
 
-    % also, worldFiducials and imageFiducials give the fiducial marker point
-    % correspondences
-    worldFiducials = [worldFiducials zeros(size(worldFiducials,1),1)];
-    whos worldFiducials
+    % add third dimension to world fiducials (checkerboard points)
+    if size(worldFiducials,2) < 3
+        worldFiducials = [worldFiducials zeros(size(worldFiducials,1),1)];
+    end
+
+    % get the overall correspondences of world points and image points
+    imageSpecs = mostInliersImageSpecPos; 
+    worldSpecs = mostInliersSpecPos;
+    worldPts = [worldSpecs; worldFiducials];
+    imagePts = [imageSpecs; imageFiducials];
     
-    worldPoints = [worldSpecs; worldFiducials];
-    imagePoints = [imageSpecs; pin];
+    %worldPts = [ worldFiducials];
+    %imagePts = [ imageFiducials];
+
+    % get the camera position vector
     T = reshape(camPosEst,3,1);
     
-    % find R and K by solving linear system
-    Q = worldPoints' - T;
-    p = imagePoints';
-    % build matrix
+    % find R,K by solving linear system: p~KR(P-T) for KR, or p~Mq for M
+    Q = worldPts' - T;
+    p = imagePts';
     A = zeros(2*size(p,2), 8);
     b = zeros(1, 2*size(p,2));
     for ix=1:size(p,2)
@@ -40,10 +44,16 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, worl
     if other.plotStuff
     %% show (before decomposition) the reprojected points to confirm that they make sense
     figure;
-    plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;
-    title('BEFORE DECOMPOSITION: the original image specs (green) and projected by M specs (red)');
+    plot(imageSpecs(:,1),imageSpecs(:,2),'g*');hold on;
+    title('BEFORE DECOMPOSITION: the original image points (green) and projected by M points (red)');
     for ix=1:size(imageSpecs,1)
         projectedSpec = M * (worldSpecs(ix,:)' - T);
+        projectedSpec = projectedSpec ./ projectedSpec(3);
+        plot(projectedSpec(1),projectedSpec(2),'r*');hold on;
+    end
+    plot(imageFiducials(:,1),imageFiducials(:,2),'g+');hold on;
+    for ix=1:size(imageFiducials,1)
+        projectedSpec = M * (worldFiducials(ix,:)' - T);
         projectedSpec = projectedSpec ./ projectedSpec(3);
         plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
     end
@@ -128,6 +138,7 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, worl
         plot(projectedFiducial(1),projectedFiducial(2),'ro');hold on;
     end
     %}
+    %%
     figure;
     %plot(imageSpecs(:,1),imageSpecs(:,2),'gx');hold on;    
     % undistort image spec locations
@@ -142,21 +153,25 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, worl
         projectedSpecs(ix,:) = projectedSpec;
         plot(projectedSpec(1),projectedSpec(2),'r+');hold on;
     end
-    imageFiducialsUndistorted = pin;%undistortPoints(pin, checkerParams);
+    imageFiducialsUndistorted = imageFiducials;%undistortPoints(pin, checkerParams);
     plot(imageFiducialsUndistorted(:,1),imageFiducialsUndistorted(:,2),'go');hold on;    
-    for ix=1:size(pin,1)
+    for ix=1:size(imageFiducials,1)
         projectedFiducial = worldToImage(checkerParams.Intrinsics,camRot',camRot*-camPos',(worldFiducials(ix,:)));
         %projectedFiducial = undistortPoints(projectedFiducial, checkerParams);
-        %imageFiducialsUndistorted = pin;%undistortPoints(pin, checkerParams);
+        %imageFiducialsUndistorted = imageFiducials;%undistortPoints(pin, checkerParams);
         projectedFiducials(ix,:) = projectedFiducial;
         plot(projectedFiducial(1),projectedFiducial(2),'ro');hold on;
     end
     %meanReprojectionError = sum(sqrt(sum((projectedSpecs - imageSpecs).^2, 2)))/size(imageSpecs,1)    
-    %meanReprojectionError = sum(sqrt(sum((projectedFiducials - pin).^2, 2)))/size(pin,1)    
+    %meanReprojectionError = sum(sqrt(sum((projectedFiducials - pin).^2, 2)))/size(pin,1)
+    %%
     end
     %% draw the scene with camera and its frustum
-    M = matfile(P.measurements).M;
     if other.plotStuff
+    GLIT_TO_MON_PLANES = 424;
+    GLIT_TO_MON_EDGES_X = 178;
+    GLIT_TO_MON_EDGES_Y = 88.8 + 77.1 + 8*18.25;
+    M = setMeasurements(GLIT_TO_MON_PLANES,GLIT_TO_MON_EDGES_X,GLIT_TO_MON_EDGES_Y);
     figure;
     hold on;
     % draw frustum
@@ -173,12 +188,14 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, worl
               [T(3) frustumWorldPoints(ix,3)],...
               'Color', 'cyan');
     end
+    %{
     % glitter square:
     gx = [0 M.GLIT_WIDTH M.GLIT_WIDTH 0];
     gy = [0 0 M.GLIT_HEIGHT M.GLIT_HEIGHT];
     gz = [0 0 0 0];
     gc = ['b'];
     patch(gx,gy,gz,gc,'DisplayName', 'Glitter');hold on;
+    
     % monitor:
     mx = [-M.GLIT_TO_MON_EDGES_X -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X+M.MON_WIDTH_MM -M.GLIT_TO_MON_EDGES_X]; 
     my = [-M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y+M.MON_HEIGHT_MM -M.GLIT_TO_MON_EDGES_Y -M.GLIT_TO_MON_EDGES_Y]; 
@@ -193,6 +210,7 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, worl
     patch(tx,ty,tz,tc,'DisplayName','Table');
     axis vis3d;
     axis equal;
+    %}
     end
 
     if other.plotStuff
@@ -209,4 +227,5 @@ function rotAndIntrinsics = linearEstimateRKglitter(impath, camPosEst, pin, worl
     cy = K(2,3);
     s = K(1,2);
     rotAndIntrinsics = [omega fx fy cx cy s];
+    %disp(rotAndIntrinsics)
 end

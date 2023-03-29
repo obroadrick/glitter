@@ -1,9 +1,13 @@
 
-skew = false;
-for index = 1:10
+skew = true;
+numSubsets = 6;
+for index = 1:numSubsets
 %expdir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/testingMatlab/odds/'];
 %expdir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan12data/' num2str(index) '/'];
-expdir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(index) '/'];
+%expdir = ['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/' num2str(index) '/'];
+overallDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/ICCV_camPos1/';
+overallDir = '/Users/oliverbroadrick/Desktop/glitter-stuff/c2/';
+expdir = [overallDir num2str(index) '/'];
 
 %% get checkerboard outputs for comparison
 if skew
@@ -56,4 +60,4 @@ printRow('range:',ranges);
 printRow('std:',stds);
 
 checkerResults = allData;
-save(['/Users/oliverbroadrick/Desktop/glitter-stuff/jan13/checkerResults.mat'], "checkerResults");
+save([overallDir 'checkerResults.mat'], "checkerResults");

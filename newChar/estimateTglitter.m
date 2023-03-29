@@ -18,7 +18,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     testimpath=impath;
     imagesc(rgb2gray(imread(testimpath)));colormap(gray);hold on;
     plot(pin(:,1),pin(:,2),'rx','MarkerSize',15);
-    [transformPath, ~, ~] = getCheckerboardHomography(expdir, impath);
+    [transformPath, ~, ~] = getCheckerboardHomography(expdir, impath, other);
     tform = matfile(transformPath).tform;
     options.filter = true;
     [imageCentroids,~,intensitys] = singleImageFindSpecs(im, 20, options); %normal use
@@ -27,13 +27,14 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     out = transformPointsForward(tform, [imageCentroids(:,1) imageCentroids(:,2)]);
     canonicalCentroids = [out(:,1) out(:,2) zeros(size(out,1),1)];
     idx = cleanPoints(canonicalCentroids, 18.25, .15);
+    imageCentroids = imageCentroids(idx,:);
     canonicalCentroids = canonicalCentroids(idx,:);
-    fprintf([int2str(size(canonicalCentroids,1)) ' specs found; ']);
+    fprintf([int2str(size(canonicalCentroids,1)) ' sparkles; ']);
 
     intensitys = intensitys(:,idx);
     %% match canonical centroids to those in the characterization
     knownCanonicalCentroids = matfile(P.canonicalCentroids).canonicalCentroids;
-    K = 10;
+    K = 5;
     [idx, dist] = knnsearch(knownCanonicalCentroids, canonicalCentroids,...
                                  'K', K, 'Distance', 'euclidean');
     specPos = zeros(size(idx,1),K,3);
@@ -228,7 +229,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     mostInliersR = [];
     mostInliersL = [];
     mostInliersIntensitys = [];
-    numRansacIters = 10000;
+    numRansacIters = 100000;
     for counter=1:numRansacIters %this is constant right now but could (should) be more dynamic/reactive than that
         
         % hypothesize a possible pair of inliers
@@ -395,8 +396,6 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     if isfield(other,'quickEstimate') && other.quickEstimate == true
         % just return the estimate based on the nearestPointManyLines
         camPosEst = quickEst;
-        mostInliersSpecPos = mostInliersSpecPos;
-        mostInliersImageSpecPos = mostInliersImageSpecPos;
         other.mostInliersL = mostInliersL;
         other.mostInliersSpecPos = mostInliersSpecPos;
         other.mostInliersIdxs = mostInliersIdxs;
@@ -417,10 +416,48 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         end
         other.reflectedRayToPinholeDists = reflectedRayToPinholeDists;
     end
+    other.specPos = canonicalCentroids;
     if ~(isfield(other,'quickEstimate') && other.quickEstimate == true)
     x0 = [quickEst godlyStd 255];
-    more.charSpecPos = matfile([P.canonicalCentroids]);
-    more.charSpecNormals = matfile([P.specNormals]);
+    more.charSpecPos = matfile([P.canonicalCentroids]).canonicalCentroids;
+    more.charSpecNormals = matfile([P.specNormals]).specNormals;
+    more.lightPos = lightPos;
+    % For each characterized spec, apply an inverse transform to get it in
+    % image coordinates, then find the maximum intensity within a small
+    % radius of each spec.
+    charSpecPos = more.charSpecPos;
+    imageCharSpecs = transformPointsInverse(tform, charSpecPos(:,1:2));
+    im = rgb2gray(imread(impath));
+    r = 25;
+    maxFilteredIm = ordfilt2(im,r^2,ones(r,r));% choose a large radius because we need 
+    % the actually sparkling sparkles to register as bright but
+    % not-sparkling ones register as bright incorrectly won't hurt so much
+    % since they won't be expected to be bright and so won't affect the
+    % loss value
+    max(imageCharSpecs,1);
+    min(imageCharSpecs,1);
+    max(imageCharSpecs,2);
+    min(imageCharSpecs,2);
+    for ix=1:size(imageCharSpecs,1)
+        x = int32(imageCharSpecs(ix,1));
+        y = int32(imageCharSpecs(ix,2));
+        if x > 0 && x < size(maxFilteredIm,1) && y > 0 && y < size(maxFilteredIm,2)
+            observedIntensitys(ix) = maxFilteredIm(int32(imageCharSpecs(ix,1)), int32(imageCharSpecs(ix,2)));
+        else
+            observedIntensitys(ix) = 0;
+        end
+    end
+    %{
+    for ix=1:size(imageCharSpecs,1)
+        x = imageCharSpecs(ix,1); y = imageCharSpecs(ix,2);
+        [y_grid, x_grid] = ndgrid(1:size(img, 1), 1:size(img, 2)); % create coordinate grids
+        mask = (x_grid - x).^2 + (y_grid - y).^2 <= r^2; % create circular mask
+        subimg = img .* uint8(mask); % apply mask to image to extract sub-image
+        % Compute maximum pixel value within the sub-image using vectorized operations
+        observedIntensitys(ix) = max(subimg(:));
+    end
+    %}
+    more.observedIntensitys = observedIntensitys;
     errFun = @(x) lossFunc(x(1:3), mostInliersSpecPos, mostInliersR, mostInliersIntensitys, x(4), x(5), more);
     options = optimset('PlotFcns',@optimplotfval);
     xf = fminsearch(errFun, x0, options);
@@ -430,6 +467,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     fprintf('Sparkle Gaussian stand dev (dist to pinhole, mm): %f and height (intensity, 0-255): %f\n',godlyStdFound, godlyPeakFound);
 
     % also compute dists to the known camera location for all shiny specs
+    if other.compare
     trueDists = [];
     for k=1:size(R,2)%size(R,2) is also just K from knnsearch above
         for ix=1:size(R,1)
@@ -452,6 +490,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
             bestMaxBrightness(ix) = maxBrightness(inlierIdxs(ix),kmin(ix));
         end
     end
+    
     %FROMHERE
     % we can also get these distances for just inliers with respect to the 
     % true camera position
@@ -469,6 +508,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
             trueInlierMaxBrightness(ix) = maxBrightness(trueInlierIdxs(ix),kmin(ix));
         end
     end
+   
     %TOHERE
     % we can also get these "true" distances for just the inliers from RANSAC
     trueDistsInliers = [];
@@ -478,7 +518,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         end
     end
     [minTrueDistsInliers,kmin] = min(trueDistsInliers, [], 2);
-    
+    end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -512,12 +552,14 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     cam=camPosEst;
     legendItems(size(legendItems,2)+1) = scatter3(cam(1),cam(2),cam(3),100,'red','o','filled','DisplayName','Estimated Camera');
     % shown known ground truth camera position
-    fprintf('Checker=(%.2f %.2f %.2f) ', knownCamPos);
-    fprintf('Sparkle=(%.2f %.2f %.2f) ', camPosEst);
-    fprintf('Diff=(%.2f %.2f %.2f) |Diff|=%.2f\n', cam - knownCamPos, norm(cam - knownCamPos));
+    %fprintf('Checker=(%.2f %.2f %.2f) ', knownCamPos);
+    %fprintf('Sparkle=(%.2f %.2f %.2f) ', camPosEst);
+    %fprintf('Diff=(%.2f %.2f %.2f) |Diff|=%.2f\n', cam - knownCamPos, norm(cam - knownCamPos));
+    if other.compare
     legendItems(size(legendItems,2)+1) = scatter3(knownCamPos(1),knownCamPos(2),knownCamPos(3),...
         100,'blue','filled','o','DisplayName','True Camera');
     % show light source as a dot
+    end
     legendItems(size(legendItems,2)+1) = scatter3(lightPos(1),lightPos(2),lightPos(3),...
         'filled','DisplayName','Light');
     % draw all the passed lines
@@ -545,6 +587,9 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
         %color = [1 c 1];
         line(x,y,z,'Color',color);
     end
+    % also show the grid squares found
+    worldFiducials = [transformPointsForward(tform, pin) zeros(size(pin,1),1)];
+    plot3(worldFiducials(:,1), worldFiducials(:,2), worldFiducials(:,3),'mX');
     
     title(sprintf('final set of inliers (%d/%d)', size(mostInliersSpecPos,1), size(specPos,1)));
     % set viewpoint:
@@ -604,11 +649,7 @@ function [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estim
     title('Intensity vs Dist to Pinhole: "True" inliers only');
     %}
 
-    % returns:
-    camPosEst = camPosEst;
-    mostInliersSpecPos = mostInliersSpecPos;
-    mostInliersImageSpecPos = mostInliersImageSpecPos;
-    
+    % returns (all others already named already in this function)
     other.mostInliersL = mostInliersL;
     other.mostInliersSpecPos = mostInliersSpecPos;
     other.mostInliersIdxs = mostInliersIdxs;
@@ -660,43 +701,55 @@ function d = distPointToLine(point, pointOnLine, direction)
     p = point';% point whose distance is being computed
     d = norm((p-a)-(dot((p-a),n,1)*n));
 end
-function error = lossFunc(camPos, mostInliersSpecPos, mostInliersR, mostInliersIntensitys, std, peak, more)
+function loss = lossFunc(camPos, mostInliersSpecPos, mostInliersR, mostInliersIntensitys, std, peak, more)
+    std = 3.5; peak = 255; % temporarily keep these as constants
     charSpecPos = more.charSpecPos;
     charSpecNormals = more.charSpecNormals;
+    lightPos = more.lightPos;
+    observedIntensitys = more.observedIntensitys;
     
     % For every characterized spec, reflect a ray from lightPos according
     % to its surface normal, find the distance from the pinhole camPos, and
     % compute its predicted intensity based on our model.
+
+    % Reflect rays from lightPos
+    charSpecPos = reshape(charSpecPos, [size(charSpecPos,1) 1 3]);
+    charSpecNormals = reshape(charSpecNormals, [size(charSpecNormals,1) 1 3]);
+    R = reflect(charSpecPos, charSpecNormals, lightPos);
+
+    % Compute dists to pinhole
+    dists = zeros(1,size(charSpecPos,1)) - 1;
     for ix=1:size(charSpecPos)
-        
+        dists(ix) = distPointToLine(camPos, reshape(charSpecPos(ix,1,:),1,3), reshape(R(ix,1,:),1,3));
     end
 
-    error = 0;
-    % for each inlier sparkle
-    for i=1:size(mostInliersSpecPos,1)
-        % compute distance from reflected ray to pinhole (camPos)
-        dist = distPointToLine(camPos, reshape(mostInliersSpecPos(i,:),1,3), reshape(mostInliersR(i,:),1,3));
-        %disp(dist);
-        %{
-        % weight this distance's contribution to the loss function by
-        % sparkle intensity(first/naive version)
-        weight = mostInliersIntensitys(i);
-        error = error + dist * weight;
-        %}
-
-        % based on this distance, estimate/predict the intensity
-        %std = 5;
-        predictedDist = sqrt(-2*std^2*log(mostInliersIntensitys(i)/peak));
-        %disp(predictedDist);
-        %disp(mostInliersIntensitys(i));
-        error = error + abs(dist - predictedDist);
+    % Predict intensity 
+    predIntensity = zeros(1,size(charSpecPos,1)) - 1;
+    for ix=1:size(charSpecPos)
+        predIntensity(ix) = peak*exp(-1 * dists(ix)^2 / 2 / std^2);
     end
-    %disp(mostInliersIntensitys);
-    % divide by the number of sparkles so that we get a more interpretable
-    % loss function value (i.e. the average difference between the observed
-    % distance from pinhole and the predicted distance to pinhole based on
-    % brightness
-    error = error / size(mostInliersIntensitys,1);
+
+    % Loss is the mean difference between the predicted intensitys
+    % and the observed intensity for all of the specs which are predicted
+    % to be bright/sparkling (above a threshold)
+    sparkleThreshold = 40;
+    loss = 0;
+    lossCount = 0;  
+    [~, idx] = sort(predIntensity, 'descend');
+    sortedPredIntensity = predIntensity(idx);
+    sortedObservedIntensity = observedIntensitys(idx);
+    for ix=1:size(predIntensity,2)
+        %if predIntensity(ix) > sparkleThreshold
+        loss = loss + abs(sortedPredIntensity(ix) - sortedObservedIntensity(ix));
+        lossCount = lossCount + 1;
+        % just count the top 50 brightest (according to prediction)
+        if lossCount == 50
+            break
+        end
+        %end
+    end
+    loss = single(loss) / single(lossCount);
+    fprintf('For camera position (%f, %f, %f), comparing %d predicted sparkle intensity, with mean abs. diff. %f\n', camPos(1), camPos(2), camPos(3), lossCount, loss);
 end
 function error = lossFuncOriginal(camPos, mostInliersSpecPos, mostInliersR, mostInliersIntensitys, std, peak)
     error = 0;
@@ -725,4 +778,24 @@ function error = lossFuncOriginal(camPos, mostInliersSpecPos, mostInliersR, most
     % distance from pinhole and the predicted distance to pinhole based on
     % brightness
     error = error / size(mostInliersIntensitys,1);
+end
+function R = reflect(specPos, specNormals, lightPos)
+    % computes the position of light reflected off the passed spec
+    % positions with specNormals from lightPos assuming that specPos is of
+    % the shape nxkx3 where n is number of specs, k is number of
+    % hypothesized positions for that spec, and 3 is number of dimensions
+    % (x,y,z)
+    R=[];
+    for ix=1:size(specPos,2)
+        % compute reflected rays: Ri = Li − 2(Li dot Ni)Ni
+        % where Li is normalized vector from spec to light
+        %       Ni is normalized normal vector
+        %       Ri is normalized reflected vector
+        L = (lightPos - reshape(specPos(:,ix,:),size(specPos,1),...
+            size(specPos,3))) ./ vecnorm(lightPos - reshape(specPos(:,ix,:),size(specPos,1),size(specPos,3)), 2, 2);
+        R(:,ix,:) = L - 2 * dot(L, reshape(specNormals(:,ix,:),...
+            size(specNormals,1),size(specNormals,3)), 2) .* reshape(specNormals(:,ix,:),...
+            size(specNormals,1),size(specNormals,3));
+        R(:,ix,:) = -1.*R(:,ix,:);
+    end
 end

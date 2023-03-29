@@ -15,19 +15,23 @@
 % image center x and y,
 % distortion paramters k1 and k2
 warning('off','MATLAB:singularMatrix');
-
+resultsSaveName = 'sparkleResults';
 testcases = loadTestCases();
-index = 1;
-input = testcases.mar4tests(index);
+for index = 1:6
+%input = testcases.mar4tests(index);
+%input = testcases.ICCV_camPos1(index);
+input = testcases.c2(index);
 %for input=[wideangle1, middle, iphone1]
 expdir = input.expdir;
-%impath = [expdir input.impath];
-impath = [expdir '1b.JPG'];
+imname = [input.impath];
+%imname = '1b.JPG';
+impath = [expdir imname];
 lightPos = matfile([expdir input.lightPosFname]).lightPos;
-fprintf('\n%s\n',input.name);
+fprintf('\n%s. ',input.name);
 skew = input.skew;
 
-[transformPath, pin, worldPoints] = getCheckerboardHomography(expdir, impath);
+other.perImageNaming = false;
+[transformPath, pin, worldPoints] = getCheckerboardHomography(expdir, imname, other);
 %%
 plotStuff = false;%TODO adapt this for this test case
 if plotStuff
@@ -52,7 +56,7 @@ P = getMar4charPaths();
 
 other.inlierThreshold = 20;
 ambientImage = -1;
-other.compare = true;
+other.compare = false;
 other.quickEstimate = true;
 %% estimate translation
 [camPosEst, mostInliersSpecPos, mostInliersImageSpecPos, other] = estimateTglitter(impath, lightPos, pin, expdir, ambientImage, skew, other);
@@ -118,7 +122,7 @@ if visualize
 end
 
 %% visualize more stuff
-visualize = true;
+visualize = false;
 if visualize
     figure;
     tiledlayout(1,2,'TileSpacing','tight','Padding','tight');
@@ -144,14 +148,20 @@ end
 
 %% solve the linear system and do RQ decomposition to get K and R
 other.plotStuff = true;
-rotAndIntrinsics2 = [camPosEst linearEstimateRKglitter(impath, camPosEst, pin, worldPoints, mostInliersSpecPos, mostInliersImageSpecPos, expdir, skew, other)];
+worldFiducials = worldPoints; 
+imageFiducials = pin;
+rotAndIntrinsics2 = [camPosEst linearEstimateRKglitter(impath, camPosEst, imageFiducials, worldFiducials, mostInliersSpecPos, mostInliersImageSpecPos, expdir, skew, other)];
+% save results
+sparkleResults(index,:) = rotAndIntrinsics2';
+%save([expdir resultsSaveName num2str(i)], "rotAndIntrinsics2");
 % print outputs
 %printBreak();
 printRow('Sparkle est.', rotAndIntrinsics2);
 diff = rotAndIntrinsicsCheckerboards - rotAndIntrinsics2;
 printRow('Diff.', diff);
-%percentErrors = (rotAndIntrinsicsCheckerboards - rotAndIntrinsics2) ./ rotAndIntrinsicsCheckerboards .* 100;
-%printRow('Percent diff.', percentErrors);
+percentErrors = (rotAndIntrinsicsCheckerboards - rotAndIntrinsics2) ./ rotAndIntrinsicsCheckerboards .* 100;
+printRow('Percent diff.', percentErrors);
+printRow('Expected.', [-1 -1 -1 -1 -1 -1 -1 -1 size(imread(impath),2)/2 size(imread(impath),1)/2 0]);
 posDiff = sqrt(sum(((camPosEst-camPos).^2)));
 R2 = rod2mat(rotAndIntrinsics2(4),rotAndIntrinsics2(5),rotAndIntrinsics2(6));
 Rerr = rotDiff(R2, camRot);
@@ -170,6 +180,10 @@ Rerr = rotDiff(R5, camRot);
 disp('difference in rotation (degrees):');
 disp(Rerr);
 %} 
+end% end loop
+
+save([expdir resultsSaveName], "sparkleResults");
+
 function printRow(rowName, rowVals)
     w = '10'; dec = '4';
     s = '%15s ';
